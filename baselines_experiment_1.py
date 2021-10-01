@@ -15,27 +15,21 @@ from utils import train, test
 
 def run_baseline1(args):
     dataset = np.load(args.filepath, allow_pickle=True)
-    labels2idx = {k: idx for idx, k in enumerate(np.unique(dataset['y_test']))}
-
-    folds = dataset['kfold_{0}_shot'.format(args.num_shots)]
+    folds = dataset['kfold_no_shot']
     base1_results = {}
     for data_source in dataset['Xy_train'][0].keys():
 
-        # TODO: It has to be solved on FrankDataset framework, not here!!
-        X_train = []
-        for sample in dataset['Xy_train'][0][data_source][0]:
-            X_train.append(sample.squeeze())
+        train_data = np.array(dataset['Xy_train'][0][data_source][0])
+        _train_labels = np.array(dataset['Xy_train'][0][data_source][1])
 
-        X_train = np.array(X_train)
+        labels2idx = {k: idx for idx, k in enumerate(np.unique(_train_labels))}
 
         cum_acc, cum_f1, cum_recall, cum_conf_matrices = [], [], [], []
 
         for fold_idx, fold in enumerate(folds):
-            # TODO
-            train_data, train_labels = dataset['X_test'][fold['train_idx']].squeeze(), dataset['y_test'][fold['train_idx']]
             test_data, test_labels = dataset['X_test'][fold['test_idx']].squeeze(), dataset['y_test'][fold['test_idx']]
 
-            train_labels = np.array([labels2idx[label] for label in train_labels])
+            train_labels = np.array([labels2idx[label] for label in _train_labels])
             test_labels = np.array([labels2idx[label] for label in test_labels])
 
             train_set = SensorDataset(train_data, train_labels)
@@ -67,6 +61,7 @@ def run_baseline1(args):
             cum_f1.append(metrics['f1-score'])
             cum_recall.append(metrics['recall'])
             cum_conf_matrices.append(metrics['confusion_matrix'])
+            break
 
         ci_mean = st.t.interval(0.9, len(cum_acc) - 1, loc=np.mean(cum_acc), scale=st.sem(cum_acc))
         ci_f1 = st.t.interval(0.9, len(cum_f1) -1, loc=np.mean(cum_f1), scale=st.sem(cum_f1))
@@ -79,6 +74,8 @@ def run_baseline1(args):
             'recall': '{:.2f} ± {:.2f}'.format(np.mean(cum_recall) * 100, abs(np.mean(cum_recall) - ci_recall[0]) * 100),
             'confusion matrix': str(confusion_matrix)
         }
+
+    return base1_results
 
 
 def run_baseline2(args):
@@ -267,16 +264,15 @@ if __name__ == '__main__':
 
     results = {}
 
-    for num_shots in [1, 5, 10]:
-        args.num_shots = num_shots
-        results[f'baseline1_{num_shots}_shot'] = run_baseline1(args)
-        #results.update(run_baseline3(args))
+    #cross dataset without transfer learning
+    results[f'baseline1_no_shot'] = run_baseline1(args)
+    #results.update(run_baseline3(args))
 
-    results['baseline2'] = run_baseline2(args)
+    #results['baseline2'] = run_baseline2(args)
 
     table = {'experiment': []}
-    for baseline, result in results.items():
-        table['experiment'].append(baseline)
+    for data_source, result in results[f'baseline1_no_shot'].items():
+        table['experiment'].append(data_source)
         for k, v in result.items():
             if k not in table:
                 table[k] = []

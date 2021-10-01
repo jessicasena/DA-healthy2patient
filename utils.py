@@ -22,7 +22,7 @@ def get_metrics(y_true, y_pred):
         'accuracy': accuracy_score(y_true, y_pred),
         'f1-score': f1_score(y_true, y_pred, average='macro'),
         'recall': recall_score(y_true, y_pred, average='macro', zero_division=0),
-        'confusion_matrix': confusion_matrix(y_true, y_pred)
+        'confusion_matrix': confusion_matrix(y_true, y_pred, normalize='true')
     }
 
 
