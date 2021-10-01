@@ -61,7 +61,6 @@ def run_baseline1(args):
             cum_f1.append(metrics['f1-score'])
             cum_recall.append(metrics['recall'])
             cum_conf_matrices.append(metrics['confusion_matrix'])
-            break
 
         ci_mean = st.t.interval(0.9, len(cum_acc) - 1, loc=np.mean(cum_acc), scale=st.sem(cum_acc))
         ci_f1 = st.t.interval(0.9, len(cum_f1) -1, loc=np.mean(cum_f1), scale=st.sem(cum_f1))
