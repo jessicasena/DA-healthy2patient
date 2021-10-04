@@ -13,6 +13,64 @@ from models import MetaSenseModel
 from utils import train, test
 
 
+def run_baseline0(args):
+    dataset = np.load(args.filepath, allow_pickle=True)
+    labels2idx = {k: idx for idx, k in enumerate(np.unique(dataset['y_test']))}
+
+    folds = dataset['kfold_{0}_shot'.format(args.num_shots)]
+
+    cum_acc, cum_f1, cum_recall, cum_conf_matrices = [], [], [], []
+
+    for fold_idx, fold in enumerate(folds):
+        train_data, train_labels = dataset['X_test'][fold['train_idx']].squeeze(), dataset['y_test'][fold['train_idx']]
+        test_data, test_labels = dataset['X_test'][fold['test_idx']].squeeze(), dataset['y_test'][fold['test_idx']]
+
+        train_labels = np.array([labels2idx[label] for label in train_labels])
+        test_labels = np.array([labels2idx[label] for label in test_labels])
+
+        train_set = SensorDataset(train_data, train_labels)
+        test_set = SensorDataset(test_data, test_labels)
+
+        train_loader = DataLoader(train_set, batch_size=args.batch_size, num_workers=args.num_workers, pin_memory=True, shuffle=True)
+
+        test_loader = DataLoader(test_set, batch_size=args.batch_size, num_workers=args.num_workers, pin_memory=True)
+
+        model = MetaSenseModel(args.num_ways)
+
+        if args.use_cuda:
+            model = model.cuda()
+
+        criterion = nn.CrossEntropyLoss()
+        optim = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
+
+        train(model, train_loader, optim, criterion, epochs=args.num_epochs, use_cuda=args.use_cuda)
+
+        metrics = test(model, test_loader, use_cuda=args.use_cuda)
+
+        print()
+        for k, v in metrics.items():
+            if k == 'confusion_matrix':
+                print('Fold {} {}: {}'.format(fold_idx + 1, k.capitalize(), v))
+            else:
+                print('Fold {} {}: {:.04f}'.format(fold_idx + 1, k.capitalize(), v))
+
+        cum_acc.append(metrics['accuracy'])
+        cum_f1.append(metrics['f1-score'])
+        cum_recall.append(metrics['recall'])
+        cum_conf_matrices.append(metrics['confusion_matrix'])
+
+    ci_mean = st.t.interval(0.9, len(cum_acc) - 1, loc=np.mean(cum_acc), scale=st.sem(cum_acc))
+    ci_f1 = st.t.interval(0.9, len(cum_f1) -1, loc=np.mean(cum_f1), scale=st.sem(cum_f1))
+    ci_recall = st.t.interval(0.9, len(cum_recall) -1, loc=np.mean(cum_recall), scale=st.sem(cum_recall))
+    confusion_matrix = sum(cum_conf_matrices)
+
+    return {
+        'accuracy': '{:.2f} ± {:.2f}'.format(np.mean(cum_acc) * 100, abs(np.mean(cum_acc) - ci_mean[0]) * 100),
+        'f1-score': '{:.2f} ± {:.2f}'.format(np.mean(cum_f1) * 100, abs(np.mean(cum_f1) - ci_f1[0]) * 100),
+        'recall': '{:.2f} ± {:.2f}'.format(np.mean(cum_recall) * 100, abs(np.mean(cum_recall) - ci_recall[0]) * 100),
+        #'confusion matrix': str(confusion_matrix)
+    }
+
 def run_baseline1(args):
     dataset = np.load(args.filepath, allow_pickle=True)
     folds = dataset['kfold_no_shot']
@@ -60,18 +118,18 @@ def run_baseline1(args):
             cum_acc.append(metrics['accuracy'])
             cum_f1.append(metrics['f1-score'])
             cum_recall.append(metrics['recall'])
-            cum_conf_matrices.append(metrics['confusion_matrix'])
+            #cum_conf_matrices.append(metrics['confusion_matrix'])
 
         ci_mean = st.t.interval(0.9, len(cum_acc) - 1, loc=np.mean(cum_acc), scale=st.sem(cum_acc))
         ci_f1 = st.t.interval(0.9, len(cum_f1) -1, loc=np.mean(cum_f1), scale=st.sem(cum_f1))
         ci_recall = st.t.interval(0.9, len(cum_recall) -1, loc=np.mean(cum_recall), scale=st.sem(cum_recall))
-        confusion_matrix = sum(cum_conf_matrices)
+        #confusion_matrix = sum(cum_conf_matrices)
 
-        base1_results[data_source] = {
+        base1_results[f'baseline1_no_shot_{data_source}'] = {
             'accuracy': '{:.2f} ± {:.2f}'.format(np.mean(cum_acc) * 100, abs(np.mean(cum_acc) - ci_mean[0]) * 100),
             'f1-score': '{:.2f} ± {:.2f}'.format(np.mean(cum_f1) * 100, abs(np.mean(cum_f1) - ci_f1[0]) * 100),
             'recall': '{:.2f} ± {:.2f}'.format(np.mean(cum_recall) * 100, abs(np.mean(cum_recall) - ci_recall[0]) * 100),
-            'confusion matrix': str(confusion_matrix)
+            #'confusion matrix': str(confusion_matrix)
         }
 
     return base1_results
@@ -253,8 +311,9 @@ if __name__ == '__main__':
     parser.add_argument('--use-cuda', action='store_true')
 
     args = parser.parse_args()
-    args.num_ways = 4
+    args.num_ways = 3
 
+    args.use_cuda = torch.cuda.is_available()
     
     if args.output:
         os.makedirs(args.output, exist_ok=True)
@@ -263,15 +322,19 @@ if __name__ == '__main__':
 
     results = {}
 
+    for num_shots in ['no', 1, 5, 10]:
+        args.num_shots = num_shots
+        results[f'baseline0_{num_shots}_shot'] = run_baseline0(args)
+
     #cross dataset without transfer learning
-    results[f'baseline1_no_shot'] = run_baseline1(args)
+    results.update(run_baseline1(args))
     #results.update(run_baseline3(args))
 
     #results['baseline2'] = run_baseline2(args)
 
     table = {'experiment': []}
-    for data_source, result in results[f'baseline1_no_shot'].items():
-        table['experiment'].append(data_source)
+    for baseline, result in results.items():
+        table['experiment'].append(baseline)
         for k, v in result.items():
             if k not in table:
                 table[k] = []
