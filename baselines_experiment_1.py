@@ -135,7 +135,7 @@ def run_baseline1(args):
     return base1_results
 
 
-def run_baseline3(args):
+def run_baseline2(args):
     device = torch.device('cuda' if args.use_cuda
         and torch.cuda.is_available() else 'cpu')
 
@@ -173,7 +173,7 @@ def run_baseline3(args):
             torch.save(model.state_dict(), f)
 
         # Adapt for each fold of the cross-validation
-        cum_acc, cum_f1, cum_recall, cum_conf_matrices = [], [], [], []
+        cum_acc, cum_f1, cum_recall = [], [], []
 
         for fold_idx, fold in enumerate(folds):
             model = MetaSenseModel(len(source_labels2idx))
@@ -208,7 +208,6 @@ def run_baseline3(args):
 
             metrics = test(model, test_loader, use_cuda=args.use_cuda)
 
-            print()
             for k, v in metrics.items():
                 if k == 'confusion_matrix':
                     print('Fold {} {}: {}'.format(fold_idx + 1, k.capitalize(), v))
@@ -218,18 +217,18 @@ def run_baseline3(args):
             cum_acc.append(metrics['accuracy'])
             cum_f1.append(metrics['f1-score'])
             cum_recall.append(metrics['recall'])
-            cum_conf_matrices.append(metrics['confusion_matrix'])
+            #cum_conf_matrices.append(metrics['confusion_matrix'])
 
         ci_mean = st.t.interval(0.9, len(cum_acc) - 1, loc=np.mean(cum_acc), scale=st.sem(cum_acc))
         ci_f1 = st.t.interval(0.9, len(cum_f1) -1, loc=np.mean(cum_f1), scale=st.sem(cum_f1))
         ci_recall = st.t.interval(0.9, len(cum_recall) -1, loc=np.mean(cum_recall), scale=st.sem(cum_recall))
-        confusion_matrix = sum(cum_conf_matrices)
+        #confusion_matrix = sum(cum_conf_matrices)
 
         results[f'baseline3_{source}_{args.num_shots}_shot'] = {
             'accuracy': '{:.2f} ± {:.2f}'.format(np.mean(cum_acc) * 100, abs(np.mean(cum_acc) - ci_mean[0]) * 100),
             'f1-score': '{:.2f} ± {:.2f}'.format(np.mean(cum_f1) * 100, abs(np.mean(cum_f1) - ci_f1[0]) * 100),
             'recall': '{:.2f} ± {:.2f}'.format(np.mean(cum_recall) * 100, abs(np.mean(cum_recall) - ci_recall[0]) * 100),
-            'confusion matrix': str(confusion_matrix)
+            #'confusion matrix': str(confusion_matrix)
         }
 
     return results  
@@ -264,15 +263,20 @@ if __name__ == '__main__':
 
     results = {}
 
+    # run baseline 0
+    # for num_shots in ['no', 1, 5, 10]:
+    #     args.num_shots = num_shots
+    #     results[f'baseline0_{num_shots}_shot'] = run_baseline0(args)
+
+    # run baseline 1
+    # cross dataset WITHOUT transfer learning
+    #results.update(run_baseline1(args))
+
+    # run baseline 2
+    # cross dataset WITH transfer learning
     for num_shots in ['no', 1, 5, 10]:
         args.num_shots = num_shots
-        results[f'baseline0_{num_shots}_shot'] = run_baseline0(args)
-
-    #cross dataset without transfer learning
-    results.update(run_baseline1(args))
-    #results.update(run_baseline3(args))
-
-    #results['baseline2'] = run_baseline2(args)
+        results[f'baseline2_{num_shots}_shot'] = run_baseline2(args)
 
     table = {'experiment': []}
     for baseline, result in results.items():
