@@ -167,8 +167,8 @@ def run_baseline2(args):
             model = model.cuda()
 
         train(model, train_loader, optim, criterion, epochs=args.num_epochs, use_cuda=args.use_cuda)
-
-        checkpoint_filepath = os.path.join(args.output, 'source_model.pth')
+        outpath = os.path.join(args.output, args.filepath.split(os.sep)[-1][:-4])
+        checkpoint_filepath = outpath + '.pth'
         with open(checkpoint_filepath, 'wb') as f:
             torch.save(model.state_dict(), f)
 
@@ -227,7 +227,7 @@ def run_baseline2(args):
         results[f'baseline3_{source}_{args.num_shots}_shot'] = {
             'accuracy': '{:.2f} ± {:.2f}'.format(np.mean(cum_acc) * 100, abs(np.mean(cum_acc) - ci_mean[0]) * 100),
             'f1-score': '{:.2f} ± {:.2f}'.format(np.mean(cum_f1) * 100, abs(np.mean(cum_f1) - ci_f1[0]) * 100),
-            'recall': '{:.2f} ± {:.2f}'.format(np.mean(cum_recall) * 100, abs(np.mean(cum_recall) - ci_recall[0]) * 100),
+            'recall': '{:.2f} ± {:.2f}'.format(np.mean(cum_recall) * 100, abs(np.mean(cum_recall) - ci_recall[0]) * 100)
             #'confusion matrix': str(confusion_matrix)
         }
 
@@ -276,7 +276,7 @@ if __name__ == '__main__':
     # cross dataset WITH transfer learning
     for num_shots in ['no', 1, 5, 10]:
         args.num_shots = num_shots
-        results[f'baseline2_{num_shots}_shot'] = run_baseline2(args)
+        results.update(run_baseline2(args))
 
     table = {'experiment': []}
     for baseline, result in results.items():
