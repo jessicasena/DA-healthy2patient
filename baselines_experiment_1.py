@@ -8,9 +8,9 @@ import torch.nn as nn
 from scipy import stats as st
 from torch.utils.data import DataLoader
 
-from data import SensorDataset
-from models import MetaSenseModel
-from utils import train, test
+from utils.data import SensorDataset
+from utils.models import MetaSenseModel
+from utils.utils import train, test
 
 
 def run_baseline0(args):
@@ -80,15 +80,16 @@ def run_baseline1(args):
         train_data = np.array(dataset['Xy_train'][0][data_source][0])
         _train_labels = np.array(dataset['Xy_train'][0][data_source][1])
 
-        labels2idx = {k: idx for idx, k in enumerate(np.unique(_train_labels))}
+        source_labels2idx = {k: idx for idx, k in enumerate(np.unique(_train_labels))}
 
         cum_acc, cum_f1, cum_recall, cum_conf_matrices = [], [], [], []
 
         for fold_idx, fold in enumerate(folds):
             test_data, test_labels = dataset['X_test'][fold['test_idx']].squeeze(), dataset['y_test'][fold['test_idx']]
+            target_labels2idx = {k: idx for idx, k in enumerate(np.unique(test_labels))}
 
-            train_labels = np.array([labels2idx[label] for label in _train_labels])
-            test_labels = np.array([labels2idx[label] for label in test_labels])
+            train_labels = np.array([source_labels2idx[label] for label in _train_labels])
+            test_labels = np.array([target_labels2idx[label] for label in test_labels])
 
             train_set = SensorDataset(train_data, train_labels)
             test_set = SensorDataset(test_data, test_labels)
@@ -264,13 +265,13 @@ if __name__ == '__main__':
     results = {}
 
     # run baseline 0
-    # for num_shots in ['no', 1, 5, 10]:
-    #     args.num_shots = num_shots
-    #     results[f'baseline0_{num_shots}_shot'] = run_baseline0(args)
+    for num_shots in ['no', 1, 5, 10]:
+        args.num_shots = num_shots
+        results[f'baseline0_{num_shots}_shot'] = run_baseline0(args)
 
     # run baseline 1
     # cross dataset WITHOUT transfer learning
-    #results.update(run_baseline1(args))
+    results.update(run_baseline1(args))
 
     # run baseline 2
     # cross dataset WITH transfer learning

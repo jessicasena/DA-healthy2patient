@@ -10,7 +10,7 @@ import torch
 from matplotlib import pyplot as plt
 from sklearn.metrics import accuracy_score, balanced_accuracy_score, f1_score, recall_score, confusion_matrix
 from tqdm import tqdm
-from data import SensorDataset
+from .data import SensorDataset
 import learn2learn as l2l
 from torch.utils.data import DataLoader
 from learn2learn.data.transforms import (ConsecutiveLabels, FusedNWaysKShots,
@@ -22,7 +22,7 @@ def get_metrics(y_true, y_pred):
         'accuracy': accuracy_score(y_true, y_pred),
         'f1-score': f1_score(y_true, y_pred, average='macro'),
         'recall': recall_score(y_true, y_pred, average='macro', zero_division=0),
-        'confusion_matrix': confusion_matrix(y_true, y_pred, normalize='true')
+        'confusion_matrix': confusion_matrix(y_true, y_pred)
     }
 
 
@@ -475,6 +475,11 @@ def tuning_test(learner, test_loader, device):
 
 
 def pairwise_distances_logits(a, b):
+    """
+    Compute the pairwise distance matrix between the vectors in a and b
+    using the pairwise distances between the logits of each vector.
+    d = -||f(x) - c_k||^2 = ||f(x)||^2 - 2 * f(x) * c_k + c_k^2
+    """
     n = a.shape[0]
     m = b.shape[0]
     logits = -((a.unsqueeze(1).expand(n, m, -1) -
