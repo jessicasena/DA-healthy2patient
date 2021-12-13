@@ -7,9 +7,10 @@ from torch.utils.data import DataLoader
 from utils.utils import train
 from utils.data import SensorDataset
 import os
-from sklearn.svm import SVC
+from sklearn.svm import LinearSVC
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error
+from tqdm import tqdm
 
 class Identity(nn.Module):
     def __init__(self):
@@ -61,6 +62,7 @@ def representation_shift(act_ref, act_test):
     Returns:
         representation_shift (float): Mean Wasserstein distance over all channels (D)
     """
+    print("Calculate representation shift\n", flush=True)
     wass_dist = [wasserstein_distance(act_ref[:, channel], act_test[:, channel]) for channel in range(act_ref.shape[1])]
     return np.asarray(wass_dist).mean()
 
@@ -94,6 +96,7 @@ def get_model(args, dataloader, n_classes):
 
     model = MetaSenseModel(n_classes)
     if args.train:
+        print("Train model ...", flush=True)
         criterion = nn.CrossEntropyLoss()
         optim = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
 
@@ -104,6 +107,7 @@ def get_model(args, dataloader, n_classes):
 
         with open(checkpoint_filepath, 'wb') as f:
             torch.save(model.state_dict(), f)
+        print("Done", flush=True)
     else:
         # Reload model weights
         with open(checkpoint_filepath, 'rb') as f:
@@ -115,20 +119,20 @@ def get_model(args, dataloader, n_classes):
 
 
 def calc_a_distance(source_train, target_train, source_test, target_test):
-
+    print("Calculate a-distance\n", flush=True)
     X_train = np.concatenate((source_train, target_train), axis=0)
     y_train = np.concatenate((np.zeros(source_train.shape[0]), np.ones(target_train.shape[0])), axis=0)
 
     X_test = np.concatenate((source_test, target_test), axis=0)
     y_test = np.concatenate((np.zeros(source_test.shape[0]), np.ones(target_test.shape[0])), axis=0)
 
-    model = SVC(kernel='linear', probability=True)
+    model = LinearSVC(verbose=True, random_state=42, max_iter=1000)
     model.fit(X_train, y_train)
 
     #err = model.score(X_test, y_test)
 
-    y_hat = model.predict_proba(X_test)
-    mae = mean_absolute_error(y_test, np.argmax(y_hat))
+    y_hat = model.predict(X_test)
+    mae = mean_absolute_error(y_test, y_hat)
 
     a_distance = 2. * (1. - 2. * mae)
 
@@ -199,10 +203,12 @@ if __name__ == '__main__':
 
     model = get_model(args, reference_loader, len(reference_labels))
 
+    print("Extracting activations - reference", flush=True)
     features_ref = extract_activations(model, reference_loader, args.use_cuda)
 
     in_loader = get_dataloader(args, in_data, in_labels)
 
+    print("Extracting activations - in dataset", flush=True)
     features_in = extract_activations(model, in_loader, args.use_cuda)
     wass_in_distance = representation_shift(features_ref, features_in)
 
@@ -210,7 +216,7 @@ if __name__ == '__main__':
 
     repr_shift.append('Out-of-distribution distance:\n')
 
-    for out_name in out_datasets:
+    for out_name in tqdm(out_datasets):
         out_data, out_labels = dataset['Xy_train'][0][out_name]
         out_data, out_labels = np.array(out_data).squeeze(), np.array(out_labels)
         out_labels2idx = {k: idx for idx, k in enumerate(np.unique(out_labels))}
@@ -221,6 +227,7 @@ if __name__ == '__main__':
         out_train_loader = get_dataloader(args, out_X_train, out_y_train)
         out_test_loader = get_dataloader(args, out_X_test, out_y_test)
 
+        print(f"Extracting activations - out  ({out_name})", flush=True)
         features_out_train = extract_activations(model, out_train_loader, args.use_cuda)
         features_out_test = extract_activations(model, out_test_loader, args.use_cuda)
         wass_out_distance = representation_shift(features_ref, features_out_test)
@@ -228,7 +235,7 @@ if __name__ == '__main__':
         repr_shift.append('{}: {}\n'.format(out_name, wass_out_distance))
 
         a_dist = calc_a_distance(features_ref, features_in, features_out_train, features_out_test)
-        adistance.append(f'{out_name}: {adistance}')
+        adistance.append(f'{out_name}: {a_dist}')
 
     for line in repr_shift:
         f.write(line)
