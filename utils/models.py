@@ -23,42 +23,36 @@ class MiniMetaSenseModel(nn.Module):
         super(MiniMetaSenseModel, self).__init__()
 
         self.features = nn.Sequential(
-            nn.Conv1d(3, 8, kernel_size=3),
-            nn.ReLU(True),
-            nn.BatchNorm1d(8),
-
-            nn.Conv1d(8, 16, kernel_size=3),
+            nn.Conv1d(3, 16, kernel_size=3),
             nn.ReLU(True),
             nn.BatchNorm1d(16),
 
             nn.Conv1d(16, 32, kernel_size=3),
             nn.MaxPool1d(2),
             nn.BatchNorm1d(32),
+            nn.Dropout(0.5),
             nn.ReLU(True),
 
             nn.Conv1d(32, 64, kernel_size=3),
+            nn.Dropout(0.5),
             nn.ReLU(True),
-            nn.BatchNorm1d(64),
-
-            nn.Conv1d(64, 128, kernel_size=3),
-            nn.MaxPool1d(2),
-            nn.ReLU(True),
-            nn.BatchNorm1d(128),
+            nn.BatchNorm1d(64)
         )
 
         self.classifier = nn.Sequential(
 
-            nn.Linear(128, 64),
+            nn.Linear(64, 32),
+            nn.Dropout(0.5),
             nn.ReLU(True),
-            nn.BatchNorm1d(64),
+            nn.BatchNorm1d(32),
 
-            nn.Linear(64, n_classes))
+            nn.Linear(32, n_classes))
 
     def forward(self, x):
         x = self.features(x)
-        x = torch.mean(x, dim=2)
-        out = self.classifier(x)
-        return out
+        y = torch.mean(x, dim=2)
+        out = self.classifier(y)
+        return out, y
 
 
 class MetaSenseModel(nn.Module):
@@ -118,9 +112,9 @@ class MetaSenseModel(nn.Module):
 
     def forward(self, x):
         x = self.features(x)
-        x = torch.mean(x, dim=2)
-        out = self.classifier(x)
-        return out
+        y = torch.mean(x, dim=2)
+        out = self.classifier(y)
+        return out, y
 
 
 class ProtoMetaSenseModel(nn.Module):

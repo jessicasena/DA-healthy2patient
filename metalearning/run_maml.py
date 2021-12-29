@@ -17,7 +17,7 @@ from torch.utils.data import DataLoader
 from utils.data import TargetDataset
 from utils.models import MetaSenseModel
 from utils.utils import (meta_test, multi_meta_train, multi_metaloaders,
-                   save_plot_adapt_steps)
+                   save_plot_adapt_steps, balanced_dataset)
 
 
 def main(args):
@@ -37,6 +37,13 @@ def main(args):
 
     dataset = np.load(args.file_path, allow_pickle=True)
     source_datasets = dataset['Xy_train'][0]
+
+    # source_datasets = {}
+    # # balance datasets
+    # for name, (_data, _labels) in unbalanced_source_datasets.items():
+    #     print(f"Source: {name}", flush=True)
+    #     data, labels = balanced_dataset(_data, _labels)
+    #     source_datasets[name] = [data, labels]
 
     metaloaders = multi_metaloaders(source_datasets, num_workers, prefetch_factor, args)
 

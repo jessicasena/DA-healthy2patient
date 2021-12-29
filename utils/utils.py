@@ -25,17 +25,29 @@ def get_metrics(y_true, y_pred):
         'confusion_matrix': confusion_matrix(y_true, y_pred)
     }
 
+def balanced_dataset(X, y):
+    from imblearn.under_sampling import RandomUnderSampler
+    from collections import Counter
+    under_sampler = RandomUnderSampler(random_state=42)
+    X_res, y_res = under_sampler.fit_resample(np.array(X).reshape(-1, 1), np.array(y).reshape(-1, 1))
+    print(f"Statistics before balancing: {Counter(y)}", flush=True)
+    print(f"Statistics after balancing: {Counter(y_res)}", flush=True)
+
+    return X_res.squeeze(), y_res.squeeze()
 
 def train(model, loader, optimizer, criterion, epochs=100, use_cuda=True):
+
     for epoch in range(epochs):
+        model.train()
         with tqdm(loader) as pbar:
             epoch_desc = 'Epoch {{0: <{0}d}}'.format(1 + int(math.log10(epochs))).format(epoch + 1)
             pbar.set_description(epoch_desc)
             for inputs, targets in pbar:
                 if use_cuda:
                     inputs, targets = inputs.cuda(), targets.cuda()
-
-                preds = model(inputs)
+                #optimizer.zero_grad()
+                model.zero_grad()
+                preds, _ = model(inputs)
                 loss = criterion(preds, targets.long())
 
                 if use_cuda:
@@ -48,7 +60,7 @@ def train(model, loader, optimizer, criterion, epochs=100, use_cuda=True):
 
                 pbar.set_postfix(loss='{0:.6f}'.format(loss), accuracy='{0:.04f}'.format(metrics['accuracy']))
 
-                optimizer.zero_grad()
+                #optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
 
@@ -62,7 +74,7 @@ def test(model, loader, use_cuda=True):
         if use_cuda:
             inputs, targets = inputs.cuda(), targets.cuda()
         
-        preds = model(inputs)
+        preds, _ = model(inputs)
 
         if use_cuda:
             targets = targets.cpu()
@@ -117,101 +129,101 @@ def accuracy(predictions, targets):
     return (predictions == targets).sum().float() / targets.size(0)
 
 
-def meta_train(model, device, loss, results_path, meta_loader, opt, scheduler, parameters, args):
-    best_value = - float("inf")
-
-    model_path = os.path.abspath(os.path.join(results_path, 'best_model.th'))
-
-    if args.tensorboard:
-        from torch.utils.tensorboard import SummaryWriter
-
-        now = datetime.now()
-        time_now = now.strftime("%d_%m_%Y_%Hh_%Mm_%Ss")
-
-        exp = f'mini_mlr{args.meta_lr}_flr{args.fast_lr}_metab{args.meta_bsz}_tststep{args.test_steps}_trtstep{args.train_steps}_{time_now}'
-
-        results_path = os.path.join(results_path, "tensorboard", exp)
-        writer = SummaryWriter(results_path)
-
-
-    # Presetting lists.
-    train_inner_errors = []
-    train_inner_accuracies = []
-    ma_accs = []
-
-    # Outer loop.
-    iteration = 0
-    while True:
-
-        for batch in meta_loader:
-
-            opt.zero_grad()
-
-            meta_valid_error = 0.0
-            meta_valid_accuracy = 0.0
-            accu = 0.0
-
-            # Inner loop.
-            for task in range(args.meta_bsz):
-                # Compute meta-training loss
-                learner = model.clone()
-                evaluation_error, evaluation_accuracy = fast_adapt(batch,
-                                                                   task,
-                                                                   learner,
-                                                                   loss,
-                                                                   args.train_steps,
-                                                                   args.shots,
-                                                                   args.ways,
-                                                                   device)
-                evaluation_error.backward()
-                meta_valid_error += evaluation_error.item()
-                meta_valid_accuracy += evaluation_accuracy.item()
-
-            if meta_valid_accuracy / args.meta_bsz > best_value:
-                best_value = meta_valid_accuracy / args.meta_bsz
-                with open(model_path, 'wb') as f:
-                    torch.save(model.state_dict(), f)
-
-            train_inner_errors.append(meta_valid_error / args.meta_bsz)
-            train_inner_accuracies.append(meta_valid_accuracy / args.meta_bsz)
-
-            ma_acc = np.mean(train_inner_accuracies[-50:]) if len(train_inner_accuracies) > 50 else 0
-            ma_accs.append(ma_acc)
-
-            if args.tensorboard:
-                writer.add_scalar("Loss/train", meta_valid_error / args.meta_bsz, iteration)
-                writer.add_scalar("Accuracy/train", meta_valid_accuracy / args.meta_bsz, iteration)
-                writer.add_scalar("Accuracy/train-ma_acc", ma_acc, iteration)
-
-
-            # Print metrics.
-            print(f'Iter {iteration + 1}/{args.iterations} - trn [loss: {meta_valid_error / args.meta_bsz:.4f} '
-                  f'- acc: {meta_valid_accuracy / args.meta_bsz:.4f} - ma_acc: {ma_acc:.4f}]', flush=True)
-
-            # Track accuracy.
-            if (iteration + 1) % args.test_interval == 0 or (iteration + 1) == args.iterations:
-                # # save plot with test accuracy
-                # save_plot(args.test_interval, iteration, test_inner_accuracies, 'test_acc', results_path)
-                # save_plot(args.test_interval, iteration, test_inner_errors, 'test_loss', results_path)
-
-                save_plot_2lines(train_inner_accuracies, ma_accs, results_path)
-
-            # Average the accumulated gradients and optimize.
-            for p in parameters:
-                p.grad.data.mul_(1.0 / args.meta_bsz)
-
-            opt.step()
-
-            # Take LR scheduler step.
-            scheduler.step()
-
-            iteration = iteration + 1
-
-            if (iteration + 1) >= args.iterations:
-                break
-
-        if (iteration + 1) >= args.iterations:
-            break
+# def meta_train(model, device, loss, results_path, meta_loader, opt, scheduler, parameters, args):
+#     best_value = - float("inf")
+#
+#     model_path = os.path.abspath(os.path.join(results_path, 'best_model.th'))
+#
+#     if args.tensorboard:
+#         from torch.utils.tensorboard import SummaryWriter
+#
+#         now = datetime.now()
+#         time_now = now.strftime("%d_%m_%Y_%Hh_%Mm_%Ss")
+#
+#         exp = f'mini_mlr{args.meta_lr}_flr{args.fast_lr}_metab{args.meta_bsz}_tststep{args.test_steps}_trtstep{args.train_steps}_{time_now}'
+#
+#         results_path = os.path.join(results_path, "tensorboard", exp)
+#         writer = SummaryWriter(results_path)
+#
+#
+#     # Presetting lists.
+#     train_inner_errors = []
+#     train_inner_accuracies = []
+#     ma_accs = []
+#
+#     # Outer loop.
+#     iteration = 0
+#     while True:
+#
+#         for batch in meta_loader:
+#
+#             opt.zero_grad()
+#
+#             meta_valid_error = 0.0
+#             meta_valid_accuracy = 0.0
+#             accu = 0.0
+#
+#             # Inner loop.
+#             for task in range(args.meta_bsz):
+#                 # Compute meta-training loss
+#                 learner = model.clone()
+#                 evaluation_error, evaluation_accuracy = fast_adapt(batch,
+#                                                                    task,
+#                                                                    learner,
+#                                                                    loss,
+#                                                                    args.train_steps,
+#                                                                    args.shots,
+#                                                                    args.ways,
+#                                                                    device)
+#                 evaluation_error.backward()
+#                 meta_valid_error += evaluation_error.item()
+#                 meta_valid_accuracy += evaluation_accuracy.item()
+#
+#             if meta_valid_accuracy / args.meta_bsz > best_value:
+#                 best_value = meta_valid_accuracy / args.meta_bsz
+#                 with open(model_path, 'wb') as f:
+#                     torch.save(model.state_dict(), f)
+#
+#             train_inner_errors.append(meta_valid_error / args.meta_bsz)
+#             train_inner_accuracies.append(meta_valid_accuracy / args.meta_bsz)
+#
+#             ma_acc = np.mean(train_inner_accuracies[-50:]) if len(train_inner_accuracies) > 50 else 0
+#             ma_accs.append(ma_acc)
+#
+#             if args.tensorboard:
+#                 writer.add_scalar("Loss/train", meta_valid_error / args.meta_bsz, iteration)
+#                 writer.add_scalar("Accuracy/train", meta_valid_accuracy / args.meta_bsz, iteration)
+#                 writer.add_scalar("Accuracy/train-ma_acc", ma_acc, iteration)
+#
+#
+#             # Print metrics.
+#             print(f'Iter {iteration + 1}/{args.iterations} - trn [loss: {meta_valid_error / args.meta_bsz:.4f} '
+#                   f'- acc: {meta_valid_accuracy / args.meta_bsz:.4f} - ma_acc: {ma_acc:.4f}]', flush=True)
+#
+#             # Track accuracy.
+#             if (iteration + 1) % args.test_interval == 0 or (iteration + 1) == args.iterations:
+#                 # # save plot with test accuracy
+#                 # save_plot(args.test_interval, iteration, test_inner_accuracies, 'test_acc', results_path)
+#                 # save_plot(args.test_interval, iteration, test_inner_errors, 'test_loss', results_path)
+#
+#                 save_plot_2lines(train_inner_accuracies, ma_accs, results_path)
+#
+#             # Average the accumulated gradients and optimize.
+#             for p in parameters:
+#                 p.grad.data.mul_(1.0 / args.meta_bsz)
+#
+#             opt.step()
+#
+#             # Take LR scheduler step.
+#             scheduler.step()
+#
+#             iteration = iteration + 1
+#
+#             if (iteration + 1) >= args.iterations:
+#                 break
+#
+#         if (iteration + 1) >= args.iterations:
+#             break
 
 
 def multi_meta_train(model, device, loss, results_path, meta_loaders, opt, scheduler, parameters, args):
@@ -243,6 +255,7 @@ def multi_meta_train(model, device, loss, results_path, meta_loaders, opt, sched
             for batch in meta_loader:
 
                 opt.zero_grad()
+                model.zero_grad()
 
                 meta_valid_error = 0.0
                 meta_valid_accuracy = 0.0
@@ -250,6 +263,9 @@ def multi_meta_train(model, device, loss, results_path, meta_loaders, opt, sched
 
                 # Inner loop.
                 for task in range(args.meta_bsz):
+                    opt.zero_grad()
+                    model.zero_grad()
+                    model.train()
                     # Compute meta-training loss
                     learner = model.clone()
                     evaluation_error, evaluation_accuracy = fast_adapt(batch,
@@ -260,9 +276,11 @@ def multi_meta_train(model, device, loss, results_path, meta_loaders, opt, sched
                                                                     args.shots,
                                                                     args.ways,
                                                                     device)
+                    model.zero_grad()
                     evaluation_error.backward()
                     meta_valid_error += evaluation_error.item()
                     meta_valid_accuracy += evaluation_accuracy.item()
+
 
                 if meta_valid_accuracy / args.meta_bsz > best_value:
                     best_value = meta_valid_accuracy / args.meta_bsz
@@ -350,6 +368,8 @@ def meta_test(model, results_path, tune_loader, test_loader, loss, test_steps, t
     print("Testing", flush=True)
     with open(model_path, 'rb') as f:
         model.load_state_dict(torch.load(f, map_location=device))
+
+
     # Compute meta-testing loss.
     learner = copy.deepcopy(model)
     adapt_values = fast_adapt_tuning(tune_loader,
@@ -372,8 +392,7 @@ def fast_adapt_tuning(
         device,
         adapt_test_interval=5):
 
-
-
+    learner.train()
     # Setting tuning optimizer.
     adapt_opt = torch.optim.Adam(list(learner.parameters()),
                                  lr=tune_lr,
@@ -396,8 +415,9 @@ def fast_adapt_tuning(
             lab = lab.to(device)
 
             adapt_opt.zero_grad()
+            learner.zero_grad()
 
-            prd = learner(acc)
+            prd, _ = learner(acc)
 
             err = loss(prd, lab)
 
@@ -435,10 +455,11 @@ def fast_adapt(batch,
     evaluation_data, evaluation_labels = data[evaluation_indices], labels[evaluation_indices]
 
     for _ in range(adaptation_steps):
-        train_error = loss(learner(adaptation_data), adaptation_labels)
+        predictions, _ = learner(adaptation_data)
+        train_error = loss(predictions, adaptation_labels)
         learner.adapt(train_error)
 
-    predictions = learner(evaluation_data)
+    predictions, _ = learner(evaluation_data)
     valid_error = loss(predictions, evaluation_labels)
     valid_accuracy = balanced_accuracy_score(predictions.max(1)[1].cpu().numpy(), evaluation_labels.cpu().numpy())
     return valid_error, valid_accuracy
@@ -460,7 +481,7 @@ def tuning_test(learner, test_loader, device):
             acc = acc.to(device)
             lab = lab.to(device)
 
-            prd = learner(acc)
+            prd, _ = learner(acc)
 
             prd_list.extend(prd.max(1)[1].cpu().numpy().tolist())
             lab_list.extend(lab.cpu().numpy().tolist())
