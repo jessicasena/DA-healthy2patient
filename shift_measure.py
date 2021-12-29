@@ -12,13 +12,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error
 from tqdm import tqdm
 
-class Identity(nn.Module):
-    def __init__(self):
-        super(Identity, self).__init__()
-
-    def forward(self, x):
-        return x
-
 def extract_activations(model, dataloader, use_cuda, max_samples=1000):
     """
     Iterate though each (subset of) dataset and store activations.
@@ -42,7 +35,7 @@ def extract_activations(model, dataloader, use_cuda, max_samples=1000):
             print(f'\r{idx}/{min(len(dataloader), max_samples)}', end="")
             if use_cuda:
                 batch = batch.cuda()
-            out = model(batch)
+            _, out = model(batch)
 
             if use_cuda:
                 out = out.cpu()
@@ -113,8 +106,6 @@ def get_model(args, dataloader, n_classes):
         with open(checkpoint_filepath, 'rb') as f:
             model.load_state_dict(torch.load(f, map_location=device))
 
-    setattr(model, 'fc', Identity())
-
     return model
 
 
@@ -126,17 +117,13 @@ def calc_a_distance(source_train, target_train, source_test, target_test):
     X_test = np.concatenate((source_test, target_test), axis=0)
     y_test = np.concatenate((np.zeros(source_test.shape[0]), np.ones(target_test.shape[0])), axis=0)
 
-    model = LinearSVC(verbose=True, random_state=42, max_iter=1000)
+    model = LinearSVC(verbose=True, random_state=42, max_iter=10000)
     model.fit(X_train, y_train)
-
-    #err = model.score(X_test, y_test)
 
     y_hat = model.predict(X_test)
     mae = mean_absolute_error(y_test, y_hat)
 
     a_distance = 2. * (1. - 2. * mae)
-
-    #a_distance = 2. * (1. - 2. * err)
 
     return a_distance
 
@@ -227,15 +214,15 @@ if __name__ == '__main__':
         out_train_loader = get_dataloader(args, out_X_train, out_y_train)
         out_test_loader = get_dataloader(args, out_X_test, out_y_test)
 
-        print(f"Extracting activations - out  ({out_name})", flush=True)
+        print(f"Extracting activations - out  ({out_name})\n", flush=True)
         features_out_train = extract_activations(model, out_train_loader, args.use_cuda)
         features_out_test = extract_activations(model, out_test_loader, args.use_cuda)
         wass_out_distance = representation_shift(features_ref, features_out_test)
 
-        repr_shift.append('{}: {}\n'.format(out_name, wass_out_distance))
+        repr_shift.append(f'{out_name}: {wass_out_distance}\n')
 
         a_dist = calc_a_distance(features_ref, features_in, features_out_train, features_out_test)
-        adistance.append(f'{out_name}: {a_dist}')
+        adistance.append(f'{out_name}: {a_dist}\n')
 
     for line in repr_shift:
         f.write(line)
