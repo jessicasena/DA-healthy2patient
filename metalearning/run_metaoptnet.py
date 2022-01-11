@@ -124,7 +124,7 @@ if __name__ == '__main__':
         nTestNovel=opt.way * opt.train_query, # num test examples for all the novel categories
         nTestBase=0, # num test examples for all the base categories
         batch_size=opt.episodes_per_batch,
-        num_workers=4,
+        num_workers=0,
         epoch_size=opt.episodes_per_batch * 1000, # num of batches per epoch
     )
 
@@ -155,8 +155,9 @@ if __name__ == '__main__':
                                  {'params': cls_head.parameters()}], lr=0.1, momentum=0.9, \
                                           weight_decay=5e-4, nesterov=True)
     
-    lambda_epoch = lambda e: 1.0 if e < 20 else (0.06 if e < 40 else 0.012 if e < 50 else (0.0024))
-    lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda_epoch, last_epoch=-1)
+    #lambda_epoch = lambda e: 1.0 if e < 20 else (0.06 if e < 40 else 0.012 if e < 50 else (0.0024))
+    #lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda_epoch, last_epoch=-1)
+    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, opt.num_epoch // 6, gamma=0.5)
 
     max_val_acc = 0.0
 
@@ -279,7 +280,7 @@ if __name__ == '__main__':
             nTestNovel=opt.test_query * opt.way,  # num test examples for all the novel categories
             nTestBase=0,  # num test examples for all the base categories
             batch_size=1,
-            num_workers=2,
+            num_workers=0,
             epoch_size=opt.test_episode,  # num of batches per epoch
         )
 

@@ -11,6 +11,7 @@ import torch.utils.data as data
 
 import torchnet as tnt
 import sys
+from transforms3d.axangles import axangle2mat
 
 def buildLabelIndex(labels):
     label2inds = {}
@@ -47,6 +48,27 @@ def padding(h):
     pad = (ideal_size - h) / 2
     return int(pad)
 
+def DA_Rotation(X):
+    axis = np.random.uniform(low=-1, high=1, size=X.shape[1])
+    angle = np.random.uniform(low=-np.pi, high=np.pi)
+    return np.matmul(X, axangle2mat(axis, angle))
+
+def DA_Permutation(X, nPerm=4, minSegLength=10):
+    X_new = np.zeros(X.shape)
+    idx = np.random.permutation(nPerm)
+    bWhile = True
+    while bWhile == True:
+        segs = np.zeros(nPerm+1, dtype=int)
+        segs[1:-1] = np.sort(np.random.randint(minSegLength, X.shape[0]-minSegLength, nPerm-1))
+        segs[-1] = X.shape[0]
+        if np.min(segs[1:]-segs[0:-1]) > minSegLength:
+            bWhile = False
+    pp = 0
+    for ii in range(nPerm):
+        x_temp = X[segs[idx[ii]]:segs[idx[ii]+1],:]
+        X_new[pp:pp+len(x_temp),:] = x_temp
+        pp += len(x_temp)
+    return(X_new)
 
 class SensorDataset(data.Dataset):
     def __init__(self, file_path, num_shots=1, fold=0, phase='train'):
@@ -118,12 +140,19 @@ class SensorDataset(data.Dataset):
         self.padding_size = padding(self.data[0].shape[-1])
         self.class_to_idx = {v: k for k, v in enumerate( np.unique(self.labels))}
 
-
     def __getitem__(self, index):
         if torch.is_tensor(index):
             index = index.tolist()
 
         sample = self.data[index].squeeze()
+        if self.phase != 'test':
+            sample = np.transpose(sample, (1, 0))
+            if random.randrange(3) == 0:
+                sample = DA_Rotation(sample)
+            if random.randrange(3) == 0:
+                sample = DA_Permutation(sample, minSegLength=20)
+            sample = np.transpose(sample, (1, 0))
+
         sample = sample.astype(np.float32)
         sample = np.pad(sample, ((0, 0), (self.padding_size, self.padding_size)), mode='constant')
         target = self.class_to_idx[self.labels[index]]

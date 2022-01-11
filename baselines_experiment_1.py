@@ -283,7 +283,8 @@ if __name__ == '__main__':
     # run baseline 0
     if args.base0:
         print('Running baseline 0\n', flush=True)
-        for num_shots in ['no', 1, 5, 10]:
+        #for num_shots in ['no', 1, 5, 10]:
+        for num_shots in [1, 5, 10]:
             args.num_shots = num_shots
             results[f'baseline0_{num_shots}_shot'] = run_baseline0(args)
 

@@ -39,7 +39,7 @@ def binv(b_mat):
     id_matrix = b_mat.new_ones(b_mat.size(-1)).diag().expand_as(b_mat)
     if torch.cuda.is_available():
         id_matrix = id_matrix.cuda()
-    b_inv, _ = torch.gesv(id_matrix, b_mat)
+    b_inv, _ = torch.solve(id_matrix, b_mat)
     
     return b_inv
 
@@ -100,7 +100,10 @@ def MetaOptNetHead_Ridge(query, support, support_labels, n_way, n_shot, lambda_r
     
     #\alpha is an (n_support, n_way) matrix
     kernel_matrix = computeGramMatrix(support, support)
-    kernel_matrix += lambda_reg * torch.eye(n_support).expand(tasks_per_batch, n_support, n_support)
+    t_eye = torch.eye(n_support).expand(tasks_per_batch, n_support, n_support)
+    if torch.cuda.is_available():
+        t_eye = t_eye.cuda()
+    kernel_matrix += lambda_reg * t_eye
     if torch.cuda.is_available():
         kernel_matrix = kernel_matrix.cuda()
 
