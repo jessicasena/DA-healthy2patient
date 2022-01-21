@@ -10,7 +10,6 @@ import torch
 import torch.utils.data as data
 
 import torchnet as tnt
-import sys
 from transforms3d.axangles import axangle2mat
 
 def buildLabelIndex(labels):
