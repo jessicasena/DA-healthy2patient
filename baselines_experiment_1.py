@@ -49,26 +49,21 @@ def run_baseline0(args):
 
         print()
         for k, v in metrics.items():
-            if k == 'confusion_matrix':
-                print('Fold {} {}: {}'.format(fold_idx + 1, k.capitalize(), v))
-            else:
+            if k != 'confusion_matrix':
                 print('Fold {} {}: {:.04f}'.format(fold_idx + 1, k.capitalize(), v))
 
         cum_acc.append(metrics['accuracy'])
         cum_f1.append(metrics['f1-score'])
         cum_recall.append(metrics['recall'])
-        cum_conf_matrices.append(metrics['confusion_matrix'])
 
     ci_mean = st.t.interval(0.9, len(cum_acc) - 1, loc=np.mean(cum_acc), scale=st.sem(cum_acc))
     ci_f1 = st.t.interval(0.9, len(cum_f1) -1, loc=np.mean(cum_f1), scale=st.sem(cum_f1))
     ci_recall = st.t.interval(0.9, len(cum_recall) -1, loc=np.mean(cum_recall), scale=st.sem(cum_recall))
-    confusion_matrix = sum(cum_conf_matrices)
 
     return {
         'accuracy': '{:.2f} ± {:.2f}'.format(np.mean(cum_acc) * 100, abs(np.mean(cum_acc) - ci_mean[0]) * 100),
         'f1-score': '{:.2f} ± {:.2f}'.format(np.mean(cum_f1) * 100, abs(np.mean(cum_f1) - ci_f1[0]) * 100),
         'recall': '{:.2f} ± {:.2f}'.format(np.mean(cum_recall) * 100, abs(np.mean(cum_recall) - ci_recall[0]) * 100),
-        #'confusion matrix': str(confusion_matrix)
     }
 
 def run_baseline1(args):
@@ -111,26 +106,21 @@ def run_baseline1(args):
             metrics = test(model, test_loader, use_cuda=args.use_cuda)
 
             for k, v in metrics.items():
-                if k == 'confusion_matrix':
-                    print('Fold {} {}: {}'.format(fold_idx + 1, k.capitalize(), v))
-                else:
+                if k != 'confusion_matrix':
                     print('Fold {} {}: {:.04f}'.format(fold_idx + 1, k.capitalize(), v))
 
             cum_acc.append(metrics['accuracy'])
             cum_f1.append(metrics['f1-score'])
             cum_recall.append(metrics['recall'])
-            #cum_conf_matrices.append(metrics['confusion_matrix'])
 
         ci_mean = st.t.interval(0.9, len(cum_acc) - 1, loc=np.mean(cum_acc), scale=st.sem(cum_acc))
         ci_f1 = st.t.interval(0.9, len(cum_f1) -1, loc=np.mean(cum_f1), scale=st.sem(cum_f1))
         ci_recall = st.t.interval(0.9, len(cum_recall) -1, loc=np.mean(cum_recall), scale=st.sem(cum_recall))
-        #confusion_matrix = sum(cum_conf_matrices)
 
         base1_results[f'baseline1_no_shot_{data_source}'] = {
             'accuracy': '{:.2f} ± {:.2f}'.format(np.mean(cum_acc) * 100, abs(np.mean(cum_acc) - ci_mean[0]) * 100),
             'f1-score': '{:.2f} ± {:.2f}'.format(np.mean(cum_f1) * 100, abs(np.mean(cum_f1) - ci_f1[0]) * 100),
             'recall': '{:.2f} ± {:.2f}'.format(np.mean(cum_recall) * 100, abs(np.mean(cum_recall) - ci_recall[0]) * 100),
-            #'confusion matrix': str(confusion_matrix)
         }
 
     return base1_results
@@ -223,26 +213,21 @@ def run_baseline2(args):
             metrics = test(model, test_loader, use_cuda=args.use_cuda)
 
             for k, v in metrics.items():
-                if k == 'confusion_matrix':
-                    print('Fold {} {}: {}'.format(fold_idx + 1, k.capitalize(), v))
-                else:
+                if k != 'confusion_matrix':
                     print('Fold {} {}: {:.04f}'.format(fold_idx + 1, k.capitalize(), v))
 
             cum_acc.append(metrics['accuracy'])
             cum_f1.append(metrics['f1-score'])
             cum_recall.append(metrics['recall'])
-            #cum_conf_matrices.append(metrics['confusion_matrix'])
 
         ci_mean = st.t.interval(0.9, len(cum_acc) - 1, loc=np.mean(cum_acc), scale=st.sem(cum_acc))
         ci_f1 = st.t.interval(0.9, len(cum_f1) -1, loc=np.mean(cum_f1), scale=st.sem(cum_f1))
         ci_recall = st.t.interval(0.9, len(cum_recall) -1, loc=np.mean(cum_recall), scale=st.sem(cum_recall))
-        #confusion_matrix = sum(cum_conf_matrices)
 
         results[f'baseline2_{source}_{args.num_shots}_shot'] = {
             'accuracy': '{:.2f} ± {:.2f}'.format(np.mean(cum_acc) * 100, abs(np.mean(cum_acc) - ci_mean[0]) * 100),
             'f1-score': '{:.2f} ± {:.2f}'.format(np.mean(cum_f1) * 100, abs(np.mean(cum_f1) - ci_f1[0]) * 100),
             'recall': '{:.2f} ± {:.2f}'.format(np.mean(cum_recall) * 100, abs(np.mean(cum_recall) - ci_recall[0]) * 100)
-            #'confusion matrix': str(confusion_matrix)
         }
 
     return results  
@@ -254,6 +239,7 @@ if __name__ == '__main__':
     # General
     parser.add_argument('filepath', type=str, help='Path to `.npz` file.')
     parser.add_argument('-o', '--output', type=str, default=None, help='Output path folder')
+    parser.add_argument('-n', '--num_ways', type=int, required=True, help='Number of classes')
 
     # Optimization
     parser.add_argument('-b', '--batch-size', type=int, default=256, help='Number of instances per batch')
@@ -269,7 +255,6 @@ if __name__ == '__main__':
     parser.add_argument('--base2', action='store_true')
 
     args = parser.parse_args()
-    args.num_ways = 3
 
     args.use_cuda = torch.cuda.is_available()
     
@@ -298,7 +283,7 @@ if __name__ == '__main__':
     if args.base2:
         print("Running baseline 2\n", flush=True)
         # cross dataset WITH transfer learning
-        for num_shots in ['no', 1, 5, 10]:
+        for num_shots in [1, 5, 10]:
         #for num_shots in [1]:
             print("Shot: {}\n".format(num_shots), flush=True)
             args.num_shots = num_shots

@@ -145,16 +145,16 @@ if __name__ == '__main__':
 
     # TODO add help information to each argument
     parser = argparse.ArgumentParser(description='Process some integers.')
-    parser.add_argument('--results_path', type=str, default='/shared/sense/sensor_domination/results/nshot_experiments/')
-    parser.add_argument('--file_path', type=str, required=True)
-    parser.add_argument('--ways', required=True, type=int)
+    parser.add_argument('--results_path', type=str, default='/home/jsenadesouza/DA-healthy2patient/results/maml/')
+    parser.add_argument('--file_path', type=str, default='/home/jsenadesouza/DA-healthy2patient/results/dataset/f20_t5_2ways_inbed_FSL.npz')
+    parser.add_argument('--ways', type=int, default=2)
     parser.add_argument('--shots', required=True, type=int)
     parser.add_argument('--debug', action='store_true')
     parser.add_argument('--folds', default=0, type=int)
     parser.add_argument('--tensorboard', action='store_true')
-    parser.add_argument('--meta_lr', default=0.006, type=float)
-    parser.add_argument('--fast_lr', default=0.03, type=float)
-    parser.add_argument('--tune_lr', default=0.002, type=float)
+    parser.add_argument('--meta_lr', default=0.0001, type=float)
+    parser.add_argument('--fast_lr', default=0.1, type=float)
+    parser.add_argument('--tune_lr', default=0.01, type=float)
     parser.add_argument('--seed', default=42, type=int)
     parser.add_argument('--meta_bsz', default=3, type=int)
     parser.add_argument('--train_bsz', default=5, type=int)
@@ -162,7 +162,7 @@ if __name__ == '__main__':
     parser.add_argument('--iterations', default=5000, type=int)
     parser.add_argument('--test_interval', default=100, type=int)
     parser.add_argument('--test_steps', default=120, type=int)
-    parser.add_argument('--train_steps', default=50, type=int)
+    parser.add_argument('--train_steps', default=10, type=int)
 
     args = parser.parse_args()
 

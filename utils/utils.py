@@ -10,7 +10,7 @@ import torch
 from matplotlib import pyplot as plt
 from sklearn.metrics import accuracy_score, balanced_accuracy_score, f1_score, recall_score, confusion_matrix
 from tqdm import tqdm
-from data import SensorDataset
+from utils.data import SensorDataset
 import learn2learn as l2l
 from torch.utils.data import DataLoader
 from learn2learn.data.transforms import (ConsecutiveLabels, FusedNWaysKShots,
