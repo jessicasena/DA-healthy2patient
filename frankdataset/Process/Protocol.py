@@ -7,6 +7,7 @@ import sys
 sys.path.insert(1, '../')
 from Signal.Transform import interpolate_sensors
 from tqdm import tqdm
+import fnmatch
 
 
 class Loso(object):
@@ -1207,7 +1208,7 @@ class MetaLearningICU(object):
 
         return Xy_train, X_test, y_test
 
-class PatientACC(object):
+class painACCProtocol(object):
     def __init__(self, list_datasets, dir_datasets, exp_name, overlapping=0.0, time_wd=5):
         self.list_datasets = list_datasets
         self.dir_datasets = dir_datasets
@@ -1219,55 +1220,11 @@ class PatientACC(object):
         self.overlapping = overlapping
         self.X = []
         self.y = []
-        self.groups = []
-        self.fundamental_matrix = []
         self.separator = '_'
         self.idx_label = 0
         self.idx_subject = 1
-        self.consult_label = {}
-        self.name_act = False
-        self.name_sub = False
         self.exp_name = exp_name
-        self.var_threshold = 0.0005
-
-    def add_consult_label(self, a):
-        z = self.consult_label.copy()  # start with x's keys and values
-        z.update(a)  # modifies z with y's keys and values & returns None
-        self.consult_label = z.copy()
-
-    # Split trial in samples
-    def sw(self, trial=None, freq=None):
-        r = 0
-        delta = freq * self.time_wd
-        output = []
-
-        sample = trial
-
-        while r + delta < len(sample):
-            block = sample[r:r + delta]
-            output.append(block)
-            r = r + delta
-            r = r - (int(delta * self.overlapping))
-
-        return output
-
-    def subject_trials_and_label_generator(self, files):
-        for pkl in files:
-            with open(pkl, 'rb') as handle:
-                data = pickle.load(handle)
-                fl = [i for i in data.keys()]
-                for file in fl:
-                    idx = file.split(self.separator)[self.idx_subject]
-                    if idx not in self.subject.keys():
-                        self.subject_idx = self.subject_idx + 1
-                        self.subject[idx] = self.subject_idx
-
-                    label = file.split(self.separator)[self.idx_label]
-                    if label not in self.activity.keys():
-                        self.label_idx += 1
-                        self.activity[label] = self.label_idx
-
-        return self.subject, self.activity
+        self.var_threshold = 0.00005
 
     def data_generator(self, files, data_name, dir_input_file, freq_data, new_freq):
 
@@ -1279,76 +1236,11 @@ class PatientACC(object):
                 data = pickle.load(handle)
                 fl = [i for i in data]
                 for file in fl:
-                    label_ = file.split(self.separator)[self.idx_label]
-                    if len(self.consult_label) > 0:
-                        label_ = self.consult_label[label_]
-                    subject_ = file.split("_")[self.idx_subject]
-                    label = self.activity[label_]
-                    subject_idx_ = self.subject[subject_]
-                    subject_name = subject_.split("s")[1]
-
-                    # Filter by source tasks and target tasks
-                    dataset_act = data_name + "-" + label_
-
+                    label_ = file.split(self.separator)[self.idx_label] + "_" + str(int(file.split(self.separator)[self.idx_subject].split("s")[1]))
                     trial = np.squeeze(np.array(data[file]))
 
-                    samples = self.sw(trial=trial, freq=freq_data)
-
-                    if samples:
-                        # remove samples with NaN
-                        new_samples = []
-                        for sample in samples:
-                            array_sum = np.sum(sample)
-                            array_has_nan = np.isnan(array_sum)
-                            if not array_has_nan:
-                                new_samples.append(sample)
-                            else:
-                                if label_ not in count:
-                                    count[label_] = 1
-                                else:
-                                    count[label_] += 1
-                        samples = np.array(new_samples)
-
-                        if freq_data != new_freq:
-                            type_interp = 'cubic'
-                            try:
-                                samples = interpolate_sensors(samples, type_interp, new_freq * self.time_wd)
-                            except:
-                                print('[Interpolation] Sample not used: size {}, local {}'.format(len(samples), file))
-                        else:
-                            samples = np.transpose(np.array(samples), (0, 2, 1))
-
-                        for i in range(0, len(samples)):
-                            self.X.append(np.array([samples[i]]))
-                            new_label = subject_name + "_" + label_
-                            self.y.append(new_label)
-                            self.groups.append(subject_idx_)
-                            self.fundamental_matrix[label][subject_idx_] += 1
-                        #else:
-                        #    print('[Trial crop] Sample not used: size {}, local {}'.format(len(samples), file))
-        print(f'Done. \nNumber of samples per activity removed (NaN values).')
-        for c, v in count.items():
-            print(f'{c} - {v}')
-
-    def remove_subject(self, code):
-        pass
-
-    def remove_action(self, code):
-        pass
-
-    def _to_categorical(self, y, nb_classes=None):
-        '''Convert class vector (integers from 0 to nb_classes)
-        to binary class matrix, for use with categorical models
-        '''
-        if not nb_classes:
-            if 0 in y:
-                nb_classes = np.max(y) + 1
-            else:
-                nb_classes = np.max(y)
-        Y = np.zeros((len(y), nb_classes))
-        for i in range(len(y)):
-            Y[i, self.activity[y[i]]] = 1.
-        return Y
+                    self.X.append(np.array([trial]))
+                    self.y.append(label_)
 
     def get_k_fold(self, X, y, n_folds):
         fold = []
@@ -1359,10 +1251,7 @@ class PatientACC(object):
         return fold
 
     def simple_generate(self, dir_save_file, new_freq=20):
-        if len(self.list_datasets) == 1:
-            name_file = '{}_f{}_t{}'.format(self.list_datasets[0].name, new_freq, self.time_wd)
-        else:
-            name_file = 'f{}_t{}_{}'.format(new_freq, self.time_wd, self.exp_name)
+        name_file = 'f{}_t{}_{}'.format(new_freq, self.time_wd, self.exp_name)
 
         print("Reading pkl files...", flush=True)
 
@@ -1372,35 +1261,37 @@ class PatientACC(object):
             input_dir = dtb.dir_save
             files = glob.glob(os.path.join(input_dir, '*.pkl'))
             for pkl in files:
-                if os.path.split(pkl)[-1].split('_')[0] == dtb.name:
+                if fnmatch.fnmatch(os.path.split(pkl)[-1], dtb.name + '_*.pkl'):
                     files_s[dtb.name].append(pkl)
-            self.subject_trials_and_label_generator(files_s[dtb.name])
         print("Done.", flush=True)
-
-        # Matrix Activity (row) by Subject (col)
-        self.fundamental_matrix = np.zeros((len(self.activity), len(self.subject)))
 
         for id_, dtb in enumerate(self.list_datasets):
             input_dir = dtb.dir_save
             dataset_name = dtb.name
             self.data_generator(files_s[dataset_name], dataset_name, input_dir, dtb.freq, new_freq)
-            # self.add_consult_label(dtb.labels)
-
-        self.groups = np.array(self.groups)
 
         self.X = np.array(self.X, dtype=float)
         self.y = np.array(self.y)
 
-        kfold = self.get_k_fold(self.X, self.y, 5)
+        # remove samples with no movement
+        new_X = []
+        new_y = []
+        count_no_movement = 0
+        for sample, label in zip(self.X, self.y):
+            sample = np.squeeze(sample)
+            var = np.mean([np.var(sample[0, :]), np.var(sample[1, :]), np.var(sample[2, :])])
+            if var > self.var_threshold:
+                new_X.append(sample)
+                new_y.append(label)
+            else:
+                count_no_movement += 1
+        print("{} samples removed because of no movement".format(count_no_movement))
 
-        np.savez_compressed(os.path.join(dir_save_file, name_file + "_kfold"),
+        #kfold = self.get_k_fold(self.X, self.y, 5)
+
+        np.savez_compressed(os.path.join(dir_save_file, name_file),
                             X=self.X,
-                            y=self.y,
-                            folds=kfold)
-
-        # print('Activities performed by less than 2 subjects')
-        # for row in invalid_rows:
-        #     print(row)
+                            y=self.y)
 
 class MetaLoso(object):
     def __init__(self, list_datasets, dir_datasets, tasks_list, exp_name, overlapping=0.0, time_wd=5):

@@ -6,6 +6,10 @@ import matplotlib.pyplot as plt
 import umap
 import copy
 import hdbscan
+from imblearn.under_sampling import RandomUnderSampler
+from multiprocessing import Pool
+import os
+from datetime import datetime
 
 
 def A(sample):
@@ -51,17 +55,33 @@ def ARA(sample):
     return feat
 
 
-def TBP(sample):
-    from scipy import signal
+def COR(sample):
     feat = []
-    sum_of_time = 0
+    for axis_i in range(0, sample.shape[1]):
+        for axis_j in range(axis_i+1, sample.shape[1]):
+            cor = np.corrcoef(sample[:,axis_i], sample[:,axis_j])
+            feat.append(cor[0][1])
+
+    return np.array(feat, dtype=np.float32)
+
+
+def MOV(sample):
+    var_threshold = 0.001
+    var = np.mean([np.var(sample[:, 0]), np.var(sample[:, 1]), np.var(sample[:, 2])])
+    if var > var_threshold:
+        return 1
+    else:
+        return 0
+
+
+def VAR(sample):
+    feat = []
     for col in range(0, sample.shape[1]):
-        data = sample[:, col]
-        peaks = signal.find_peaks_cwt(data, np.arange(1,4))
+        var = np.var(sample[:, col])
+        feat.append(var)
 
-        feat.append(peaks)
+    return np.array(feat, dtype=np.float32)
 
-    return feat
 
 
 def feature_extraction(X):
@@ -73,12 +93,12 @@ def feature_extraction(X):
     # Time Between Peaks - TBP
     X_tmp = []
     for sample in X:
-        features = A(copy.copy(sample))
-        features = np.hstack((features, A(copy.copy(sample))))
-        features = np.hstack((features, SD(copy.copy(sample))))
-        features = np.hstack((features, AAD(copy.copy(sample))))
-        features = np.hstack((features, ARA(copy.copy(sample))))
-        #features = np.hstack((features, TBP(sample)))
+        features = A(sample)
+        features = np.hstack((features, SD(sample)))
+        features = np.hstack((features, AAD(sample)))
+        features = np.hstack((features, ARA(sample)))
+        features = np.hstack((features, VAR(sample)))
+        features = np.hstack((features, MOV(sample)))
         X_tmp.append(features)
 
     X = np.array(X_tmp)
@@ -90,7 +110,7 @@ def get_cmap(n, name='gist_rainbow'):
     return plt.cm.get_cmap(name, n)
 
 
-def print_clusters(n_class, finalDf, exp_name, y_new):
+def print_by_cluster(n_class, finalDf, exp_name, y_new):
     fig = plt.figure(figsize=(20, 20))
     ax = fig.add_subplot(1, 1, 1)
     ax.set_xlabel('First Component', fontsize=15)
@@ -103,7 +123,7 @@ def print_clusters(n_class, finalDf, exp_name, y_new):
         colors.append(cmap(i))
 
     for target, color in zip(targets, colors):
-        indicesToKeep = finalDf['target'] == target
+        indicesToKeep = finalDf['label'] == target
         if target <= 0:
             ax.scatter(finalDf.loc[indicesToKeep, 'First Component']
                        , finalDf.loc[indicesToKeep, 'Second Component']
@@ -114,6 +134,30 @@ def print_clusters(n_class, finalDf, exp_name, y_new):
                        , finalDf.loc[indicesToKeep, 'Second Component']
                        , color=color
                        , s=50)
+    ax.legend(targets)
+    ax.grid()
+    # plt.show()
+    plt.savefig(exp_name + '.png')
+
+
+def print_by_class(n_class, finalDf, exp_name, y_new):
+    fig = plt.figure(figsize=(20, 20))
+    ax = fig.add_subplot(1, 1, 1)
+    ax.set_xlabel('First Component', fontsize=15)
+    ax.set_ylabel('Second Component', fontsize=15)
+    ax.set_title('Umap projection for patiend accelerometer data', fontsize=20)
+    cmap = get_cmap(n_class)
+    targets = np.unique(y_new)
+    colors = []
+    for i in range(n_class):
+        colors.append(cmap(i))
+
+    for target, color in zip(targets, colors):
+        indicesToKeep = finalDf['label'] == target
+        ax.scatter(finalDf.loc[indicesToKeep, 'First Component']
+                   , finalDf.loc[indicesToKeep, 'Second Component']
+                   , color=color
+                   , s=50)
     ax.legend(targets)
     ax.grid()
     # plt.show()
@@ -134,7 +178,7 @@ def print_one_cluster(n_class, finalDf, exp_name, y_patients_id, cluster_number)
     finalDf = finalDf.loc[finalDf['target'] == cluster_number]
 
     for target, color in zip(targets, colors):
-        indicesToKeep = finalDf['patient_id'] == target
+        indicesToKeep = finalDf['label'] == target
         ax.scatter(finalDf.loc[indicesToKeep, 'First Component']
                        , finalDf.loc[indicesToKeep, 'Second Component']
                        , color=color
@@ -148,21 +192,38 @@ def print_one_cluster(n_class, finalDf, exp_name, y_patients_id, cluster_number)
 
 if __name__ == '__main__':
     np.random.seed(42)
-    data_input_file = "/home/jsenadesouza/DA-healthy2patient/results/dataset/IHealth_f100_t5_kfold.npz"
+    data_input_file = "/home/jsenadesouza/DA-healthy2patient/results/pain/dataset/f10_t1800_painscore_patientid_acc_30minmargin_measurednowcol_30min_10hz_filtered_kfold.npz"
+    #feature_file = data_input_file.split('.npz')[0] + '_features.npz'
+    #     np.savez_compressed(data_input_file.split('.npz')[0] + '_features.npz', X=X, y=y, folds=folds)
+
+    print("Extracting features")
     tmp = np.load(data_input_file, allow_pickle=True)
     X = tmp['X']
     y = tmp['y']
     folds = tmp['folds']
-    X = feature_extraction(np.squeeze(X))
+    X = np.transpose(np.squeeze(X), (0, 2, 1))
+    y_label, y_id = [], []
+    for yy in y:
+        y_label.append(yy.split("_")[0])
+        y_id.append(yy.split("_")[1])
 
-    X_flatten = X.reshape((X.shape[0], -1))
+    y = np.array(y_label)
+
+    # Undersampling the data to balance the classes
+    # rus = RandomUnderSampler(random_state=42, sampling_strategy={'none': 1000, 'mild': 1000, 'moderate': 1000, 'severe': 1000})
+    # rus.fit_resample(X[:, :, 0], y)
+    # X, y = X[rus.sample_indices_], y[rus.sample_indices_]
+    # print("Undersampling done")
+
+    X_feat = feature_extraction(X)
 
     embedding = umap.UMAP(
-        n_neighbors=30,
+        n_neighbors=10,
         min_dist=0.0,
         n_components=2,
-        random_state=42,
-    ).fit_transform(X_flatten)
+        random_state=42#,
+        #metric='cosine'
+    ).fit_transform(X_feat)
 
     principalDf = pd.DataFrame(data=embedding
                                , columns=['First Component', 'Second Component'])
@@ -176,17 +237,21 @@ if __name__ == '__main__':
     for yy in y:
         y_patient.append(yy.split('_')[0])
 
-    y_new = labels
+    fold = "/home/jsenadesouza/DA-healthy2patient/results/plot_clusters/"
 
-    n_class = np.unique(y_new).shape[0]
+    n_class = np.unique(y_patient).shape[0]
+    y_class = pd.DataFrame(data=y_patient, columns=['label'])
+    finalDf = pd.concat([principalDf, y_class], axis=1)
+    exp_name = 'clusteredby_pain_' + datetime.now().strftime("%d-%m-%y_%H-%M-%S") + "_"
+    out_folder = os.path.join(fold, exp_name)
+    print_by_class(n_class, finalDf, out_folder, y_class)
 
-    y_pd = pd.DataFrame(data=y_new, columns=['target'])
-    y_pat_id = pd.DataFrame(data=y_patient, columns=['patient_id'])
-
-    finalDf = pd.concat([principalDf, y_pd, y_pat_id], axis=1)
-
-    exp_name = 'umap_handcrafted_features_clustering_hdbscan_cluster_5'
-    print_one_cluster(n_class, finalDf, exp_name, y_pat_id, 5)
+    n_class = np.unique(labels).shape[0]
+    y_cluster = pd.DataFrame(data=labels, columns=['label'])
+    finalDf = pd.concat([principalDf, y_cluster], axis=1)
+    exp_name = 'clusteredbyalgo_' + datetime.now().strftime("%d-%m-%y_%H-%M-%S") + "_"
+    out_folder = os.path.join(fold, exp_name)
+    print_by_cluster(n_class, finalDf, out_folder, y_cluster)
 
 
 
