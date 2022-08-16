@@ -137,9 +137,40 @@ class TargetDataset(data.Dataset):
         return len(self.items)
 
 
-class SensorDataset(data.Dataset):
-    def __init__(self, data, labels, transform=None, target_transform=None):
+class SensorSequence(data.Dataset):
+    def __init__(self, data, labels):
         self.data = data
+        self.labels = labels
+        self.classes = np.unique(labels)
+        self.class_to_idx = {v: k for k, v in enumerate(self.classes)}
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        if torch.is_tensor(idx):
+            idx = idx.tolist()
+
+        sample = self.data[idx].squeeze()
+        sample = np.transpose(sample, (1, 0))
+        # split accelerometer into chunks of size 1 minute (600 values = 60 seconds x 10hz)
+        n = 600
+        chunks = [sample[:, i:i + n] for i in range(0, sample.shape[1], n)]
+        sequences = []
+        for chunk in chunks:
+            chunk = chunk.astype(np.float32)
+            padding_size = padding(chunk.shape[-1])
+            chunk = np.pad(chunk, ((0, 0), (padding_size, padding_size)), mode='constant')
+            sequences.append(chunk)
+        target = self.class_to_idx[self.labels[idx]]
+
+        return np.array(sequences), [], target
+
+
+class SensorDataset(data.Dataset):
+    def __init__(self, data, add_data, labels, transform=None, target_transform=None):
+        self.data = data
+        self.add_data = add_data
         self.labels = labels
         self.transform = transform
         self.target_transform = target_transform
@@ -155,16 +186,19 @@ class SensorDataset(data.Dataset):
             idx = idx.tolist()
 
         sample = self.data[idx].squeeze()
+        add_data_sample = []
+        if self.add_data is not None:
+            add_data_sample = self.add_data[idx]
 
-        sample = np.transpose(sample, (1, 0))
-        if random.randrange(3) == 0:
-            sample = DA_Rotation(sample)
-        if random.randrange(3) == 0:
-            sample = DA_Permutation(sample, minSegLength=20)
+        #sample = np.transpose(sample, (1, 0))
+        # if random.randrange(3) == 0:
+        #     sample = DA_Rotation(sample)
+        # if random.randrange(3) == 0:
+        #     sample = DA_Permutation(sample, minSegLength=20)
         sample = np.transpose(sample, (1, 0))
 
         sample = sample.astype(np.float32)
-        sample = np.pad(sample, ((0, 0), (self.padding_size, self.padding_size)), mode='constant')
+       # sample = np.pad(sample, ((0, 0), (self.padding_size, self.padding_size)), mode='constant')
         target = self.class_to_idx[self.labels[idx]]
 
         if self.transform:
@@ -173,7 +207,7 @@ class SensorDataset(data.Dataset):
         if self.target_transform:
             target = self.target_transform(sample)
 
-        return (sample, target)
+        return (sample, add_data_sample, target)
 
 
 if __name__ == '__main__':

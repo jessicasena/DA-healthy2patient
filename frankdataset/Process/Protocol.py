@@ -1575,3 +1575,129 @@ class MetaLoso(object):
                             X=self.X, y=self.y)
 
 
+class outcomeACCProtocol(object):
+    def __init__(self, list_datasets, dir_datasets, exp_name, overlapping=0.0, time_wd=5):
+        self.list_datasets = list_datasets
+        self.dir_datasets = dir_datasets
+        self.time_wd = time_wd
+        self.activity = {}
+        self.label_idx = -1
+        self.subject = {}
+        self.subject_idx = -1
+        self.overlapping = overlapping
+        self.X = []
+        self.y = []
+        self.separator = '_'
+        self.idx_label = 0
+        self.idx_subject = 1
+        self.exp_name = exp_name
+        self.var_threshold = 0.00005
+
+    def data_generator(self, files, data_name, dir_input_file, freq_data, new_freq):
+
+        print("\nAdding samples from {}".format(data_name), flush=True)
+        count_samples = 0
+        count_patients = []
+        for id_, fl in enumerate(files):
+            pkl = os.path.join(dir_input_file, data_name + '_' + str(id_) + '.pkl')
+            with open(pkl, 'rb') as handle:
+                data = pickle.load(handle)
+                fl = [i for i in data]
+                for file in fl:
+                    label_vector = file.split("_")[:17]
+                    subject_id = file.split("_")[17].split("s")[1]
+                    label_vector.append(subject_id)
+                    # GAMBIARRA
+                    if data_name == "acc_outcomes_PAIN" or data_name == "acc_outcomes_ADAPT":
+                        trial = np.array(data[file])[:, 1:]
+                    else:
+                        trial = np.squeeze(np.array(data[file]))
+
+                    count_samples += 1
+                    if subject_id not in count_patients:
+                        count_patients.append(subject_id)
+
+                    self.X.append(np.array([trial]))
+                    self.y.append(label_vector)
+        print(f"{count_samples} samples\n")
+        print(f"{len(count_patients)} patients")
+
+    def get_k_fold(self, X, y, n_folds):
+        fold = []
+        rskf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=42)
+        for train_index, test_index in rskf.split(X, y):
+            fold.append({"train_idx": train_index, "test_idx": test_index})
+
+        return fold
+
+    def simple_generate(self, dir_save_file, new_freq=20):
+        name_file = 'f{}_t{}_{}'.format(new_freq, self.time_wd, self.exp_name)
+
+        print("Reading pkl files...", flush=True)
+
+        files_s = {}
+        for id_, dtb in enumerate(self.list_datasets):
+            files_s[dtb.name] = []
+            input_dir = dtb.dir_save
+            files = glob.glob(os.path.join(input_dir, '*.pkl'))
+            for pkl in files:
+                if fnmatch.fnmatch(os.path.split(pkl)[-1], dtb.name + '_*.pkl'):
+                    files_s[dtb.name].append(pkl)
+        print("Done.", flush=True)
+
+        for id_, dtb in enumerate(self.list_datasets):
+            input_dir = dtb.dir_save
+            dataset_name = dtb.name
+            self.data_generator(files_s[dataset_name], dataset_name, input_dir, dtb.freq, new_freq)
+
+        self.X = np.array(self.X, dtype=float)
+        self.y = np.array(self.y)
+
+        tmp_datasets = {}
+        new_X = []
+        new_y = []
+
+        # normalization [-0.5, 0.5]
+        for xx, yy in zip(self.X, self.y):
+            if "P" in yy[-1]:
+                d_name = "PAIN"
+            elif "I" in yy[-1]:
+                d_name = "ADAPT"
+            else:
+                d_name = "Int_ICU"
+
+            # get all activities from a dataset
+            if d_name not in tmp_datasets:
+                tmp_datasets[d_name] = [[xx], [yy]]
+            else:
+                tmp_datasets[d_name][0].append(xx)
+                tmp_datasets[d_name][1].append(yy)
+
+        for v in tmp_datasets.values():
+            new_X.extend(((v[0] - np.min(v[0])) / (np.max(v[0]) - np.min(v[0]))) - 0.5)
+            new_y.extend(v[1])
+
+        self.X = new_X
+        self.y = new_y
+        # # remove samples with no movement
+        # new_X = []
+        # new_y = []
+        # count_no_movement = 0
+        # for sample, label in zip(self.X, self.y):
+        #     sample = np.squeeze(sample)
+        #     var = np.mean([np.var(sample[0, :]), np.var(sample[1, :]), np.var(sample[2, :])])
+        #     if var > self.var_threshold:
+        #         new_X.append(sample)
+        #         new_y.append(label)
+        #     else:
+        #         count_no_movement += 1
+        # print("{} samples removed because of no movement".format(count_no_movement))
+
+        #kfold = self.get_k_fold(self.X, self.y, 5)
+        y_col_names = ['heart_rate', 'heart_rate_class', 'temp', 'temp_class', 'lenght_of_stay', 'is_dead', 'pain_score', 'pain_score_class',
+             'sofa_score', 'sofa_score_class', 'map', 'map_class', 'braden_score', 'braden_score_class', 'spo2', 'spo2_class', 'cam', 'patient_id']
+        np.savez_compressed(os.path.join(dir_save_file, name_file),
+                            X=self.X,
+                            y=self.y,
+                            y_col_names=y_col_names)
+

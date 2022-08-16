@@ -10,99 +10,30 @@ from imblearn.under_sampling import RandomUnderSampler
 from multiprocessing import Pool
 import os
 from datetime import datetime
+import math
 
-
-def A(sample):
-    feat = []
-    for col in range(0,sample.shape[1]):
-        average = np.average(sample[:,col])
-        feat.append(average)
-
-    return feat
-
-
-def SD(sample):
-    feat = []
-    for col in range(0, sample.shape[1]):
-        std = np.std(sample[:, col])
-        feat.append(std)
-
-    return feat
-
-
-def AAD(sample):
-    feat = []
-    for col in range(0, sample.shape[1]):
-        data = sample[:, col]
-        add = np.mean(np.absolute(data - np.mean(data)))
-        feat.append(add)
-
-    return feat
-
-
-def ARA(sample):
-    #Average Resultant Acceleration[1]:
-    # Average of the square roots of the sum of the values of each axis squared √(xi^2 + yi^2+ zi^2) over the ED
-    feat = []
-    sum_square = 0
-    sample = np.power(sample, 2)
-    for col in range(0, sample.shape[1]):
-        sum_square = sum_square + sample[:, col]
-
-    sample = np.sqrt(sum_square)
-    average = np.average(sample)
-    feat.append(average)
-    return feat
-
-
-def COR(sample):
-    feat = []
-    for axis_i in range(0, sample.shape[1]):
-        for axis_j in range(axis_i+1, sample.shape[1]):
-            cor = np.corrcoef(sample[:,axis_i], sample[:,axis_j])
-            feat.append(cor[0][1])
-
-    return np.array(feat, dtype=np.float32)
-
-
-def MOV(sample):
-    var_threshold = 0.001
-    var = np.mean([np.var(sample[:, 0]), np.var(sample[:, 1]), np.var(sample[:, 2])])
-    if var > var_threshold:
-        return 1
-    else:
-        return 0
-
-
-def VAR(sample):
-    feat = []
-    for col in range(0, sample.shape[1]):
-        var = np.var(sample[:, col])
-        feat.append(var)
-
-    return np.array(feat, dtype=np.float32)
-
+def magnitude(sample):
+    mag_vector = []
+    for s in sample:
+        mag_vector.append(math.sqrt(sum([s[0]**2, s[1]**2, s[2]**2])))
+    return mag_vector
 
 
 def feature_extraction(X):
-    #Extracts the features, as mentioned by Catal et al. 2015
-    # Average - A,
-    # Standard Deviation - SD,
-    # Average Absolute Difference - AAD,
-    # Average Resultant Acceleration - ARA(1),
-    # Time Between Peaks - TBP
-    X_tmp = []
+    """
+    Derive three activity intensity cues: mean and standard deviation of activity intensity,
+    and duration of immobility during assessment window to summarize the data.
+    """
+    features = []
     for sample in X:
-        features = A(sample)
-        features = np.hstack((features, SD(sample)))
-        features = np.hstack((features, AAD(sample)))
-        features = np.hstack((features, ARA(sample)))
-        features = np.hstack((features, VAR(sample)))
-        features = np.hstack((features, MOV(sample)))
-        X_tmp.append(features)
+        mag = magnitude(sample)
+        ft_mean = np.mean(mag)
+        ft_std = np.std(mag)
+        # calculate duration of immobility
+        features.append([ft_mean, ft_std])
 
-    X = np.array(X_tmp)
-    return X
+    return features
+
 
 def get_cmap(n, name='gist_rainbow'):
     '''Returns a function that maps each index in 0, 1, ..., n-1 to a distinct
@@ -140,12 +71,12 @@ def print_by_cluster(n_class, finalDf, exp_name, y_new):
     plt.savefig(exp_name + '.png')
 
 
-def print_by_class(n_class, finalDf, exp_name, y_new):
+def print_by_class(n_class, finalDf, exp_name, y_new, clin_variable):
     fig = plt.figure(figsize=(20, 20))
     ax = fig.add_subplot(1, 1, 1)
     ax.set_xlabel('First Component', fontsize=15)
     ax.set_ylabel('Second Component', fontsize=15)
-    ax.set_title('Umap projection for patiend accelerometer data', fontsize=20)
+    ax.set_title(f'Accelerometer data - {clin_variable}', fontsize=20)
     cmap = get_cmap(n_class)
     targets = np.unique(y_new)
     colors = []
@@ -163,12 +94,13 @@ def print_by_class(n_class, finalDf, exp_name, y_new):
     # plt.show()
     plt.savefig(exp_name + '.png')
 
-def print_one_cluster(n_class, finalDf, exp_name, y_patients_id, cluster_number):
+
+def print_one_cluster(n_class, finalDf, exp_name, y_patients_id, cluster_number, clin_variable):
     fig = plt.figure(figsize=(20, 20))
     ax = fig.add_subplot(1, 1, 1)
     ax.set_xlabel('First Component', fontsize=15)
     ax.set_ylabel('Second Component', fontsize=15)
-    ax.set_title('Umap projection for patiend accelerometer data', fontsize=20)
+    ax.set_title(f'Accelerometer data - {clin_variable}', fontsize=20)
     cmap = get_cmap(n_class)
     targets = np.unique(y_patients_id)
     colors = []
@@ -192,7 +124,7 @@ def print_one_cluster(n_class, finalDf, exp_name, y_patients_id, cluster_number)
 
 if __name__ == '__main__':
     np.random.seed(42)
-    data_input_file = "/home/jsenadesouza/DA-healthy2patient/results/pain/dataset/f10_t1800_painscore_patientid_acc_30minmargin_measurednowcol_30min_10hz_filtered_kfold.npz"
+    data_input_file = "/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset/f10_t1800_outcomesscore_patientid_acc_30minmargin_measurednowcol_30min_10hz_filtered.npz"
     #feature_file = data_input_file.split('.npz')[0] + '_features.npz'
     #     np.savez_compressed(data_input_file.split('.npz')[0] + '_features.npz', X=X, y=y, folds=folds)
 
@@ -200,14 +132,8 @@ if __name__ == '__main__':
     tmp = np.load(data_input_file, allow_pickle=True)
     X = tmp['X']
     y = tmp['y']
-    folds = tmp['folds']
+    y_col_names = list(tmp['y_col_names'])
     X = np.transpose(np.squeeze(X), (0, 2, 1))
-    y_label, y_id = [], []
-    for yy in y:
-        y_label.append(yy.split("_")[0])
-        y_id.append(yy.split("_")[1])
-
-    y = np.array(y_label)
 
     # Undersampling the data to balance the classes
     # rus = RandomUnderSampler(random_state=42, sampling_strategy={'none': 1000, 'mild': 1000, 'moderate': 1000, 'severe': 1000})
@@ -233,25 +159,19 @@ if __name__ == '__main__':
         min_cluster_size=500,
     ).fit_predict(embedding)
 
-    y_patient = []
-    for yy in y:
-        y_patient.append(yy.split('_')[0])
-
     fold = "/home/jsenadesouza/DA-healthy2patient/results/plot_clusters/"
 
-    n_class = np.unique(y_patient).shape[0]
-    y_class = pd.DataFrame(data=y_patient, columns=['label'])
-    finalDf = pd.concat([principalDf, y_class], axis=1)
-    exp_name = 'clusteredby_pain_' + datetime.now().strftime("%d-%m-%y_%H-%M-%S") + "_"
-    out_folder = os.path.join(fold, exp_name)
-    print_by_class(n_class, finalDf, out_folder, y_class)
+    for clin_variable in y_col_names:
+        #clin_variable = 'patient_id'
+        col_idx = y_col_names.index(clin_variable)
+        y_target = np.array(y[:, col_idx])
 
-    n_class = np.unique(labels).shape[0]
-    y_cluster = pd.DataFrame(data=labels, columns=['label'])
-    finalDf = pd.concat([principalDf, y_cluster], axis=1)
-    exp_name = 'clusteredbyalgo_' + datetime.now().strftime("%d-%m-%y_%H-%M-%S") + "_"
-    out_folder = os.path.join(fold, exp_name)
-    print_by_cluster(n_class, finalDf, out_folder, y_cluster)
+        n_class = np.unique(y_target).shape[0]
+        y_class = pd.DataFrame(data=y_target, columns=['label'])
+        finalDf = pd.concat([principalDf, y_class], axis=1)
+        exp_name = f'clusteredby_{clin_variable}_' + datetime.now().strftime("%d-%m-%y_%H-%M-%S") + "_"
+        out_folder = os.path.join(fold, exp_name)
+        print_by_class(n_class, finalDf, out_folder, y_class, clin_variable)
 
 
 

@@ -35,19 +35,24 @@ def balanced_dataset(X, y):
 
     return X_res.squeeze(), y_res.squeeze()
 
-def train(model, loader, optimizer, criterion, epochs=100, use_cuda=True):
 
+def train(model, loader, optimizer, criterion, device, scheduler, writer, epochs=100, use_cuda=True, use_additional_data=False):
+    step = 0
     for epoch in range(epochs):
         model.train()
         with tqdm(loader) as pbar:
             epoch_desc = 'Epoch {{0: <{0}d}}'.format(1 + int(math.log10(epochs))).format(epoch + 1)
             pbar.set_description(epoch_desc)
-            for inputs, targets in pbar:
+            for acc, add_data, targets in pbar:
                 if use_cuda:
-                    inputs, targets = inputs.cuda(), targets.cuda()
-                #optimizer.zero_grad()
-                model.zero_grad()
-                preds, _ = model(inputs)
+                    acc, targets = acc.to(device), targets.to(device)
+                    if use_additional_data:
+                        add_data = add_data.to(device)
+
+                if use_additional_data:
+                    preds = model(acc, add_data)
+                else:
+                    preds = model(acc)
                 loss = criterion(preds, targets.long())
 
                 if use_cuda:
@@ -60,25 +65,118 @@ def train(model, loader, optimizer, criterion, epochs=100, use_cuda=True):
 
                 pbar.set_postfix(loss='{0:.6f}'.format(loss), accuracy='{0:.04f}'.format(metrics['accuracy']))
 
-                #optimizer.zero_grad()
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+                step += 1
+                writer.add_scalar('Loss/train', loss.item(), step)
+                writer.add_scalar('Metrics/acc', metrics['accuracy'], step)
+
+        scheduler.step()
+
+
+def train_withaddfeatures(model, loader, optimizer, criterion, device, epochs=100, use_cuda=True):
+    for epoch in range(epochs):
+        model.train()
+        with tqdm(loader) as pbar:
+            epoch_desc = 'Epoch {{0: <{0}d}}'.format(1 + int(math.log10(epochs))).format(epoch + 1)
+            pbar.set_description(epoch_desc)
+            for acc, poi, targets in pbar:
+                if use_cuda:
+                    acc, poi, targets = acc.to(device), poi.to(device), targets.to(device)
+                # optimizer.zero_grad()
+                model.zero_grad()
+                preds, _ = model(acc, poi)
+                loss = criterion(preds, targets.long())
+
+                if use_cuda:
+                    targets = targets.cpu()
+
+                y_true = targets.numpy()
+                y_pred = np.argmax(preds.detach().cpu().numpy(), axis=1)
+
+                metrics = get_metrics(y_true, y_pred)
+
+                pbar.set_postfix(loss='{0:.6f}'.format(loss), accuracy='{0:.04f}'.format(metrics['accuracy']))
+
+                # optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
 
 
-def test(model, loader, use_cuda=True):
+def train_resnet(model, loader, optimizer, criterion, device, scheduler, writer, epochs=100, use_cuda=True):
+    step = 0
+    for epoch in range(epochs):
+        model.train()
+        with tqdm(loader) as pbar:
+            epoch_desc = 'Epoch {{0: <{0}d}}'.format(1 + int(math.log10(epochs))).format(epoch + 1)
+            pbar.set_description(epoch_desc)
+            for acc, poi, targets in pbar:
+                if use_cuda:
+                    acc, poi, targets = acc.to(device), poi.to(device), targets.to(device)
+
+                preds = model(acc, poi)
+                loss = criterion(preds, targets.long())
+
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+                step += 1
+
+                writer.add_scalar('Loss/train', loss.item(), step)
+
+                if use_cuda:
+                    targets = targets.cpu()
+
+                y_true = targets.numpy()
+                y_pred = np.argmax(preds.detach().cpu().numpy(), axis=1)
+
+                metrics = get_metrics(y_true, y_pred)
+
+                pbar.set_postfix(loss='{0:.6f}'.format(loss), accuracy='{0:.04f}'.format(metrics['accuracy']))
+                writer.add_scalar('Metrics/acc', metrics['accuracy'], step)
+                scheduler.step(epoch)
+
+
+def test(model, loader, device, use_cuda=True, use_additional_data=False):
+    model.eval()
+    print('Eval model...')
+    y_true = []
+    y_pred = []
+    for inputs, add_data, targets in tqdm(loader):
+        if use_cuda:
+            inputs, targets = inputs.to(device), targets.to(device)
+            if use_additional_data:
+                add_data = add_data.to(device)
+
+        if use_additional_data:
+            preds = model(inputs, add_data)
+        else:
+            preds = model(inputs)
+
+        if use_cuda:
+            targets = targets.cpu()
+            
+        y_true.extend(targets.numpy())
+        y_pred.extend(np.argmax(preds.detach().cpu().numpy(), axis=1))
+
+    return get_metrics(y_true, y_pred)
+
+
+def test_resnet(model, loader, device, use_cuda=True):
     model.eval()
     print('Eval model...')
     y_true = []
     y_pred = []
     for inputs, targets in tqdm(loader):
         if use_cuda:
-            inputs, targets = inputs.cuda(), targets.cuda()
-        
-        preds, _ = model(inputs)
+            inputs, targets = inputs.to(device), targets.to(device)
+
+        preds = model(inputs)
 
         if use_cuda:
             targets = targets.cpu()
-            
+
         y_true.extend(targets.numpy())
         y_pred.extend(np.argmax(preds.detach().cpu().numpy(), axis=1))
 

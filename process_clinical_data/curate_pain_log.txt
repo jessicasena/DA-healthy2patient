@@ -1,0 +1,1204 @@
+Index(['P001_leg_Timestamp_Unix_CAL\n', 'P001_leg_Accel_WR_X_CAL\n',
+       'P001_leg_Accel_WR_Y_CAL\n', 'P001_leg_Accel_WR_Z_CAL\n',
+       'P001_leg_Gyro_X_CAL\n', 'P001_leg_Gyro_Y_CAL\n',
+       'P001_leg_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P057_arm3_Timestamp_Unix_CAL\n', 'P057_arm3_Accel_LN_X_CAL\n',
+       'P057_arm3_Accel_LN_Y_CAL\n', 'P057_arm3_Accel_LN_Z_CAL\n',
+       'P057_arm3_Accel_WR_X_CAL\n', 'P057_arm3_Accel_WR_Y_CAL\n',
+       'P057_arm3_Accel_WR_Z_CAL\n', 'P057_arm3_Gyro_X_CAL\n',
+       'P057_arm3_Gyro_Y_CAL\n', 'P057_arm3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P057_ankle1_Timestamp_Unix_CAL\n', 'P057_ankle1_Accel_LN_X_CAL\n',
+       'P057_ankle1_Accel_LN_Y_CAL\n', 'P057_ankle1_Accel_LN_Z_CAL\n',
+       'P057_ankle1_Accel_WR_X_CAL\n', 'P057_ankle1_Accel_WR_Y_CAL\n',
+       'P057_ankle1_Accel_WR_Z_CAL\n', 'P057_ankle1_Gyro_X_CAL\n',
+       'P057_ankle1_Gyro_Y_CAL\n', 'P057_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P057_arm1_Timestamp_Unix_CAL\n', 'P057_arm1_Accel_LN_X_CAL\n',
+       'P057_arm1_Accel_LN_Y_CAL\n', 'P057_arm1_Accel_LN_Z_CAL\n',
+       'P057_arm1_Accel_WR_X_CAL\n', 'P057_arm1_Accel_WR_Y_CAL\n',
+       'P057_arm1_Accel_WR_Z_CAL\n', 'P057_arm1_Gyro_X_CAL\n',
+       'P057_arm1_Gyro_Y_CAL\n', 'P057_arm1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P057_ankle3_Timestamp_Unix_CAL\n', 'P057_ankle3_Accel_LN_X_CAL\n',
+       'P057_ankle3_Accel_LN_Y_CAL\n', 'P057_ankle3_Accel_LN_Z_CAL\n',
+       'P057_ankle3_Accel_WR_X_CAL\n', 'P057_ankle3_Accel_WR_Y_CAL\n',
+       'P057_ankle3_Accel_WR_Z_CAL\n', 'P057_ankle3_Gyro_X_CAL\n',
+       'P057_ankle3_Gyro_Y_CAL\n', 'P057_ankle3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P013_arm3_Timestamp_Unix_CAL\n', 'P013_arm3_Accel_LN_X_CAL\n',
+       'P013_arm3_Accel_LN_Y_CAL\n', 'P013_arm3_Accel_LN_Z_CAL\n',
+       'P013_arm3_Accel_WR_X_CAL\n', 'P013_arm3_Accel_WR_Y_CAL\n',
+       'P013_arm3_Accel_WR_Z_CAL\n', 'P013_arm3_Gyro_X_CAL\n',
+       'P013_arm3_Gyro_Y_CAL\n', 'P013_arm3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P013_ankle1_Timestamp_Unix_CAL\n', 'P013_ankle1_Accel_LN_X_CAL\n',
+       'P013_ankle1_Accel_LN_Y_CAL\n', 'P013_ankle1_Accel_LN_Z_CAL\n',
+       'P013_ankle1_Accel_WR_X_CAL\n', 'P013_ankle1_Accel_WR_Y_CAL\n',
+       'P013_ankle1_Accel_WR_Z_CAL\n', 'P013_ankle1_Gyro_X_CAL\n',
+       'P013_ankle1_Gyro_Y_CAL\n', 'P013_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P013_ankle3_Timestamp_Unix_CAL\n', 'P013_ankle3_Accel_LN_X_CAL\n',
+       'P013_ankle3_Accel_LN_Y_CAL\n', 'P013_ankle3_Accel_LN_Z_CAL\n',
+       'P013_ankle3_Accel_WR_X_CAL\n', 'P013_ankle3_Accel_WR_Y_CAL\n',
+       'P013_ankle3_Accel_WR_Z_CAL\n', 'P013_ankle3_Gyro_X_CAL\n',
+       'P013_ankle3_Gyro_Y_CAL\n', 'P013_ankle3_Gyro_Z_CAL\n'],
+      dtype='object')
+
+Location emg dont recognized. Trying arm
+Index(['P013_EMG_arm_Timestamp_Unix_CAL\n', 'P013_EMG_arm_Accel_WR_X_CAL\n',
+       'P013_EMG_arm_Accel_WR_Y_CAL\n', 'P013_EMG_arm_Accel_WR_Z_CAL\n',
+       'P013_EMG_arm_Gyro_X_CAL\n', 'P013_EMG_arm_Gyro_Y_CAL\n',
+       'P013_EMG_arm_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P060_ankle1_Timestamp_Unix_CAL\n', 'P060_ankle1_Accel_LN_X_CAL\n',
+       'P060_ankle1_Accel_LN_Y_CAL\n', 'P060_ankle1_Accel_LN_Z_CAL\n',
+       'P060_ankle1_Accel_WR_X_CAL\n', 'P060_ankle1_Accel_WR_Y_CAL\n',
+       'P060_ankle1_Accel_WR_Z_CAL\n', 'P060_ankle1_Gyro_X_CAL\n',
+       'P060_ankle1_Gyro_Y_CAL\n', 'P060_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P047_ankle3_Timestamp_Unix_CAL\n', 'P047_ankle3_Accel_LN_X_CAL\n',
+       'P047_ankle3_Accel_LN_Y_CAL\n', 'P047_ankle3_Accel_LN_Z_CAL\n',
+       'P047_ankle3_Accel_WR_X_CAL\n', 'P047_ankle3_Accel_WR_Y_CAL\n',
+       'P047_ankle3_Accel_WR_Z_CAL\n', 'P047_ankle3_Gyro_X_CAL\n',
+       'P047_ankle3_Gyro_Y_CAL\n', 'P047_ankle3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P047_arm3_Timestamp_Unix_CAL\n', 'P047_arm3_Accel_LN_X_CAL\n',
+       'P047_arm3_Accel_LN_Y_CAL\n', 'P047_arm3_Accel_LN_Z_CAL\n',
+       'P047_arm3_Accel_WR_X_CAL\n', 'P047_arm3_Accel_WR_Y_CAL\n',
+       'P047_arm3_Accel_WR_Z_CAL\n', 'P047_arm3_Gyro_X_CAL\n',
+       'P047_arm3_Gyro_Y_CAL\n', 'P047_arm3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P047_ankle1_Timestamp_Unix_CAL\n', 'P047_ankle1_Accel_LN_X_CAL\n',
+       'P047_ankle1_Accel_LN_Y_CAL\n', 'P047_ankle1_Accel_LN_Z_CAL\n',
+       'P047_ankle1_Accel_WR_X_CAL\n', 'P047_ankle1_Accel_WR_Y_CAL\n',
+       'P047_ankle1_Accel_WR_Z_CAL\n', 'P047_ankle1_Gyro_X_CAL\n',
+       'P047_ankle1_Gyro_Y_CAL\n', 'P047_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+
+Location emg dont recognized. Trying arm
+Index(['P030_EMG_arm_Timestamp_Unix_CAL\n', 'P030_EMG_arm_Accel_WR_X_CAL\n',
+       'P030_EMG_arm_Accel_WR_Y_CAL\n', 'P030_EMG_arm_Accel_WR_Z_CAL\n',
+       'P030_EMG_arm_Gyro_X_CAL\n', 'P030_EMG_arm_Gyro_Y_CAL\n',
+       'P030_EMG_arm_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P052_ankle5_Timestamp_Unix_CAL\n', 'P052_ankle5_Accel_LN_X_CAL\n',
+       'P052_ankle5_Accel_LN_Y_CAL\n', 'P052_ankle5_Accel_LN_Z_CAL\n',
+       'P052_ankle5_Accel_WR_X_CAL\n', 'P052_ankle5_Accel_WR_Y_CAL\n',
+       'P052_ankle5_Accel_WR_Z_CAL\n', 'P052_ankle5_Gyro_X_CAL\n',
+       'P052_ankle5_Gyro_Y_CAL\n', 'P052_ankle5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P052_arm1_Timestamp_Unix_CAL\n', 'P052_arm1_Accel_LN_X_CAL\n',
+       'P052_arm1_Accel_LN_Y_CAL\n', 'P052_arm1_Accel_LN_Z_CAL\n',
+       'P052_arm1_Accel_WR_X_CAL\n', 'P052_arm1_Accel_WR_Y_CAL\n',
+       'P052_arm1_Accel_WR_Z_CAL\n', 'P052_arm1_Gyro_X_CAL\n',
+       'P052_arm1_Gyro_Y_CAL\n', 'P052_arm1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P051_arm3_Timestamp_Unix_CAL\n', 'P051_arm3_Accel_LN_X_CAL\n',
+       'P051_arm3_Accel_LN_Y_CAL\n', 'P051_arm3_Accel_LN_Z_CAL\n',
+       'P051_arm3_Accel_WR_X_CAL\n', 'P051_arm3_Accel_WR_Y_CAL\n',
+       'P051_arm3_Accel_WR_Z_CAL\n', 'P051_arm3_Gyro_X_CAL\n',
+       'P051_arm3_Gyro_Y_CAL\n', 'P051_arm3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P051_ankle3_Timestamp_Unix_CAL\n', 'P051_ankle3_Accel_LN_X_CAL\n',
+       'P051_ankle3_Accel_LN_Y_CAL\n', 'P051_ankle3_Accel_LN_Z_CAL\n',
+       'P051_ankle3_Accel_WR_X_CAL\n', 'P051_ankle3_Accel_WR_Y_CAL\n',
+       'P051_ankle3_Accel_WR_Z_CAL\n', 'P051_ankle3_Gyro_X_CAL\n',
+       'P051_ankle3_Gyro_Y_CAL\n', 'P051_ankle3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P052_ankle1_Timestamp_Unix_CAL\n', 'P052_ankle1_Accel_LN_X_CAL\n',
+       'P052_ankle1_Accel_LN_Y_CAL\n', 'P052_ankle1_Accel_LN_Z_CAL\n',
+       'P052_ankle1_Accel_WR_X_CAL\n', 'P052_ankle1_Accel_WR_Y_CAL\n',
+       'P052_ankle1_Accel_WR_Z_CAL\n', 'P052_ankle1_Gyro_X_CAL\n',
+       'P052_ankle1_Gyro_Y_CAL\n', 'P052_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P052_arm5_Timestamp_Unix_CAL\n', 'P052_arm5_Accel_LN_X_CAL\n',
+       'P052_arm5_Accel_LN_Y_CAL\n', 'P052_arm5_Accel_LN_Z_CAL\n',
+       'P052_arm5_Accel_WR_X_CAL\n', 'P052_arm5_Accel_WR_Y_CAL\n',
+       'P052_arm5_Accel_WR_Z_CAL\n', 'P052_arm5_Gyro_X_CAL\n',
+       'P052_arm5_Gyro_Y_CAL\n', 'P052_arm5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P052_ankle3_Timestamp_Unix_CAL\n', 'P052_ankle3_Accel_LN_X_CAL\n',
+       'P052_ankle3_Accel_LN_Y_CAL\n', 'P052_ankle3_Accel_LN_Z_CAL\n',
+       'P052_ankle3_Accel_WR_X_CAL\n', 'P052_ankle3_Accel_WR_Y_CAL\n',
+       'P052_ankle3_Accel_WR_Z_CAL\n', 'P052_ankle3_Gyro_X_CAL\n',
+       'P052_ankle3_Gyro_Y_CAL\n', 'P052_ankle3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P055_arm2_Timestamp_Unix_CAL\n', 'P055_arm2_Accel_LN_X_CAL\n',
+       'P055_arm2_Accel_LN_Y_CAL\n', 'P055_arm2_Accel_LN_Z_CAL\n',
+       'P055_arm2_Accel_WR_X_CAL\n', 'P055_arm2_Accel_WR_Y_CAL\n',
+       'P055_arm2_Accel_WR_Z_CAL\n', 'P055_arm2_Gyro_X_CAL\n',
+       'P055_arm2_Gyro_Y_CAL\n', 'P055_arm2_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P055_ankle2_Timestamp_Unix_CAL\n', 'P055_ankle2_Accel_LN_X_CAL\n',
+       'P055_ankle2_Accel_LN_Y_CAL\n', 'P055_ankle2_Accel_LN_Z_CAL\n',
+       'P055_ankle2_Accel_WR_X_CAL\n', 'P055_ankle2_Accel_WR_Y_CAL\n',
+       'P055_ankle2_Accel_WR_Z_CAL\n', 'P055_ankle2_Gyro_X_CAL\n',
+       'P055_ankle2_Gyro_Y_CAL\n', 'P055_ankle2_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P055_ankle1_Timestamp_Unix_CAL\n', 'P055_ankle1_Accel_LN_X_CAL\n',
+       'P055_ankle1_Accel_LN_Y_CAL\n', 'P055_ankle1_Accel_LN_Z_CAL\n',
+       'P055_ankle1_Accel_WR_X_CAL\n', 'P055_ankle1_Accel_WR_Y_CAL\n',
+       'P055_ankle1_Accel_WR_Z_CAL\n', 'P055_ankle1_Gyro_X_CAL\n',
+       'P055_ankle1_Gyro_Y_CAL\n', 'P055_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P055_ankle6_Timestamp_Unix_CAL\n', 'P055_ankle6_Accel_LN_X_CAL\n',
+       'P055_ankle6_Accel_LN_Y_CAL\n', 'P055_ankle6_Accel_LN_Z_CAL\n',
+       'P055_ankle6_Accel_WR_X_CAL\n', 'P055_ankle6_Accel_WR_Y_CAL\n',
+       'P055_ankle6_Accel_WR_Z_CAL\n', 'P055_ankle6_Gyro_X_CAL\n',
+       'P055_ankle6_Gyro_Y_CAL\n', 'P055_ankle6_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P055_leg5_Timestamp_Unix_CAL\n', 'P055_leg5_Accel_LN_X_CAL\n',
+       'P055_leg5_Accel_LN_Y_CAL\n', 'P055_leg5_Accel_LN_Z_CAL\n',
+       'P055_leg5_Accel_WR_X_CAL\n', 'P055_leg5_Accel_WR_Y_CAL\n',
+       'P055_leg5_Accel_WR_Z_CAL\n', 'P055_leg5_Gyro_X_CAL\n',
+       'P055_leg5_Gyro_Y_CAL\n', 'P055_leg5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P055_arm5_Timestamp_Unix_CAL\n', 'P055_arm5_Accel_LN_X_CAL\n',
+       'P055_arm5_Accel_LN_Y_CAL\n', 'P055_arm5_Accel_LN_Z_CAL\n',
+       'P055_arm5_Accel_WR_X_CAL\n', 'P055_arm5_Accel_WR_Y_CAL\n',
+       'P055_arm5_Accel_WR_Z_CAL\n', 'P055_arm5_Gyro_X_CAL\n',
+       'P055_arm5_Gyro_Y_CAL\n', 'P055_arm5_Gyro_Z_CAL\n'],
+      dtype='object')
+
+Location emg dont recognized. Trying arm
+Index(['P055_EMG_arm_Timestamp_Unix_CAL\n', 'P055_EMG_arm_Accel_WR_X_CAL\n',
+       'P055_EMG_arm_Accel_WR_Y_CAL\n', 'P055_EMG_arm_Accel_WR_Z_CAL\n',
+       'P055_EMG_arm_Gyro_X_CAL\n', 'P055_EMG_arm_Gyro_Y_CAL\n',
+       'P055_EMG_arm_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P023_ankle6_Timestamp_Unix_CAL\n', 'P023_ankle6_Accel_LN_X_CAL\n',
+       'P023_ankle6_Accel_LN_Y_CAL\n', 'P023_ankle6_Accel_LN_Z_CAL\n',
+       'P023_ankle6_Accel_WR_X_CAL\n', 'P023_ankle6_Accel_WR_Y_CAL\n',
+       'P023_ankle6_Accel_WR_Z_CAL\n', 'P023_ankle6_Gyro_X_CAL\n',
+       'P023_ankle6_Gyro_Y_CAL\n', 'P023_ankle6_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P023_ankle2_Timestamp_Unix_CAL\n', 'P023_ankle2_Accel_LN_X_CAL\n',
+       'P023_ankle2_Accel_LN_Y_CAL\n', 'P023_ankle2_Accel_LN_Z_CAL\n',
+       'P023_ankle2_Accel_WR_X_CAL\n', 'P023_ankle2_Accel_WR_Y_CAL\n',
+       'P023_ankle2_Accel_WR_Z_CAL\n', 'P023_ankle2_Gyro_X_CAL\n',
+       'P023_ankle2_Gyro_Y_CAL\n', 'P023_ankle2_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P023_arm6_Timestamp_Unix_CAL\n', 'P023_arm6_Accel_LN_X_CAL\n',
+       'P023_arm6_Accel_LN_Y_CAL\n', 'P023_arm6_Accel_LN_Z_CAL\n',
+       'P023_arm6_Accel_WR_X_CAL\n', 'P023_arm6_Accel_WR_Y_CAL\n',
+       'P023_arm6_Accel_WR_Z_CAL\n', 'P023_arm6_Gyro_X_CAL\n',
+       'P023_arm6_Gyro_Y_CAL\n', 'P023_arm6_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P023_arm2_Timestamp_Unix_CAL\n', 'P023_arm2_Accel_LN_X_CAL\n',
+       'P023_arm2_Accel_LN_Y_CAL\n', 'P023_arm2_Accel_LN_Z_CAL\n',
+       'P023_arm2_Accel_WR_X_CAL\n', 'P023_arm2_Accel_WR_Y_CAL\n',
+       'P023_arm2_Accel_WR_Z_CAL\n', 'P023_arm2_Gyro_X_CAL\n',
+       'P023_arm2_Gyro_Y_CAL\n', 'P023_arm2_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P023_ankle4_Timestamp_Unix_CAL\n', 'P023_ankle4_Accel_LN_X_CAL\n',
+       'P023_ankle4_Accel_LN_Y_CAL\n', 'P023_ankle4_Accel_LN_Z_CAL\n',
+       'P023_ankle4_Accel_WR_X_CAL\n', 'P023_ankle4_Accel_WR_Y_CAL\n',
+       'P023_ankle4_Accel_WR_Z_CAL\n', 'P023_ankle4_Gyro_X_CAL\n',
+       'P023_ankle4_Gyro_Y_CAL\n', 'P023_ankle4_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P023_arm4_Timestamp_Unix_CAL\n', 'P023_arm4_Accel_LN_X_CAL\n',
+       'P023_arm4_Accel_LN_Y_CAL\n', 'P023_arm4_Accel_LN_Z_CAL\n',
+       'P023_arm4_Accel_WR_X_CAL\n', 'P023_arm4_Accel_WR_Y_CAL\n',
+       'P023_arm4_Accel_WR_Z_CAL\n', 'P023_arm4_Gyro_X_CAL\n',
+       'P023_arm4_Gyro_Y_CAL\n', 'P023_arm4_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P015_leg1_Timestamp_Unix_CAL\n', 'P015_leg1_Accel_LN_X_CAL\n',
+       'P015_leg1_Accel_LN_Y_CAL\n', 'P015_leg1_Accel_LN_Z_CAL\n',
+       'P015_leg1_Accel_WR_X_CAL\n', 'P015_leg1_Accel_WR_Y_CAL\n',
+       'P015_leg1_Accel_WR_Z_CAL\n', 'P015_leg1_Gyro_X_CAL\n',
+       'P015_leg1_Gyro_Y_CAL\n', 'P015_leg1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P015_arm3_Timestamp_Unix_CAL\n', 'P015_arm3_Accel_LN_X_CAL\n',
+       'P015_arm3_Accel_LN_Y_CAL\n', 'P015_arm3_Accel_LN_Z_CAL\n',
+       'P015_arm3_Accel_WR_X_CAL\n', 'P015_arm3_Accel_WR_Y_CAL\n',
+       'P015_arm3_Accel_WR_Z_CAL\n', 'P015_arm3_Gyro_X_CAL\n',
+       'P015_arm3_Gyro_Y_CAL\n', 'P015_arm3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P015_arm5_Timestamp_Unix_CAL\n', 'P015_arm5_Accel_LN_X_CAL\n',
+       'P015_arm5_Accel_LN_Y_CAL\n', 'P015_arm5_Accel_LN_Z_CAL\n',
+       'P015_arm5_Accel_WR_X_CAL\n', 'P015_arm5_Accel_WR_Y_CAL\n',
+       'P015_arm5_Accel_WR_Z_CAL\n', 'P015_arm5_Gyro_X_CAL\n',
+       'P015_arm5_Gyro_Y_CAL\n', 'P015_arm5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P015_ankle5_Timestamp_Unix_CAL\n', 'P015_ankle5_Accel_LN_X_CAL\n',
+       'P015_ankle5_Accel_LN_Y_CAL\n', 'P015_ankle5_Accel_LN_Z_CAL\n',
+       'P015_ankle5_Accel_WR_X_CAL\n', 'P015_ankle5_Accel_WR_Y_CAL\n',
+       'P015_ankle5_Accel_WR_Z_CAL\n', 'P015_ankle5_Gyro_X_CAL\n',
+       'P015_ankle5_Gyro_Y_CAL\n', 'P015_ankle5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P008_ankle3_Timestamp_Unix_CAL\n', 'P008_ankle3_Accel_LN_X_CAL\n',
+       'P008_ankle3_Accel_LN_Y_CAL\n', 'P008_ankle3_Accel_LN_Z_CAL\n',
+       'P008_ankle3_Accel_WR_X_CAL\n', 'P008_ankle3_Accel_WR_Y_CAL\n',
+       'P008_ankle3_Accel_WR_Z_CAL\n', 'P008_ankle3_Gyro_X_CAL\n',
+       'P008_ankle3_Gyro_Y_CAL\n', 'P008_ankle3_Gyro_Z_CAL\n'],
+      dtype='object')
+
+Location emg dont recognized. Trying arm
+Index(['P008_EMG_arm_Timestamp_Unix_CAL\n', 'P008_EMG_arm_Accel_WR_X_CAL\n',
+       'P008_EMG_arm_Accel_WR_Y_CAL\n', 'P008_EMG_arm_Accel_WR_Z_CAL\n',
+       'P008_EMG_arm_Gyro_X_CAL\n', 'P008_EMG_arm_Gyro_Y_CAL\n',
+       'P008_EMG_arm_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P008_ankle1_Timestamp_Unix_CAL\n', 'P008_ankle1_Accel_LN_X_CAL\n',
+       'P008_ankle1_Accel_LN_Y_CAL\n', 'P008_ankle1_Accel_LN_Z_CAL\n',
+       'P008_ankle1_Accel_WR_X_CAL\n', 'P008_ankle1_Accel_WR_Y_CAL\n',
+       'P008_ankle1_Accel_WR_Z_CAL\n', 'P008_ankle1_Gyro_X_CAL\n',
+       'P008_ankle1_Gyro_Y_CAL\n', 'P008_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P008_arm3_Timestamp_Unix_CAL\n', 'P008_arm3_Accel_LN_X_CAL\n',
+       'P008_arm3_Accel_LN_Y_CAL\n', 'P008_arm3_Accel_LN_Z_CAL\n',
+       'P008_arm3_Accel_WR_X_CAL\n', 'P008_arm3_Accel_WR_Y_CAL\n',
+       'P008_arm3_Accel_WR_Z_CAL\n', 'P008_arm3_Gyro_X_CAL\n',
+       'P008_arm3_Gyro_Y_CAL\n', 'P008_arm3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P029_ankle5_Timestamp_Unix_CAL\n', 'P029_ankle5_Accel_LN_X_CAL\n',
+       'P029_ankle5_Accel_LN_Y_CAL\n', 'P029_ankle5_Accel_LN_Z_CAL\n',
+       'P029_ankle5_Accel_WR_X_CAL\n', 'P029_ankle5_Accel_WR_Y_CAL\n',
+       'P029_ankle5_Accel_WR_Z_CAL\n', 'P029_ankle5_Gyro_X_CAL\n',
+       'P029_ankle5_Gyro_Y_CAL\n', 'P029_ankle5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P029_arm5_Timestamp_Unix_CAL\n', 'P029_arm5_Accel_LN_X_CAL\n',
+       'P029_arm5_Accel_LN_Y_CAL\n', 'P029_arm5_Accel_LN_Z_CAL\n',
+       'P029_arm5_Accel_WR_X_CAL\n', 'P029_arm5_Accel_WR_Y_CAL\n',
+       'P029_arm5_Accel_WR_Z_CAL\n', 'P029_arm5_Gyro_X_CAL\n',
+       'P029_arm5_Gyro_Y_CAL\n', 'P029_arm5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P029_ankle1_Timestamp_Unix_CAL\n', 'P029_ankle1_Accel_LN_X_CAL\n',
+       'P029_ankle1_Accel_LN_Y_CAL\n', 'P029_ankle1_Accel_LN_Z_CAL\n',
+       'P029_ankle1_Accel_WR_X_CAL\n', 'P029_ankle1_Accel_WR_Y_CAL\n',
+       'P029_ankle1_Accel_WR_Z_CAL\n', 'P029_ankle1_Gyro_X_CAL\n',
+       'P029_ankle1_Gyro_Y_CAL\n', 'P029_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+
+Location emg dont recognized. Trying arm
+Index(['P029_EMG_arm_Timestamp_Unix_CAL\n', 'P029_EMG_arm_Accel_WR_X_CAL\n',
+       'P029_EMG_arm_Accel_WR_Y_CAL\n', 'P029_EMG_arm_Accel_WR_Z_CAL\n',
+       'P029_EMG_arm_Gyro_X_CAL\n', 'P029_EMG_arm_Gyro_Y_CAL\n',
+       'P029_EMG_arm_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P029_arm3_Timestamp_Unix_CAL\n', 'P029_arm3_Accel_LN_X_CAL\n',
+       'P029_arm3_Accel_LN_Y_CAL\n', 'P029_arm3_Accel_LN_Z_CAL\n',
+       'P029_arm3_Accel_WR_X_CAL\n', 'P029_arm3_Accel_WR_Y_CAL\n',
+       'P029_arm3_Accel_WR_Z_CAL\n', 'P029_arm3_Gyro_X_CAL\n',
+       'P029_arm3_Gyro_Y_CAL\n', 'P029_arm3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P029_ankle3_Timestamp_Unix_CAL\n', 'P029_ankle3_Accel_LN_X_CAL\n',
+       'P029_ankle3_Accel_LN_Y_CAL\n', 'P029_ankle3_Accel_LN_Z_CAL\n',
+       'P029_ankle3_Accel_WR_X_CAL\n', 'P029_ankle3_Accel_WR_Y_CAL\n',
+       'P029_ankle3_Accel_WR_Z_CAL\n', 'P029_ankle3_Gyro_X_CAL\n',
+       'P029_ankle3_Gyro_Y_CAL\n', 'P029_ankle3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P014_arm3_Timestamp_Unix_CAL\n', 'P014_arm3_Accel_LN_X_CAL\n',
+       'P014_arm3_Accel_LN_Y_CAL\n', 'P014_arm3_Accel_LN_Z_CAL\n',
+       'P014_arm3_Accel_WR_X_CAL\n', 'P014_arm3_Accel_WR_Y_CAL\n',
+       'P014_arm3_Accel_WR_Z_CAL\n', 'P014_arm3_Gyro_X_CAL\n',
+       'P014_arm3_Gyro_Y_CAL\n', 'P014_arm3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P014_arm5_Timestamp_Unix_CAL\n', 'P014_arm5_Accel_LN_X_CAL\n',
+       'P014_arm5_Accel_LN_Y_CAL\n', 'P014_arm5_Accel_LN_Z_CAL\n',
+       'P014_arm5_Accel_WR_X_CAL\n', 'P014_arm5_Accel_WR_Y_CAL\n',
+       'P014_arm5_Accel_WR_Z_CAL\n', 'P014_arm5_Gyro_X_CAL\n',
+       'P014_arm5_Gyro_Y_CAL\n', 'P014_arm5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P038_arm6_Timestamp_Unix_CAL\n', 'P038_arm6_Accel_LN_X_CAL\n',
+       'P038_arm6_Accel_LN_Y_CAL\n', 'P038_arm6_Accel_LN_Z_CAL\n',
+       'P038_arm6_Accel_WR_X_CAL\n', 'P038_arm6_Accel_WR_Y_CAL\n',
+       'P038_arm6_Accel_WR_Z_CAL\n', 'P038_arm6_Gyro_X_CAL\n',
+       'P038_arm6_Gyro_Y_CAL\n', 'P038_arm6_Gyro_Z_CAL\n'],
+      dtype='object')
+
+Location emg dont recognized. Trying arm
+Index(['P038_EMG_arm_Timestamp_Unix_CAL\n', 'P038_EMG_arm_Accel_WR_X_CAL\n',
+       'P038_EMG_arm_Accel_WR_Y_CAL\n', 'P038_EMG_arm_Accel_WR_Z_CAL\n',
+       'P038_EMG_arm_Gyro_X_CAL\n', 'P038_EMG_arm_Gyro_Y_CAL\n',
+       'P038_EMG_arm_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P038_ankle4_Timestamp_Unix_CAL\n', 'P038_ankle4_Accel_LN_X_CAL\n',
+       'P038_ankle4_Accel_LN_Y_CAL\n', 'P038_ankle4_Accel_LN_Z_CAL\n',
+       'P038_ankle4_Accel_WR_X_CAL\n', 'P038_ankle4_Accel_WR_Y_CAL\n',
+       'P038_ankle4_Accel_WR_Z_CAL\n', 'P038_ankle4_Gyro_X_CAL\n',
+       'P038_ankle4_Gyro_Y_CAL\n', 'P038_ankle4_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P038_arm4_Timestamp_Unix_CAL\n', 'P038_arm4_Accel_LN_X_CAL\n',
+       'P038_arm4_Accel_LN_Y_CAL\n', 'P038_arm4_Accel_LN_Z_CAL\n',
+       'P038_arm4_Accel_WR_X_CAL\n', 'P038_arm4_Accel_WR_Y_CAL\n',
+       'P038_arm4_Accel_WR_Z_CAL\n', 'P038_arm4_Gyro_X_CAL\n',
+       'P038_arm4_Gyro_Y_CAL\n', 'P038_arm4_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P038_ankle5_Timestamp_Unix_CAL\n', 'P038_ankle5_Accel_WR_X_CAL\n',
+       'P038_ankle5_Accel_WR_Y_CAL\n', 'P038_ankle5_Accel_WR_Z_CAL\n',
+       'P038_ankle5_Gyro_X_CAL\n', 'P038_ankle5_Gyro_Y_CAL\n',
+       'P038_ankle5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P038_ankle6_Timestamp_Unix_CAL\n', 'P038_ankle6_Accel_LN_X_CAL\n',
+       'P038_ankle6_Accel_LN_Y_CAL\n', 'P038_ankle6_Accel_LN_Z_CAL\n',
+       'P038_ankle6_Accel_WR_X_CAL\n', 'P038_ankle6_Accel_WR_Y_CAL\n',
+       'P038_ankle6_Accel_WR_Z_CAL\n', 'P038_ankle6_Gyro_X_CAL\n',
+       'P038_ankle6_Gyro_Y_CAL\n', 'P038_ankle6_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P048_ankle3_Timestamp_Unix_CAL\n', 'P048_ankle3_Accel_LN_X_CAL\n',
+       'P048_ankle3_Accel_LN_Y_CAL\n', 'P048_ankle3_Accel_LN_Z_CAL\n',
+       'P048_ankle3_Accel_WR_X_CAL\n', 'P048_ankle3_Accel_WR_Y_CAL\n',
+       'P048_ankle3_Accel_WR_Z_CAL\n', 'P048_ankle3_Gyro_X_CAL\n',
+       'P048_ankle3_Gyro_Y_CAL\n', 'P048_ankle3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P048_arm3_Timestamp_Unix_CAL\n', 'P048_arm3_Accel_LN_X_CAL\n',
+       'P048_arm3_Accel_LN_Y_CAL\n', 'P048_arm3_Accel_LN_Z_CAL\n',
+       'P048_arm3_Accel_WR_X_CAL\n', 'P048_arm3_Accel_WR_Y_CAL\n',
+       'P048_arm3_Accel_WR_Z_CAL\n', 'P048_arm3_Gyro_X_CAL\n',
+       'P048_arm3_Gyro_Y_CAL\n', 'P048_arm3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P048_ankle1_Timestamp_Unix_CAL\n', 'P048_ankle1_Accel_LN_X_CAL\n',
+       'P048_ankle1_Accel_LN_Y_CAL\n', 'P048_ankle1_Accel_LN_Z_CAL\n',
+       'P048_ankle1_Accel_WR_X_CAL\n', 'P048_ankle1_Accel_WR_Y_CAL\n',
+       'P048_ankle1_Accel_WR_Z_CAL\n', 'P048_ankle1_Gyro_X_CAL\n',
+       'P048_ankle1_Gyro_Y_CAL\n', 'P048_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P067_ankle3_Timestamp_Unix_CAL\n', 'P067_ankle3_Accel_LN_X_CAL\n',
+       'P067_ankle3_Accel_LN_Y_CAL\n', 'P067_ankle3_Accel_LN_Z_CAL\n',
+       'P067_ankle3_Accel_WR_X_CAL\n', 'P067_ankle3_Accel_WR_Y_CAL\n',
+       'P067_ankle3_Accel_WR_Z_CAL\n', 'P067_ankle3_Gyro_X_CAL\n',
+       'P067_ankle3_Gyro_Y_CAL\n', 'P067_ankle3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P067_arm5_Timestamp_Unix_CAL\n', 'P067_arm5_Accel_LN_X_CAL\n',
+       'P067_arm5_Accel_LN_Y_CAL\n', 'P067_arm5_Accel_LN_Z_CAL\n',
+       'P067_arm5_Accel_WR_X_CAL\n', 'P067_arm5_Accel_WR_Y_CAL\n',
+       'P067_arm5_Accel_WR_Z_CAL\n', 'P067_arm5_Gyro_X_CAL\n',
+       'P067_arm5_Gyro_Y_CAL\n', 'P067_arm5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P067_arm3_Timestamp_Unix_CAL\n', 'P067_arm3_Accel_LN_X_CAL\n',
+       'P067_arm3_Accel_LN_Y_CAL\n', 'P067_arm3_Accel_LN_Z_CAL\n',
+       'P067_arm3_Accel_WR_X_CAL\n', 'P067_arm3_Accel_WR_Y_CAL\n',
+       'P067_arm3_Accel_WR_Z_CAL\n', 'P067_arm3_Gyro_X_CAL\n',
+       'P067_arm3_Gyro_Y_CAL\n', 'P067_arm3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P067_ankle1_Timestamp_Unix_CAL\n', 'P067_ankle1_Accel_LN_X_CAL\n',
+       'P067_ankle1_Accel_LN_Y_CAL\n', 'P067_ankle1_Accel_LN_Z_CAL\n',
+       'P067_ankle1_Accel_WR_X_CAL\n', 'P067_ankle1_Accel_WR_Y_CAL\n',
+       'P067_ankle1_Accel_WR_Z_CAL\n', 'P067_ankle1_Gyro_X_CAL\n',
+       'P067_ankle1_Gyro_Y_CAL\n', 'P067_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+
+Location emg dont recognized. Trying arm
+Index(['P067_EMG_arm_Timestamp_Unix_CAL\n', 'P067_EMG_arm_Accel_WR_X_CAL\n',
+       'P067_EMG_arm_Accel_WR_Y_CAL\n', 'P067_EMG_arm_Accel_WR_Z_CAL\n',
+       'P067_EMG_arm_Gyro_X_CAL\n', 'P067_EMG_arm_Gyro_Y_CAL\n',
+       'P067_EMG_arm_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P010_ankle_Timestamp_Unix_CAL\n', 'P010_ankle_Accel_LN_X_CAL\n',
+       'P010_ankle_Accel_LN_Y_CAL\n', 'P010_ankle_Accel_LN_Z_CAL\n',
+       'P010_ankle_Accel_WR_X_CAL\n', 'P010_ankle_Accel_WR_Y_CAL\n',
+       'P010_ankle_Accel_WR_Z_CAL\n', 'P010_ankle_Gyro_X_CAL\n',
+       'P010_ankle_Gyro_Y_CAL\n', 'P010_ankle_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P010_ARM_1_Timestamp_Unix_CAL\n', 'P010_ARM_1_Accel_WR_X_CAL\n',
+       'P010_ARM_1_Accel_WR_Y_CAL\n', 'P010_ARM_1_Accel_WR_Z_CAL\n',
+       'P010_ARM_1_Gyro_X_CAL\n', 'P010_ARM_1_Gyro_Y_CAL\n',
+       'P010_ARM_1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P010_ankle1_Timestamp_Unix_CAL\n', 'P010_ankle1_Accel_LN_X_CAL\n',
+       'P010_ankle1_Accel_LN_Y_CAL\n', 'P010_ankle1_Accel_LN_Z_CAL\n',
+       'P010_ankle1_Accel_WR_X_CAL\n', 'P010_ankle1_Accel_WR_Y_CAL\n',
+       'P010_ankle1_Accel_WR_Z_CAL\n', 'P010_ankle1_Gyro_X_CAL\n',
+       'P010_ankle1_Gyro_Y_CAL\n', 'P010_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P010_arm3_Timestamp_Unix_CAL\n', 'P010_arm3_Accel_LN_X_CAL\n',
+       'P010_arm3_Accel_LN_Y_CAL\n', 'P010_arm3_Accel_LN_Z_CAL\n',
+       'P010_arm3_Accel_WR_X_CAL\n', 'P010_arm3_Accel_WR_Y_CAL\n',
+       'P010_arm3_Accel_WR_Z_CAL\n', 'P010_arm3_Gyro_X_CAL\n',
+       'P010_arm3_Gyro_Y_CAL\n', 'P010_arm3_Gyro_Z_CAL\n'],
+      dtype='object')
+
+Location emg dont recognized. Trying arm
+Index(['P035_EMG_arm_Timestamp_Unix_CAL\n', 'P035_EMG_arm_Accel_WR_X_CAL\n',
+       'P035_EMG_arm_Accel_WR_Y_CAL\n', 'P035_EMG_arm_Accel_WR_Z_CAL\n',
+       'P035_EMG_arm_Gyro_X_CAL\n', 'P035_EMG_arm_Gyro_Y_CAL\n',
+       'P035_EMG_arm_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P035_ankle1_Timestamp_Unix_CAL\n', 'P035_ankle1_Accel_LN_X_CAL\n',
+       'P035_ankle1_Accel_LN_Y_CAL\n', 'P035_ankle1_Accel_LN_Z_CAL\n',
+       'P035_ankle1_Accel_WR_X_CAL\n', 'P035_ankle1_Accel_WR_Y_CAL\n',
+       'P035_ankle1_Accel_WR_Z_CAL\n', 'P035_ankle1_Gyro_X_CAL\n',
+       'P035_ankle1_Gyro_Y_CAL\n', 'P035_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+
+Location emg dont recognized. Trying arm
+Index(['P061_EMG_arm_Timestamp_Unix_CAL\n', 'P061_EMG_arm_Accel_WR_X_CAL\n',
+       'P061_EMG_arm_Accel_WR_Y_CAL\n', 'P061_EMG_arm_Accel_WR_Z_CAL\n',
+       'P061_EMG_arm_Gyro_X_CAL\n', 'P061_EMG_arm_Gyro_Y_CAL\n',
+       'P061_EMG_arm_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P061_ankle1_Timestamp_Unix_CAL\n', 'P061_ankle1_Accel_LN_X_CAL\n',
+       'P061_ankle1_Accel_LN_Y_CAL\n', 'P061_ankle1_Accel_LN_Z_CAL\n',
+       'P061_ankle1_Accel_WR_X_CAL\n', 'P061_ankle1_Accel_WR_Y_CAL\n',
+       'P061_ankle1_Accel_WR_Z_CAL\n', 'P061_ankle1_Gyro_X_CAL\n',
+       'P061_ankle1_Gyro_Y_CAL\n', 'P061_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P022_ankle5_Timestamp_Unix_CAL\n', 'P022_ankle5_Accel_LN_X_CAL\n',
+       'P022_ankle5_Accel_LN_Y_CAL\n', 'P022_ankle5_Accel_LN_Z_CAL\n',
+       'P022_ankle5_Accel_WR_X_CAL\n', 'P022_ankle5_Accel_WR_Y_CAL\n',
+       'P022_ankle5_Accel_WR_Z_CAL\n', 'P022_ankle5_Gyro_X_CAL\n',
+       'P022_ankle5_Gyro_Y_CAL\n', 'P022_ankle5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P022_ankle1_Timestamp_Unix_CAL\n', 'P022_ankle1_Accel_LN_X_CAL\n',
+       'P022_ankle1_Accel_LN_Y_CAL\n', 'P022_ankle1_Accel_LN_Z_CAL\n',
+       'P022_ankle1_Accel_WR_X_CAL\n', 'P022_ankle1_Accel_WR_Y_CAL\n',
+       'P022_ankle1_Accel_WR_Z_CAL\n', 'P022_ankle1_Gyro_X_CAL\n',
+       'P022_ankle1_Gyro_Y_CAL\n', 'P022_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P022_arm3_Timestamp_Unix_CAL\n', 'P022_arm3_Accel_LN_X_CAL\n',
+       'P022_arm3_Accel_LN_Y_CAL\n', 'P022_arm3_Accel_LN_Z_CAL\n',
+       'P022_arm3_Accel_WR_X_CAL\n', 'P022_arm3_Accel_WR_Y_CAL\n',
+       'P022_arm3_Accel_WR_Z_CAL\n', 'P022_arm3_Gyro_X_CAL\n',
+       'P022_arm3_Gyro_Y_CAL\n', 'P022_arm3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P022_ankle3_Timestamp_Unix_CAL\n', 'P022_ankle3_Accel_LN_X_CAL\n',
+       'P022_ankle3_Accel_LN_Y_CAL\n', 'P022_ankle3_Accel_LN_Z_CAL\n',
+       'P022_ankle3_Accel_WR_X_CAL\n', 'P022_ankle3_Accel_WR_Y_CAL\n',
+       'P022_ankle3_Accel_WR_Z_CAL\n', 'P022_ankle3_Gyro_X_CAL\n',
+       'P022_ankle3_Gyro_Y_CAL\n', 'P022_ankle3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P052_ankle3_Timestamp_Unix_CAL\n', 'P052_ankle3_Accel_LN_X_CAL\n',
+       'P052_ankle3_Accel_LN_Y_CAL\n', 'P052_ankle3_Accel_LN_Z_CAL\n',
+       'P052_ankle3_Accel_WR_X_CAL\n', 'P052_ankle3_Accel_WR_Y_CAL\n',
+       'P052_ankle3_Accel_WR_Z_CAL\n', 'P052_ankle3_Gyro_X_CAL\n',
+       'P052_ankle3_Gyro_Y_CAL\n', 'P052_ankle3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P051_arm5_Timestamp_Unix_CAL\n', 'P051_arm5_Accel_LN_X_CAL\n',
+       'P051_arm5_Accel_LN_Y_CAL\n', 'P051_arm5_Accel_LN_Z_CAL\n',
+       'P051_arm5_Accel_WR_X_CAL\n', 'P051_arm5_Accel_WR_Y_CAL\n',
+       'P051_arm5_Accel_WR_Z_CAL\n', 'P051_arm5_Gyro_X_CAL\n',
+       'P051_arm5_Gyro_Y_CAL\n', 'P051_arm5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P051_ankle5_Timestamp_Unix_CAL\n', 'P051_ankle5_Accel_LN_X_CAL\n',
+       'P051_ankle5_Accel_LN_Y_CAL\n', 'P051_ankle5_Accel_LN_Z_CAL\n',
+       'P051_ankle5_Accel_WR_X_CAL\n', 'P051_ankle5_Accel_WR_Y_CAL\n',
+       'P051_ankle5_Accel_WR_Z_CAL\n', 'P051_ankle5_Gyro_X_CAL\n',
+       'P051_ankle5_Gyro_Y_CAL\n', 'P051_ankle5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P052_arm3_Timestamp_Unix_CAL\n', 'P052_arm3_Accel_LN_X_CAL\n',
+       'P052_arm3_Accel_LN_Y_CAL\n', 'P052_arm3_Accel_LN_Z_CAL\n',
+       'P052_arm3_Accel_WR_X_CAL\n', 'P052_arm3_Accel_WR_Y_CAL\n',
+       'P052_arm3_Accel_WR_Z_CAL\n', 'P052_arm3_Gyro_X_CAL\n',
+       'P052_arm3_Gyro_Y_CAL\n', 'P052_arm3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P051_ankle1_Timestamp_Unix_CAL\n', 'P051_ankle1_Accel_LN_X_CAL\n',
+       'P051_ankle1_Accel_LN_Y_CAL\n', 'P051_ankle1_Accel_LN_Z_CAL\n',
+       'P051_ankle1_Accel_WR_X_CAL\n', 'P051_ankle1_Accel_WR_Y_CAL\n',
+       'P051_ankle1_Accel_WR_Z_CAL\n', 'P051_ankle1_Gyro_X_CAL\n',
+       'P051_ankle1_Gyro_Y_CAL\n', 'P051_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P054_leg5_Timestamp_Unix_CAL\n', 'P054_leg5_Accel_LN_X_CAL\n',
+       'P054_leg5_Accel_LN_Y_CAL\n', 'P054_leg5_Accel_LN_Z_CAL\n',
+       'P054_leg5_Accel_WR_X_CAL\n', 'P054_leg5_Accel_WR_Y_CAL\n',
+       'P054_leg5_Accel_WR_Z_CAL\n', 'P054_leg5_Gyro_X_CAL\n',
+       'P054_leg5_Gyro_Y_CAL\n', 'P054_leg5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P054_arm5_Timestamp_Unix_CAL\n', 'P054_arm5_Accel_LN_X_CAL\n',
+       'P054_arm5_Accel_LN_Y_CAL\n', 'P054_arm5_Accel_LN_Z_CAL\n',
+       'P054_arm5_Accel_WR_X_CAL\n', 'P054_arm5_Accel_WR_Y_CAL\n',
+       'P054_arm5_Accel_WR_Z_CAL\n', 'P054_arm5_Gyro_X_CAL\n',
+       'P054_arm5_Gyro_Y_CAL\n', 'P054_arm5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P054_arm2_Timestamp_Unix_CAL\n', 'P054_arm2_Accel_LN_X_CAL\n',
+       'P054_arm2_Accel_LN_Y_CAL\n', 'P054_arm2_Accel_LN_Z_CAL\n',
+       'P054_arm2_Accel_WR_X_CAL\n', 'P054_arm2_Accel_WR_Y_CAL\n',
+       'P054_arm2_Accel_WR_Z_CAL\n', 'P054_arm2_Gyro_X_CAL\n',
+       'P054_arm2_Gyro_Y_CAL\n', 'P054_arm2_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P054_ankle1_Timestamp_Unix_CAL\n', 'P054_ankle1_Accel_LN_X_CAL\n',
+       'P054_ankle1_Accel_LN_Y_CAL\n', 'P054_ankle1_Accel_LN_Z_CAL\n',
+       'P054_ankle1_Accel_WR_X_CAL\n', 'P054_ankle1_Accel_WR_Y_CAL\n',
+       'P054_ankle1_Accel_WR_Z_CAL\n', 'P054_ankle1_Gyro_X_CAL\n',
+       'P054_ankle1_Gyro_Y_CAL\n', 'P054_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P054_ankle2_Timestamp_Unix_CAL\n', 'P054_ankle2_Accel_LN_X_CAL\n',
+       'P054_ankle2_Accel_LN_Y_CAL\n', 'P054_ankle2_Accel_LN_Z_CAL\n',
+       'P054_ankle2_Accel_WR_X_CAL\n', 'P054_ankle2_Accel_WR_Y_CAL\n',
+       'P054_ankle2_Accel_WR_Z_CAL\n', 'P054_ankle2_Gyro_X_CAL\n',
+       'P054_ankle2_Gyro_Y_CAL\n', 'P054_ankle2_Gyro_Z_CAL\n'],
+      dtype='object')
+
+Location emg dont recognized. Trying arm
+Index(['P054_EMG_arm_Timestamp_Unix_CAL\n', 'P054_EMG_arm_Accel_WR_X_CAL\n',
+       'P054_EMG_arm_Accel_WR_Y_CAL\n', 'P054_EMG_arm_Accel_WR_Z_CAL\n',
+       'P054_EMG_arm_Gyro_X_CAL\n', 'P054_EMG_arm_Gyro_Y_CAL\n',
+       'P054_EMG_arm_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P003_arm_Timestamp_Unix_CAL\n', 'P003_arm_Accel_LN_X_CAL\n',
+       'P003_arm_Accel_LN_Y_CAL\n', 'P003_arm_Accel_LN_Z_CAL\n',
+       'P003_arm_Accel_WR_X_CAL\n', 'P003_arm_Accel_WR_Y_CAL\n',
+       'P003_arm_Accel_WR_Z_CAL\n', 'P003_arm_Gyro_X_CAL\n',
+       'P003_arm_Gyro_Y_CAL\n', 'P003_arm_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P003_ankle_Timestamp_Unix_CAL\n', 'P003_ankle_Accel_LN_X_CAL\n',
+       'P003_ankle_Accel_LN_Y_CAL\n', 'P003_ankle_Accel_LN_Z_CAL\n',
+       'P003_ankle_Accel_WR_X_CAL\n', 'P003_ankle_Accel_WR_Y_CAL\n',
+       'P003_ankle_Accel_WR_Z_CAL\n', 'P003_ankle_Gyro_X_CAL\n',
+       'P003_ankle_Gyro_Y_CAL\n', 'P003_ankle_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P003_arm5_Timestamp_Unix_CAL\n', 'P003_arm5_Accel_LN_X_CAL\n',
+       'P003_arm5_Accel_LN_Y_CAL\n', 'P003_arm5_Accel_LN_Z_CAL\n',
+       'P003_arm5_Accel_WR_X_CAL\n', 'P003_arm5_Accel_WR_Y_CAL\n',
+       'P003_arm5_Accel_WR_Z_CAL\n', 'P003_arm5_Gyro_X_CAL\n',
+       'P003_arm5_Gyro_Y_CAL\n', 'P003_arm5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P003_ankle5_Timestamp_Unix_CAL\n', 'P003_ankle5_Accel_LN_X_CAL\n',
+       'P003_ankle5_Accel_LN_Y_CAL\n', 'P003_ankle5_Accel_LN_Z_CAL\n',
+       'P003_ankle5_Accel_WR_X_CAL\n', 'P003_ankle5_Accel_WR_Y_CAL\n',
+       'P003_ankle5_Accel_WR_Z_CAL\n', 'P003_ankle5_Gyro_X_CAL\n',
+       'P003_ankle5_Gyro_Y_CAL\n', 'P003_ankle5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P003_ankle_Timestamp_Unix_CAL\n', 'P003_ankle_Accel_LN_X_CAL\n',
+       'P003_ankle_Accel_LN_Y_CAL\n', 'P003_ankle_Accel_LN_Z_CAL\n',
+       'P003_ankle_Accel_WR_X_CAL\n', 'P003_ankle_Accel_WR_Y_CAL\n',
+       'P003_ankle_Accel_WR_Z_CAL\n', 'P003_ankle_Gyro_X_CAL\n',
+       'P003_ankle_Gyro_Y_CAL\n', 'P003_ankle_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P003_ankle2_Timestamp_Unix_CAL\n', 'P003_ankle2_Accel_LN_X_CAL\n',
+       'P003_ankle2_Accel_LN_Y_CAL\n', 'P003_ankle2_Accel_LN_Z_CAL\n',
+       'P003_ankle2_Accel_WR_X_CAL\n', 'P003_ankle2_Accel_WR_Y_CAL\n',
+       'P003_ankle2_Accel_WR_Z_CAL\n', 'P003_ankle2_Gyro_X_CAL\n',
+       'P003_ankle2_Gyro_Y_CAL\n', 'P003_ankle2_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P003_ankle2_Timestamp_Unix_CAL\n', 'P003_ankle2_Accel_LN_X_CAL\n',
+       'P003_ankle2_Accel_LN_Y_CAL\n', 'P003_ankle2_Accel_LN_Z_CAL\n',
+       'P003_ankle2_Accel_WR_X_CAL\n', 'P003_ankle2_Accel_WR_Y_CAL\n',
+       'P003_ankle2_Accel_WR_Z_CAL\n', 'P003_ankle2_Gyro_X_CAL\n',
+       'P003_ankle2_Gyro_Y_CAL\n', 'P003_ankle2_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P069_ankle3_Timestamp_Unix_CAL\n', 'P069_ankle3_Accel_LN_X_CAL\n',
+       'P069_ankle3_Accel_LN_Y_CAL\n', 'P069_ankle3_Accel_LN_Z_CAL\n',
+       'P069_ankle3_Accel_WR_X_CAL\n', 'P069_ankle3_Accel_WR_Y_CAL\n',
+       'P069_ankle3_Accel_WR_Z_CAL\n', 'P069_ankle3_Gyro_X_CAL\n',
+       'P069_ankle3_Gyro_Y_CAL\n', 'P069_ankle3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P069_ankle1_Timestamp_Unix_CAL\n', 'P069_ankle1_Accel_LN_X_CAL\n',
+       'P069_ankle1_Accel_LN_Y_CAL\n', 'P069_ankle1_Accel_LN_Z_CAL\n',
+       'P069_ankle1_Accel_WR_X_CAL\n', 'P069_ankle1_Accel_WR_Y_CAL\n',
+       'P069_ankle1_Accel_WR_Z_CAL\n', 'P069_ankle1_Gyro_X_CAL\n',
+       'P069_ankle1_Gyro_Y_CAL\n', 'P069_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P069_ankle5_Timestamp_Unix_CAL\n', 'P069_ankle5_Accel_LN_X_CAL\n',
+       'P069_ankle5_Accel_LN_Y_CAL\n', 'P069_ankle5_Accel_LN_Z_CAL\n',
+       'P069_ankle5_Accel_WR_X_CAL\n', 'P069_ankle5_Accel_WR_Y_CAL\n',
+       'P069_ankle5_Accel_WR_Z_CAL\n', 'P069_ankle5_Gyro_X_CAL\n',
+       'P069_ankle5_Gyro_Y_CAL\n', 'P069_ankle5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P009_ankle4_Timestamp_Unix_CAL\n', 'P009_ankle4_Accel_LN_X_CAL\n',
+       'P009_ankle4_Accel_LN_Y_CAL\n', 'P009_ankle4_Accel_LN_Z_CAL\n',
+       'P009_ankle4_Accel_WR_X_CAL\n', 'P009_ankle4_Accel_WR_Y_CAL\n',
+       'P009_ankle4_Accel_WR_Z_CAL\n', 'P009_ankle4_Gyro_X_CAL\n',
+       'P009_ankle4_Gyro_Y_CAL\n', 'P009_ankle4_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P009_arm4_Timestamp_Unix_CAL\n', 'P009_arm4_Accel_LN_X_CAL\n',
+       'P009_arm4_Accel_LN_Y_CAL\n', 'P009_arm4_Accel_LN_Z_CAL\n',
+       'P009_arm4_Accel_WR_X_CAL\n', 'P009_arm4_Accel_WR_Y_CAL\n',
+       'P009_arm4_Accel_WR_Z_CAL\n', 'P009_arm4_Gyro_X_CAL\n',
+       'P009_arm4_Gyro_Y_CAL\n', 'P009_arm4_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P009_ankle6_Timestamp_Unix_CAL\n', 'P009_ankle6_Accel_LN_X_CAL\n',
+       'P009_ankle6_Accel_LN_Y_CAL\n', 'P009_ankle6_Accel_LN_Z_CAL\n',
+       'P009_ankle6_Accel_WR_X_CAL\n', 'P009_ankle6_Accel_WR_Y_CAL\n',
+       'P009_ankle6_Accel_WR_Z_CAL\n', 'P009_ankle6_Gyro_X_CAL\n',
+       'P009_ankle6_Gyro_Y_CAL\n', 'P009_ankle6_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P009_ankle2_Timestamp_Unix_CAL\n', 'P009_ankle2_Accel_LN_X_CAL\n',
+       'P009_ankle2_Accel_LN_Y_CAL\n', 'P009_ankle2_Accel_LN_Z_CAL\n',
+       'P009_ankle2_Accel_WR_X_CAL\n', 'P009_ankle2_Accel_WR_Y_CAL\n',
+       'P009_ankle2_Accel_WR_Z_CAL\n', 'P009_ankle2_Gyro_X_CAL\n',
+       'P009_ankle2_Gyro_Y_CAL\n', 'P009_ankle2_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P006_ankle2_Timestamp_Unix_CAL\n', 'P006_ankle2_Accel_LN_X_CAL\n',
+       'P006_ankle2_Accel_LN_Y_CAL\n', 'P006_ankle2_Accel_LN_Z_CAL\n',
+       'P006_ankle2_Accel_WR_X_CAL\n', 'P006_ankle2_Accel_WR_Y_CAL\n',
+       'P006_ankle2_Accel_WR_Z_CAL\n', 'P006_ankle2_Gyro_X_CAL\n',
+       'P006_ankle2_Gyro_Y_CAL\n', 'P006_ankle2_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P006_ankle2_Timestamp_Unix_CAL\n', 'P006_ankle2_Accel_LN_X_CAL\n',
+       'P006_ankle2_Accel_LN_Y_CAL\n', 'P006_ankle2_Accel_LN_Z_CAL\n',
+       'P006_ankle2_Accel_WR_X_CAL\n', 'P006_ankle2_Accel_WR_Y_CAL\n',
+       'P006_ankle2_Accel_WR_Z_CAL\n', 'P006_ankle2_Gyro_X_CAL\n',
+       'P006_ankle2_Gyro_Y_CAL\n', 'P006_ankle2_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P006_arm4_Timestamp_Unix_CAL\n', 'P006_arm4_Accel_LN_X_CAL\n',
+       'P006_arm4_Accel_LN_Y_CAL\n', 'P006_arm4_Accel_LN_Z_CAL\n',
+       'P006_arm4_Accel_WR_X_CAL\n', 'P006_arm4_Accel_WR_Y_CAL\n',
+       'P006_arm4_Accel_WR_Z_CAL\n', 'P006_arm4_Gyro_X_CAL\n',
+       'P006_arm4_Gyro_Y_CAL\n', 'P006_arm4_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P006_ankle4_Timestamp_Unix_CAL\n', 'P006_ankle4_Accel_LN_X_CAL\n',
+       'P006_ankle4_Accel_LN_Y_CAL\n', 'P006_ankle4_Accel_LN_Z_CAL\n',
+       'P006_ankle4_Accel_WR_X_CAL\n', 'P006_ankle4_Accel_WR_Y_CAL\n',
+       'P006_ankle4_Accel_WR_Z_CAL\n', 'P006_ankle4_Gyro_X_CAL\n',
+       'P006_ankle4_Gyro_Y_CAL\n', 'P006_ankle4_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P070_arm5_Timestamp_Unix_CAL\n', 'P070_arm5_Accel_LN_X_CAL\n',
+       'P070_arm5_Accel_LN_Y_CAL\n', 'P070_arm5_Accel_LN_Z_CAL\n',
+       'P070_arm5_Accel_WR_X_CAL\n', 'P070_arm5_Accel_WR_Y_CAL\n',
+       'P070_arm5_Accel_WR_Z_CAL\n', 'P070_arm5_Gyro_X_CAL\n',
+       'P070_arm5_Gyro_Y_CAL\n', 'P070_arm5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P070_ankle5_Timestamp_Unix_CAL\n', 'P070_ankle5_Accel_LN_X_CAL\n',
+       'P070_ankle5_Accel_LN_Y_CAL\n', 'P070_ankle5_Accel_LN_Z_CAL\n',
+       'P070_ankle5_Accel_WR_X_CAL\n', 'P070_ankle5_Accel_WR_Y_CAL\n',
+       'P070_ankle5_Accel_WR_Z_CAL\n', 'P070_ankle5_Gyro_X_CAL\n',
+       'P070_ankle5_Gyro_Y_CAL\n', 'P070_ankle5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P070_arm3_Timestamp_Unix_CAL\n', 'P070_arm3_Accel_LN_X_CAL\n',
+       'P070_arm3_Accel_LN_Y_CAL\n', 'P070_arm3_Accel_LN_Z_CAL\n',
+       'P070_arm3_Accel_WR_X_CAL\n', 'P070_arm3_Accel_WR_Y_CAL\n',
+       'P070_arm3_Accel_WR_Z_CAL\n', 'P070_arm3_Gyro_X_CAL\n',
+       'P070_arm3_Gyro_Y_CAL\n', 'P070_arm3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P070_ankle1_Timestamp_Unix_CAL\n', 'P070_ankle1_Accel_LN_X_CAL\n',
+       'P070_ankle1_Accel_LN_Y_CAL\n', 'P070_ankle1_Accel_LN_Z_CAL\n',
+       'P070_ankle1_Accel_WR_X_CAL\n', 'P070_ankle1_Accel_WR_Y_CAL\n',
+       'P070_ankle1_Accel_WR_Z_CAL\n', 'P070_ankle1_Gyro_X_CAL\n',
+       'P070_ankle1_Gyro_Y_CAL\n', 'P070_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P070_ankle3_Timestamp_Unix_CAL\n', 'P070_ankle3_Accel_LN_X_CAL\n',
+       'P070_ankle3_Accel_LN_Y_CAL\n', 'P070_ankle3_Accel_LN_Z_CAL\n',
+       'P070_ankle3_Accel_WR_X_CAL\n', 'P070_ankle3_Accel_WR_Y_CAL\n',
+       'P070_ankle3_Accel_WR_Z_CAL\n', 'P070_ankle3_Gyro_X_CAL\n',
+       'P070_ankle3_Gyro_Y_CAL\n', 'P070_ankle3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P056_ankle5_Timestamp_Unix_CAL\n', 'P056_ankle5_Accel_LN_X_CAL\n',
+       'P056_ankle5_Accel_LN_Y_CAL\n', 'P056_ankle5_Accel_LN_Z_CAL\n',
+       'P056_ankle5_Accel_WR_X_CAL\n', 'P056_ankle5_Accel_WR_Y_CAL\n',
+       'P056_ankle5_Accel_WR_Z_CAL\n', 'P056_ankle5_Gyro_X_CAL\n',
+       'P056_ankle5_Gyro_Y_CAL\n', 'P056_ankle5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P056_ankle2_Timestamp_Unix_CAL\n', 'P056_ankle2_Accel_LN_X_CAL\n',
+       'P056_ankle2_Accel_LN_Y_CAL\n', 'P056_ankle2_Accel_LN_Z_CAL\n',
+       'P056_ankle2_Accel_WR_X_CAL\n', 'P056_ankle2_Accel_WR_Y_CAL\n',
+       'P056_ankle2_Accel_WR_Z_CAL\n', 'P056_ankle2_Gyro_X_CAL\n',
+       'P056_ankle2_Gyro_Y_CAL\n', 'P056_ankle2_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P056_ankle1_Timestamp_Unix_CAL\n', 'P056_ankle1_Accel_LN_X_CAL\n',
+       'P056_ankle1_Accel_LN_Y_CAL\n', 'P056_ankle1_Accel_LN_Z_CAL\n',
+       'P056_ankle1_Accel_WR_X_CAL\n', 'P056_ankle1_Accel_WR_Y_CAL\n',
+       'P056_ankle1_Accel_WR_Z_CAL\n', 'P056_ankle1_Gyro_X_CAL\n',
+       'P056_ankle1_Gyro_Y_CAL\n', 'P056_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P039_ankle5_Timestamp_Unix_CAL\n', 'P039_ankle5_Accel_LN_X_CAL\n',
+       'P039_ankle5_Accel_LN_Y_CAL\n', 'P039_ankle5_Accel_LN_Z_CAL\n',
+       'P039_ankle5_Accel_WR_X_CAL\n', 'P039_ankle5_Accel_WR_Y_CAL\n',
+       'P039_ankle5_Accel_WR_Z_CAL\n', 'P039_ankle5_Gyro_X_CAL\n',
+       'P039_ankle5_Gyro_Y_CAL\n', 'P039_ankle5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P039_arm5_Timestamp_Unix_CAL\n', 'P039_arm5_Accel_LN_X_CAL\n',
+       'P039_arm5_Accel_LN_Y_CAL\n', 'P039_arm5_Accel_LN_Z_CAL\n',
+       'P039_arm5_Accel_WR_X_CAL\n', 'P039_arm5_Accel_WR_Y_CAL\n',
+       'P039_arm5_Accel_WR_Z_CAL\n', 'P039_arm5_Gyro_X_CAL\n',
+       'P039_arm5_Gyro_Y_CAL\n', 'P039_arm5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P039_ankle3_Timestamp_Unix_CAL\n', 'P039_ankle3_Accel_LN_X_CAL\n',
+       'P039_ankle3_Accel_LN_Y_CAL\n', 'P039_ankle3_Accel_LN_Z_CAL\n',
+       'P039_ankle3_Accel_WR_X_CAL\n', 'P039_ankle3_Accel_WR_Y_CAL\n',
+       'P039_ankle3_Accel_WR_Z_CAL\n', 'P039_ankle3_Gyro_X_CAL\n',
+       'P039_ankle3_Gyro_Y_CAL\n', 'P039_ankle3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P005_arm3_Timestamp_Unix_CAL\n', 'P005_arm3_Accel_LN_X_CAL\n',
+       'P005_arm3_Accel_LN_Y_CAL\n', 'P005_arm3_Accel_LN_Z_CAL\n',
+       'P005_arm3_Accel_WR_X_CAL\n', 'P005_arm3_Accel_WR_Y_CAL\n',
+       'P005_arm3_Accel_WR_Z_CAL\n', 'P005_arm3_Gyro_X_CAL\n',
+       'P005_arm3_Gyro_Y_CAL\n', 'P005_arm3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P005_leg_1_Timestamp_Unix_CAL\n', 'P005_leg_1_Accel_WR_X_CAL\n',
+       'P005_leg_1_Accel_WR_Y_CAL\n', 'P005_leg_1_Accel_WR_Z_CAL\n',
+       'P005_leg_1_Gyro_X_CAL\n', 'P005_leg_1_Gyro_Y_CAL\n',
+       'P005_leg_1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P005_ankle3_Timestamp_Unix_CAL\n', 'P005_ankle3_Accel_LN_X_CAL\n',
+       'P005_ankle3_Accel_LN_Y_CAL\n', 'P005_ankle3_Accel_LN_Z_CAL\n',
+       'P005_ankle3_Accel_WR_X_CAL\n', 'P005_ankle3_Accel_WR_Y_CAL\n',
+       'P005_ankle3_Accel_WR_Z_CAL\n', 'P005_ankle3_Gyro_X_CAL\n',
+       'P005_ankle3_Gyro_Y_CAL\n', 'P005_ankle3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P025_arm3_Timestamp_Unix_CAL\n', 'P025_arm3_Accel_LN_X_CAL\n',
+       'P025_arm3_Accel_LN_Y_CAL\n', 'P025_arm3_Accel_LN_Z_CAL\n',
+       'P025_arm3_Accel_WR_X_CAL\n', 'P025_arm3_Accel_WR_Y_CAL\n',
+       'P025_arm3_Accel_WR_Z_CAL\n', 'P025_arm3_Gyro_X_CAL\n',
+       'P025_arm3_Gyro_Y_CAL\n', 'P025_arm3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P025_arm5_Timestamp_Unix_CAL\n', 'P025_arm5_Accel_LN_X_CAL\n',
+       'P025_arm5_Accel_LN_Y_CAL\n', 'P025_arm5_Accel_LN_Z_CAL\n',
+       'P025_arm5_Accel_WR_X_CAL\n', 'P025_arm5_Accel_WR_Y_CAL\n',
+       'P025_arm5_Accel_WR_Z_CAL\n', 'P025_arm5_Gyro_X_CAL\n',
+       'P025_arm5_Gyro_Y_CAL\n', 'P025_arm5_Gyro_Z_CAL\n'],
+      dtype='object')
+
+Location emg dont recognized. Trying arm
+Index(['P025_EMG_arm_Timestamp_Unix_CAL\n', 'P025_EMG_arm_Accel_WR_X_CAL\n',
+       'P025_EMG_arm_Accel_WR_Y_CAL\n', 'P025_EMG_arm_Accel_WR_Z_CAL\n',
+       'P025_EMG_arm_Gyro_X_CAL\n', 'P025_EMG_arm_Gyro_Y_CAL\n',
+       'P025_EMG_arm_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P059_arm4_Timestamp_Unix_CAL\n', 'P059_arm4_Accel_LN_X_CAL\n',
+       'P059_arm4_Accel_LN_Y_CAL\n', 'P059_arm4_Accel_LN_Z_CAL\n',
+       'P059_arm4_Accel_WR_X_CAL\n', 'P059_arm4_Accel_WR_Y_CAL\n',
+       'P059_arm4_Accel_WR_Z_CAL\n', 'P059_arm4_Gyro_X_CAL\n',
+       'P059_arm4_Gyro_Y_CAL\n', 'P059_arm4_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P042_arm3_Timestamp_Unix_CAL\n', 'P042_arm3_Accel_LN_X_CAL\n',
+       'P042_arm3_Accel_LN_Y_CAL\n', 'P042_arm3_Accel_LN_Z_CAL\n',
+       'P042_arm3_Accel_WR_X_CAL\n', 'P042_arm3_Accel_WR_Y_CAL\n',
+       'P042_arm3_Accel_WR_Z_CAL\n', 'P042_arm3_Gyro_X_CAL\n',
+       'P042_arm3_Gyro_Y_CAL\n', 'P042_arm3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P040_ankle1_Timestamp_Unix_CAL\n', 'P040_ankle1_Accel_LN_X_CAL\n',
+       'P040_ankle1_Accel_LN_Y_CAL\n', 'P040_ankle1_Accel_LN_Z_CAL\n',
+       'P040_ankle1_Accel_WR_X_CAL\n', 'P040_ankle1_Accel_WR_Y_CAL\n',
+       'P040_ankle1_Accel_WR_Z_CAL\n', 'P040_ankle1_Gyro_X_CAL\n',
+       'P040_ankle1_Gyro_Y_CAL\n', 'P040_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P071_ankle1_Timestamp_Unix_CAL\n', 'P071_ankle1_Accel_LN_X_CAL\n',
+       'P071_ankle1_Accel_LN_Y_CAL\n', 'P071_ankle1_Accel_LN_Z_CAL\n',
+       'P071_ankle1_Accel_WR_X_CAL\n', 'P071_ankle1_Accel_WR_Y_CAL\n',
+       'P071_ankle1_Accel_WR_Z_CAL\n', 'P071_ankle1_Gyro_X_CAL\n',
+       'P071_ankle1_Gyro_Y_CAL\n', 'P071_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+
+Location emg dont recognized. Trying arm
+Index(['P037_EMG_arm_Timestamp_Unix_CAL\n', 'P037_EMG_arm_Accel_WR_X_CAL\n',
+       'P037_EMG_arm_Accel_WR_Y_CAL\n', 'P037_EMG_arm_Accel_WR_Z_CAL\n',
+       'P037_EMG_arm_Gyro_X_CAL\n', 'P037_EMG_arm_Gyro_Y_CAL\n',
+       'P037_EMG_arm_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P037_ankle6_Timestamp_Unix_CAL\n', 'P037_ankle6_Accel_LN_X_CAL\n',
+       'P037_ankle6_Accel_LN_Y_CAL\n', 'P037_ankle6_Accel_LN_Z_CAL\n',
+       'P037_ankle6_Accel_WR_X_CAL\n', 'P037_ankle6_Accel_WR_Y_CAL\n',
+       'P037_ankle6_Accel_WR_Z_CAL\n', 'P037_ankle6_Gyro_X_CAL\n',
+       'P037_ankle6_Gyro_Y_CAL\n', 'P037_ankle6_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P037_arm3_Timestamp_Unix_CAL\n', 'P037_arm3_Accel_LN_X_CAL\n',
+       'P037_arm3_Accel_LN_Y_CAL\n', 'P037_arm3_Accel_LN_Z_CAL\n',
+       'P037_arm3_Accel_WR_X_CAL\n', 'P037_arm3_Accel_WR_Y_CAL\n',
+       'P037_arm3_Accel_WR_Z_CAL\n', 'P037_arm3_Gyro_X_CAL\n',
+       'P037_arm3_Gyro_Y_CAL\n', 'P037_arm3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P037_leg3_Timestamp_Unix_CAL\n', 'P037_leg3_Accel_LN_X_CAL\n',
+       'P037_leg3_Accel_LN_Y_CAL\n', 'P037_leg3_Accel_LN_Z_CAL\n',
+       'P037_leg3_Accel_WR_X_CAL\n', 'P037_leg3_Accel_WR_Y_CAL\n',
+       'P037_leg3_Accel_WR_Z_CAL\n', 'P037_leg3_Gyro_X_CAL\n',
+       'P037_leg3_Gyro_Y_CAL\n', 'P037_leg3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P037_arm6_Timestamp_Unix_CAL\n', 'P037_arm6_Accel_LN_X_CAL\n',
+       'P037_arm6_Accel_LN_Y_CAL\n', 'P037_arm6_Accel_LN_Z_CAL\n',
+       'P037_arm6_Accel_WR_X_CAL\n', 'P037_arm6_Accel_WR_Y_CAL\n',
+       'P037_arm6_Accel_WR_Z_CAL\n', 'P037_arm6_Gyro_X_CAL\n',
+       'P037_arm6_Gyro_Y_CAL\n', 'P037_arm6_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P037_ankle2_Timestamp_Unix_CAL\n', 'P037_ankle2_Accel_LN_X_CAL\n',
+       'P037_ankle2_Accel_LN_Y_CAL\n', 'P037_ankle2_Accel_LN_Z_CAL\n',
+       'P037_ankle2_Accel_WR_X_CAL\n', 'P037_ankle2_Accel_WR_Y_CAL\n',
+       'P037_ankle2_Accel_WR_Z_CAL\n', 'P037_ankle2_Gyro_X_CAL\n',
+       'P037_ankle2_Gyro_Y_CAL\n', 'P037_ankle2_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P007_arm4_Timestamp_Unix_CAL\n', 'P007_arm4_Accel_LN_X_CAL\n',
+       'P007_arm4_Accel_LN_Y_CAL\n', 'P007_arm4_Accel_LN_Z_CAL\n',
+       'P007_arm4_Accel_WR_X_CAL\n', 'P007_arm4_Accel_WR_Y_CAL\n',
+       'P007_arm4_Accel_WR_Z_CAL\n', 'P007_arm4_Gyro_X_CAL\n',
+       'P007_arm4_Gyro_Y_CAL\n', 'P007_arm4_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P007_ankle2_Timestamp_Unix_CAL\n', 'P007_ankle2_Accel_LN_X_CAL\n',
+       'P007_ankle2_Accel_LN_Y_CAL\n', 'P007_ankle2_Accel_LN_Z_CAL\n',
+       'P007_ankle2_Accel_WR_X_CAL\n', 'P007_ankle2_Accel_WR_Y_CAL\n',
+       'P007_ankle2_Accel_WR_Z_CAL\n', 'P007_ankle2_Gyro_X_CAL\n',
+       'P007_ankle2_Gyro_Y_CAL\n', 'P007_ankle2_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P007_ankle4_Timestamp_Unix_CAL\n', 'P007_ankle4_Accel_LN_X_CAL\n',
+       'P007_ankle4_Accel_LN_Y_CAL\n', 'P007_ankle4_Accel_LN_Z_CAL\n',
+       'P007_ankle4_Accel_WR_X_CAL\n', 'P007_ankle4_Accel_WR_Y_CAL\n',
+       'P007_ankle4_Accel_WR_Z_CAL\n', 'P007_ankle4_Gyro_X_CAL\n',
+       'P007_ankle4_Gyro_Y_CAL\n', 'P007_ankle4_Gyro_Z_CAL\n'],
+      dtype='object')
+
+Location emg dont recognized. Trying arm
+Index(['P007_EMG_arm_Timestamp_Unix_CAL\n', 'P007_EMG_arm_Accel_LN_X_CAL\n',
+       'P007_EMG_arm_Accel_LN_Y_CAL\n', 'P007_EMG_arm_Accel_LN_Z_CAL\n',
+       'P007_EMG_arm_Accel_WR_X_CAL\n', 'P007_EMG_arm_Accel_WR_Y_CAL\n',
+       'P007_EMG_arm_Accel_WR_Z_CAL\n', 'P007_EMG_arm_Gyro_X_CAL\n',
+       'P007_EMG_arm_Gyro_Y_CAL\n', 'P007_EMG_arm_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P007_ankle2_Timestamp_Unix_CAL\n', 'P007_ankle2_Accel_LN_X_CAL\n',
+       'P007_ankle2_Accel_LN_Y_CAL\n', 'P007_ankle2_Accel_LN_Z_CAL\n',
+       'P007_ankle2_Accel_WR_X_CAL\n', 'P007_ankle2_Accel_WR_Y_CAL\n',
+       'P007_ankle2_Accel_WR_Z_CAL\n', 'P007_ankle2_Gyro_X_CAL\n',
+       'P007_ankle2_Gyro_Y_CAL\n', 'P007_ankle2_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P024_ankle1_Timestamp_Unix_CAL\n', 'P024_ankle1_Accel_LN_X_CAL\n',
+       'P024_ankle1_Accel_LN_Y_CAL\n', 'P024_ankle1_Accel_LN_Z_CAL\n',
+       'P024_ankle1_Accel_WR_X_CAL\n', 'P024_ankle1_Accel_WR_Y_CAL\n',
+       'P024_ankle1_Accel_WR_Z_CAL\n', 'P024_ankle1_Gyro_X_CAL\n',
+       'P024_ankle1_Gyro_Y_CAL\n', 'P024_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P024_arm1_Timestamp_Unix_CAL\n', 'P024_arm1_Accel_LN_X_CAL\n',
+       'P024_arm1_Accel_LN_Y_CAL\n', 'P024_arm1_Accel_LN_Z_CAL\n',
+       'P024_arm1_Accel_WR_X_CAL\n', 'P024_arm1_Accel_WR_Y_CAL\n',
+       'P024_arm1_Accel_WR_Z_CAL\n', 'P024_arm1_Gyro_X_CAL\n',
+       'P024_arm1_Gyro_Y_CAL\n', 'P024_arm1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P024_arm4_Timestamp_Unix_CAL\n', 'P024_arm4_Accel_LN_X_CAL\n',
+       'P024_arm4_Accel_LN_Y_CAL\n', 'P024_arm4_Accel_LN_Z_CAL\n',
+       'P024_arm4_Accel_WR_X_CAL\n', 'P024_arm4_Accel_WR_Y_CAL\n',
+       'P024_arm4_Accel_WR_Z_CAL\n', 'P024_arm4_Gyro_X_CAL\n',
+       'P024_arm4_Gyro_Y_CAL\n', 'P024_arm4_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P024_ankle4_Timestamp_Unix_CAL\n', 'P024_ankle4_Accel_LN_X_CAL\n',
+       'P024_ankle4_Accel_LN_Y_CAL\n', 'P024_ankle4_Accel_LN_Z_CAL\n',
+       'P024_ankle4_Accel_WR_X_CAL\n', 'P024_ankle4_Accel_WR_Y_CAL\n',
+       'P024_ankle4_Accel_WR_Z_CAL\n', 'P024_ankle4_Gyro_X_CAL\n',
+       'P024_ankle4_Gyro_Y_CAL\n', 'P024_ankle4_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P044_arm3_Timestamp_Unix_CAL\n', 'P044_arm3_Accel_LN_X_CAL\n',
+       'P044_arm3_Accel_LN_Y_CAL\n', 'P044_arm3_Accel_LN_Z_CAL\n',
+       'P044_arm3_Accel_WR_X_CAL\n', 'P044_arm3_Accel_WR_Y_CAL\n',
+       'P044_arm3_Accel_WR_Z_CAL\n', 'P044_arm3_Gyro_X_CAL\n',
+       'P044_arm3_Gyro_Y_CAL\n', 'P044_arm3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P044_arm5_Timestamp_Unix_CAL\n', 'P044_arm5_Accel_LN_X_CAL\n',
+       'P044_arm5_Accel_LN_Y_CAL\n', 'P044_arm5_Accel_LN_Z_CAL\n',
+       'P044_arm5_Accel_WR_X_CAL\n', 'P044_arm5_Accel_WR_Y_CAL\n',
+       'P044_arm5_Accel_WR_Z_CAL\n', 'P044_arm5_Gyro_X_CAL\n',
+       'P044_arm5_Gyro_Y_CAL\n', 'P044_arm5_Gyro_Z_CAL\n'],
+      dtype='object')
+
+Location emg dont recognized. Trying arm
+Index(['P044_EMG_arm_Timestamp_Unix_CAL\n', 'P044_EMG_arm_Accel_WR_X_CAL\n',
+       'P044_EMG_arm_Accel_WR_Y_CAL\n', 'P044_EMG_arm_Accel_WR_Z_CAL\n',
+       'P044_EMG_arm_Gyro_X_CAL\n', 'P044_EMG_arm_Gyro_Y_CAL\n',
+       'P044_EMG_arm_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P053_ankle4_Timestamp_Unix_CAL\n', 'P053_ankle4_Accel_LN_X_CAL\n',
+       'P053_ankle4_Accel_LN_Y_CAL\n', 'P053_ankle4_Accel_LN_Z_CAL\n',
+       'P053_ankle4_Accel_WR_X_CAL\n', 'P053_ankle4_Accel_WR_Y_CAL\n',
+       'P053_ankle4_Accel_WR_Z_CAL\n', 'P053_ankle4_Gyro_X_CAL\n',
+       'P053_ankle4_Gyro_Y_CAL\n', 'P053_ankle4_Gyro_Z_CAL\n'],
+      dtype='object')
+
+Location emg dont recognized. Trying arm
+Index(['P053_EMG_arm_Timestamp_Unix_CAL\n', 'P053_EMG_arm_Accel_WR_X_CAL\n',
+       'P053_EMG_arm_Accel_WR_Y_CAL\n', 'P053_EMG_arm_Accel_WR_Z_CAL\n',
+       'P053_EMG_arm_Gyro_X_CAL\n', 'P053_EMG_arm_Gyro_Y_CAL\n',
+       'P053_EMG_arm_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P053_ankle6_Timestamp_Unix_CAL\n', 'P053_ankle6_Accel_LN_X_CAL\n',
+       'P053_ankle6_Accel_LN_Y_CAL\n', 'P053_ankle6_Accel_LN_Z_CAL\n',
+       'P053_ankle6_Accel_WR_X_CAL\n', 'P053_ankle6_Accel_WR_Y_CAL\n',
+       'P053_ankle6_Accel_WR_Z_CAL\n', 'P053_ankle6_Gyro_X_CAL\n',
+       'P053_ankle6_Gyro_Y_CAL\n', 'P053_ankle6_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P053_ankle2_Timestamp_Unix_CAL\n', 'P053_ankle2_Accel_LN_X_CAL\n',
+       'P053_ankle2_Accel_LN_Y_CAL\n', 'P053_ankle2_Accel_LN_Z_CAL\n',
+       'P053_ankle2_Accel_WR_X_CAL\n', 'P053_ankle2_Accel_WR_Y_CAL\n',
+       'P053_ankle2_Accel_WR_Z_CAL\n', 'P053_ankle2_Gyro_X_CAL\n',
+       'P053_ankle2_Gyro_Y_CAL\n', 'P053_ankle2_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P053_arm5_Timestamp_Unix_CAL\n', 'P053_arm5_Accel_LN_X_CAL\n',
+       'P053_arm5_Accel_LN_Y_CAL\n', 'P053_arm5_Accel_LN_Z_CAL\n',
+       'P053_arm5_Accel_WR_X_CAL\n', 'P053_arm5_Accel_WR_Y_CAL\n',
+       'P053_arm5_Accel_WR_Z_CAL\n', 'P053_arm5_Gyro_X_CAL\n',
+       'P053_arm5_Gyro_Y_CAL\n', 'P053_arm5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P053_ankle2_Timestamp_Unix_CAL\n', 'P053_ankle2_Accel_LN_X_CAL\n',
+       'P053_ankle2_Accel_LN_Y_CAL\n', 'P053_ankle2_Accel_LN_Z_CAL\n',
+       'P053_ankle2_Accel_WR_X_CAL\n', 'P053_ankle2_Accel_WR_Y_CAL\n',
+       'P053_ankle2_Accel_WR_Z_CAL\n', 'P053_ankle2_Gyro_X_CAL\n',
+       'P053_ankle2_Gyro_Y_CAL\n', 'P053_ankle2_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P004_arm1_Timestamp_Unix_CAL\n', 'P004_arm1_Accel_LN_X_CAL\n',
+       'P004_arm1_Accel_LN_Y_CAL\n', 'P004_arm1_Accel_LN_Z_CAL\n',
+       'P004_arm1_Accel_WR_X_CAL\n', 'P004_arm1_Accel_WR_Y_CAL\n',
+       'P004_arm1_Accel_WR_Z_CAL\n', 'P004_arm1_Gyro_X_CAL\n',
+       'P004_arm1_Gyro_Y_CAL\n', 'P004_arm1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P004_ankle1_Timestamp_Unix_CAL\n', 'P004_ankle1_Accel_LN_X_CAL\n',
+       'P004_ankle1_Accel_LN_Y_CAL\n', 'P004_ankle1_Accel_LN_Z_CAL\n',
+       'P004_ankle1_Accel_WR_X_CAL\n', 'P004_ankle1_Accel_WR_Y_CAL\n',
+       'P004_ankle1_Accel_WR_Z_CAL\n', 'P004_ankle1_Gyro_X_CAL\n',
+       'P004_ankle1_Gyro_Y_CAL\n', 'P004_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P004_arm5_Timestamp_Unix_CAL\n', 'P004_arm5_Accel_LN_X_CAL\n',
+       'P004_arm5_Accel_LN_Y_CAL\n', 'P004_arm5_Accel_LN_Z_CAL\n',
+       'P004_arm5_Accel_WR_X_CAL\n', 'P004_arm5_Accel_WR_Y_CAL\n',
+       'P004_arm5_Accel_WR_Z_CAL\n', 'P004_arm5_Gyro_X_CAL\n',
+       'P004_arm5_Gyro_Y_CAL\n', 'P004_arm5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P004_ankle3_Timestamp_Unix_CAL\n', 'P004_ankle3_Accel_LN_X_CAL\n',
+       'P004_ankle3_Accel_LN_Y_CAL\n', 'P004_ankle3_Accel_LN_Z_CAL\n',
+       'P004_ankle3_Accel_WR_X_CAL\n', 'P004_ankle3_Accel_WR_Y_CAL\n',
+       'P004_ankle3_Accel_WR_Z_CAL\n', 'P004_ankle3_Gyro_X_CAL\n',
+       'P004_ankle3_Gyro_Y_CAL\n', 'P004_ankle3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P004_arm3_Timestamp_Unix_CAL\n', 'P004_arm3_Accel_LN_X_CAL\n',
+       'P004_arm3_Accel_LN_Y_CAL\n', 'P004_arm3_Accel_LN_Z_CAL\n',
+       'P004_arm3_Accel_WR_X_CAL\n', 'P004_arm3_Accel_WR_Y_CAL\n',
+       'P004_arm3_Accel_WR_Z_CAL\n', 'P004_arm3_Gyro_X_CAL\n',
+       'P004_arm3_Gyro_Y_CAL\n', 'P004_arm3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P004_ankle5_Timestamp_Unix_CAL\n', 'P004_ankle5_Accel_LN_X_CAL\n',
+       'P004_ankle5_Accel_LN_Y_CAL\n', 'P004_ankle5_Accel_LN_Z_CAL\n',
+       'P004_ankle5_Accel_WR_X_CAL\n', 'P004_ankle5_Accel_WR_Y_CAL\n',
+       'P004_ankle5_Accel_WR_Z_CAL\n', 'P004_ankle5_Gyro_X_CAL\n',
+       'P004_ankle5_Gyro_Y_CAL\n', 'P004_ankle5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P028_arm3_Timestamp_Unix_CAL\n', 'P028_arm3_Accel_LN_X_CAL\n',
+       'P028_arm3_Accel_LN_Y_CAL\n', 'P028_arm3_Accel_LN_Z_CAL\n',
+       'P028_arm3_Accel_WR_X_CAL\n', 'P028_arm3_Accel_WR_Y_CAL\n',
+       'P028_arm3_Accel_WR_Z_CAL\n', 'P028_arm3_Gyro_X_CAL\n',
+       'P028_arm3_Gyro_Y_CAL\n', 'P028_arm3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P028_arm5_Timestamp_Unix_CAL\n', 'P028_arm5_Accel_LN_X_CAL\n',
+       'P028_arm5_Accel_LN_Y_CAL\n', 'P028_arm5_Accel_LN_Z_CAL\n',
+       'P028_arm5_Accel_WR_X_CAL\n', 'P028_arm5_Accel_WR_Y_CAL\n',
+       'P028_arm5_Accel_WR_Z_CAL\n', 'P028_arm5_Gyro_X_CAL\n',
+       'P028_arm5_Gyro_Y_CAL\n', 'P028_arm5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P028_ankle3_Timestamp_Unix_CAL\n', 'P028_ankle3_Accel_LN_X_CAL\n',
+       'P028_ankle3_Accel_LN_Y_CAL\n', 'P028_ankle3_Accel_LN_Z_CAL\n',
+       'P028_ankle3_Accel_WR_X_CAL\n', 'P028_ankle3_Accel_WR_Y_CAL\n',
+       'P028_ankle3_Accel_WR_Z_CAL\n', 'P028_ankle3_Gyro_X_CAL\n',
+       'P028_ankle3_Gyro_Y_CAL\n', 'P028_ankle3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P028_ankle1_Timestamp_Unix_CAL\n', 'P028_ankle1_Accel_LN_X_CAL\n',
+       'P028_ankle1_Accel_LN_Y_CAL\n', 'P028_ankle1_Accel_LN_Z_CAL\n',
+       'P028_ankle1_Accel_WR_X_CAL\n', 'P028_ankle1_Accel_WR_Y_CAL\n',
+       'P028_ankle1_Accel_WR_Z_CAL\n', 'P028_ankle1_Gyro_X_CAL\n',
+       'P028_ankle1_Gyro_Y_CAL\n', 'P028_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P020_ankle1_Timestamp_Unix_CAL\n', 'P020_ankle1_Accel_LN_X_CAL\n',
+       'P020_ankle1_Accel_LN_Y_CAL\n', 'P020_ankle1_Accel_LN_Z_CAL\n',
+       'P020_ankle1_Accel_WR_X_CAL\n', 'P020_ankle1_Accel_WR_Y_CAL\n',
+       'P020_ankle1_Accel_WR_Z_CAL\n', 'P020_ankle1_Gyro_X_CAL\n',
+       'P020_ankle1_Gyro_Y_CAL\n', 'P020_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P063_ankle1_Timestamp_Unix_CAL\n', 'P063_ankle1_Accel_LN_X_CAL\n',
+       'P063_ankle1_Accel_LN_Y_CAL\n', 'P063_ankle1_Accel_LN_Z_CAL\n',
+       'P063_ankle1_Accel_WR_X_CAL\n', 'P063_ankle1_Accel_WR_Y_CAL\n',
+       'P063_ankle1_Accel_WR_Z_CAL\n', 'P063_ankle1_Gyro_X_CAL\n',
+       'P063_ankle1_Gyro_Y_CAL\n', 'P063_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P063_arm4_Timestamp_Unix_CAL\n', 'P063_arm4_Accel_LN_X_CAL\n',
+       'P063_arm4_Accel_LN_Y_CAL\n', 'P063_arm4_Accel_LN_Z_CAL\n',
+       'P063_arm4_Accel_WR_X_CAL\n', 'P063_arm4_Accel_WR_Y_CAL\n',
+       'P063_arm4_Accel_WR_Z_CAL\n', 'P063_arm4_Gyro_X_CAL\n',
+       'P063_arm4_Gyro_Y_CAL\n', 'P063_arm4_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P063_ankle3_Timestamp_Unix_CAL\n', 'P063_ankle3_Accel_LN_X_CAL\n',
+       'P063_ankle3_Accel_LN_Y_CAL\n', 'P063_ankle3_Accel_LN_Z_CAL\n',
+       'P063_ankle3_Accel_WR_X_CAL\n', 'P063_ankle3_Accel_WR_Y_CAL\n',
+       'P063_ankle3_Accel_WR_Z_CAL\n', 'P063_ankle3_Gyro_X_CAL\n',
+       'P063_ankle3_Gyro_Y_CAL\n', 'P063_ankle3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P063_arm3_Timestamp_Unix_CAL\n', 'P063_arm3_Accel_LN_X_CAL\n',
+       'P063_arm3_Accel_LN_Y_CAL\n', 'P063_arm3_Accel_LN_Z_CAL\n',
+       'P063_arm3_Accel_WR_X_CAL\n', 'P063_arm3_Accel_WR_Y_CAL\n',
+       'P063_arm3_Accel_WR_Z_CAL\n', 'P063_arm3_Gyro_X_CAL\n',
+       'P063_arm3_Gyro_Y_CAL\n', 'P063_arm3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P045_ankle3_Timestamp_Unix_CAL\n', 'P045_ankle3_Accel_LN_X_CAL\n',
+       'P045_ankle3_Accel_LN_Y_CAL\n', 'P045_ankle3_Accel_LN_Z_CAL\n',
+       'P045_ankle3_Accel_WR_X_CAL\n', 'P045_ankle3_Accel_WR_Y_CAL\n',
+       'P045_ankle3_Accel_WR_Z_CAL\n', 'P045_ankle3_Gyro_X_CAL\n',
+       'P045_ankle3_Gyro_Y_CAL\n', 'P045_ankle3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P045_ankle5_Timestamp_Unix_CAL\n', 'P045_ankle5_Accel_LN_X_CAL\n',
+       'P045_ankle5_Accel_LN_Y_CAL\n', 'P045_ankle5_Accel_LN_Z_CAL\n',
+       'P045_ankle5_Accel_WR_X_CAL\n', 'P045_ankle5_Accel_WR_Y_CAL\n',
+       'P045_ankle5_Accel_WR_Z_CAL\n', 'P045_ankle5_Gyro_X_CAL\n',
+       'P045_ankle5_Gyro_Y_CAL\n', 'P045_ankle5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P045_ankle1_Timestamp_Unix_CAL\n', 'P045_ankle1_Accel_LN_X_CAL\n',
+       'P045_ankle1_Accel_LN_Y_CAL\n', 'P045_ankle1_Accel_LN_Z_CAL\n',
+       'P045_ankle1_Accel_WR_X_CAL\n', 'P045_ankle1_Accel_WR_Y_CAL\n',
+       'P045_ankle1_Accel_WR_Z_CAL\n', 'P045_ankle1_Gyro_X_CAL\n',
+       'P045_ankle1_Gyro_Y_CAL\n', 'P045_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+
+Location emg dont recognized. Trying arm
+Index(['P026_EMG_arm_Timestamp_Unix_CAL\n', 'P026_EMG_arm_Accel_WR_X_CAL\n',
+       'P026_EMG_arm_Accel_WR_Y_CAL\n', 'P026_EMG_arm_Accel_WR_Z_CAL\n',
+       'P026_EMG_arm_Gyro_X_CAL\n', 'P026_EMG_arm_Gyro_Y_CAL\n',
+       'P026_EMG_arm_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P026_ankle2_Timestamp_Unix_CAL\n', 'P026_ankle2_Accel_LN_X_CAL\n',
+       'P026_ankle2_Accel_LN_Y_CAL\n', 'P026_ankle2_Accel_LN_Z_CAL\n',
+       'P026_ankle2_Accel_WR_X_CAL\n', 'P026_ankle2_Accel_WR_Y_CAL\n',
+       'P026_ankle2_Accel_WR_Z_CAL\n', 'P026_ankle2_Gyro_X_CAL\n',
+       'P026_ankle2_Gyro_Y_CAL\n', 'P026_ankle2_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P066_ankle1_Timestamp_Unix_CAL\n', 'P066_ankle1_Accel_LN_X_CAL\n',
+       'P066_ankle1_Accel_LN_Y_CAL\n', 'P066_ankle1_Accel_LN_Z_CAL\n',
+       'P066_ankle1_Accel_WR_X_CAL\n', 'P066_ankle1_Accel_WR_Y_CAL\n',
+       'P066_ankle1_Accel_WR_Z_CAL\n', 'P066_ankle1_Gyro_X_CAL\n',
+       'P066_ankle1_Gyro_Y_CAL\n', 'P066_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+
+Location emg dont recognized. Trying arm
+Index(['P021_EMG_arm_Timestamp_Unix_CAL\n', 'P021_EMG_arm_Accel_WR_X_CAL\n',
+       'P021_EMG_arm_Accel_WR_Y_CAL\n', 'P021_EMG_arm_Accel_WR_Z_CAL\n',
+       'P021_EMG_arm_Gyro_X_CAL\n', 'P021_EMG_arm_Gyro_Y_CAL\n',
+       'P021_EMG_arm_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P021_ankle1_Timestamp_Unix_CAL\n', 'P021_ankle1_Accel_LN_X_CAL\n',
+       'P021_ankle1_Accel_LN_Y_CAL\n', 'P021_ankle1_Accel_LN_Z_CAL\n',
+       'P021_ankle1_Accel_WR_X_CAL\n', 'P021_ankle1_Accel_WR_Y_CAL\n',
+       'P021_ankle1_Accel_WR_Z_CAL\n', 'P021_ankle1_Gyro_X_CAL\n',
+       'P021_ankle1_Gyro_Y_CAL\n', 'P021_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P021_arm3_Timestamp_Unix_CAL\n', 'P021_arm3_Accel_LN_X_CAL\n',
+       'P021_arm3_Accel_LN_Y_CAL\n', 'P021_arm3_Accel_LN_Z_CAL\n',
+       'P021_arm3_Accel_WR_X_CAL\n', 'P021_arm3_Accel_WR_Y_CAL\n',
+       'P021_arm3_Accel_WR_Z_CAL\n', 'P021_arm3_Gyro_X_CAL\n',
+       'P021_arm3_Gyro_Y_CAL\n', 'P021_arm3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P021_ankle3_Timestamp_Unix_CAL\n', 'P021_ankle3_Accel_LN_X_CAL\n',
+       'P021_ankle3_Accel_LN_Y_CAL\n', 'P021_ankle3_Accel_LN_Z_CAL\n',
+       'P021_ankle3_Accel_WR_X_CAL\n', 'P021_ankle3_Accel_WR_Y_CAL\n',
+       'P021_ankle3_Accel_WR_Z_CAL\n', 'P021_ankle3_Gyro_X_CAL\n',
+       'P021_ankle3_Gyro_Y_CAL\n', 'P021_ankle3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P002_ankle_Timestamp_Unix_CAL\n', 'P002_ankle_Accel_WR_X_CAL\n',
+       'P002_ankle_Accel_WR_Y_CAL\n', 'P002_ankle_Accel_WR_Z_CAL\n',
+       'P002_ankle_Gyro_X_CAL\n', 'P002_ankle_Gyro_Y_CAL\n',
+       'P002_ankle_Gyro_Z_CAL\n'],
+      dtype='object')
+
+Location emg dont recognized. Trying arm
+Index(['P002_emg_arm_Timestamp_Unix_CAL\n', 'P002_emg_arm_Accel_WR_X_CAL\n',
+       'P002_emg_arm_Accel_WR_Y_CAL\n', 'P002_emg_arm_Accel_WR_Z_CAL\n',
+       'P002_emg_arm_Gyro_X_CAL\n', 'P002_emg_arm_Gyro_Y_CAL\n',
+       'P002_emg_arm_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P062_arm_Timestamp_Unix_CAL\n', 'P062_arm_Accel_WR_X_CAL\n',
+       'P062_arm_Accel_WR_Y_CAL\n', 'P062_arm_Accel_WR_Z_CAL\n',
+       'P062_arm_Gyro_X_CAL\n', 'P062_arm_Gyro_Y_CAL\n',
+       'P062_arm_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P062_ankle4_Timestamp_Unix_CAL\n', 'P062_ankle4_Accel_LN_X_CAL\n',
+       'P062_ankle4_Accel_LN_Y_CAL\n', 'P062_ankle4_Accel_LN_Z_CAL\n',
+       'P062_ankle4_Accel_WR_X_CAL\n', 'P062_ankle4_Accel_WR_Y_CAL\n',
+       'P062_ankle4_Accel_WR_Z_CAL\n', 'P062_ankle4_Gyro_X_CAL\n',
+       'P062_ankle4_Gyro_Y_CAL\n', 'P062_ankle4_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P062_ankle2_Timestamp_Unix_CAL\n', 'P062_ankle2_Accel_LN_X_CAL\n',
+       'P062_ankle2_Accel_LN_Y_CAL\n', 'P062_ankle2_Accel_LN_Z_CAL\n',
+       'P062_ankle2_Accel_WR_X_CAL\n', 'P062_ankle2_Accel_WR_Y_CAL\n',
+       'P062_ankle2_Accel_WR_Z_CAL\n', 'P062_ankle2_Gyro_X_CAL\n',
+       'P062_ankle2_Gyro_Y_CAL\n', 'P062_ankle2_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P062_ankle_Timestamp_Unix_CAL\n', 'P062_ankle_Accel_WR_X_CAL\n',
+       'P062_ankle_Accel_WR_Y_CAL\n', 'P062_ankle_Accel_WR_Z_CAL\n',
+       'P062_ankle_Gyro_X_CAL\n', 'P062_ankle_Gyro_Y_CAL\n',
+       'P062_ankle_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P011_ankle1_Timestamp_Unix_CAL\n', 'P011_ankle1_Accel_LN_X_CAL\n',
+       'P011_ankle1_Accel_LN_Y_CAL\n', 'P011_ankle1_Accel_LN_Z_CAL\n',
+       'P011_ankle1_Accel_WR_X_CAL\n', 'P011_ankle1_Accel_WR_Y_CAL\n',
+       'P011_ankle1_Accel_WR_Z_CAL\n', 'P011_ankle1_Gyro_X_CAL\n',
+       'P011_ankle1_Gyro_Y_CAL\n', 'P011_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P017_ankle3_Timestamp_Unix_CAL\n', 'P017_ankle3_Accel_LN_X_CAL\n',
+       'P017_ankle3_Accel_LN_Y_CAL\n', 'P017_ankle3_Accel_LN_Z_CAL\n',
+       'P017_ankle3_Accel_WR_X_CAL\n', 'P017_ankle3_Accel_WR_Y_CAL\n',
+       'P017_ankle3_Accel_WR_Z_CAL\n', 'P017_ankle3_Gyro_X_CAL\n',
+       'P017_ankle3_Gyro_Y_CAL\n', 'P017_ankle3_Gyro_Z_CAL\n'],
+      dtype='object')
+
+Location acc dont recognized. Trying leg
+Index(['P017_Acc_leg_Timestamp_Unix_CAL\n', 'P017_Acc_leg_Accel_LN_X_CAL\n',
+       'P017_Acc_leg_Accel_LN_Y_CAL\n', 'P017_Acc_leg_Accel_LN_Z_CAL\n',
+       'P017_Acc_leg_Accel_WR_X_CAL\n', 'P017_Acc_leg_Accel_WR_Y_CAL\n',
+       'P017_Acc_leg_Accel_WR_Z_CAL\n', 'P017_Acc_leg_Gyro_X_CAL\n',
+       'P017_Acc_leg_Gyro_Y_CAL\n', 'P017_Acc_leg_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P017_ankle1_Timestamp_Unix_CAL\n', 'P017_ankle1_Accel_LN_X_CAL\n',
+       'P017_ankle1_Accel_LN_Y_CAL\n', 'P017_ankle1_Accel_LN_Z_CAL\n',
+       'P017_ankle1_Accel_WR_X_CAL\n', 'P017_ankle1_Accel_WR_Y_CAL\n',
+       'P017_ankle1_Accel_WR_Z_CAL\n', 'P017_ankle1_Gyro_X_CAL\n',
+       'P017_ankle1_Gyro_Y_CAL\n', 'P017_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P017_arm5_Timestamp_Unix_CAL\n', 'P017_arm5_Accel_LN_X_CAL\n',
+       'P017_arm5_Accel_LN_Y_CAL\n', 'P017_arm5_Accel_LN_Z_CAL\n',
+       'P017_arm5_Accel_WR_X_CAL\n', 'P017_arm5_Accel_WR_Y_CAL\n',
+       'P017_arm5_Accel_WR_Z_CAL\n', 'P017_arm5_Gyro_X_CAL\n',
+       'P017_arm5_Gyro_Y_CAL\n', 'P017_arm5_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P017_arm3_Timestamp_Unix_CAL\n', 'P017_arm3_Accel_LN_X_CAL\n',
+       'P017_arm3_Accel_LN_Y_CAL\n', 'P017_arm3_Accel_LN_Z_CAL\n',
+       'P017_arm3_Accel_WR_X_CAL\n', 'P017_arm3_Accel_WR_Y_CAL\n',
+       'P017_arm3_Accel_WR_Z_CAL\n', 'P017_arm3_Gyro_X_CAL\n',
+       'P017_arm3_Gyro_Y_CAL\n', 'P017_arm3_Gyro_Z_CAL\n'],
+      dtype='object')
+
+Location emg dont recognized. Trying arm
+Index(['P017_EMG_arm_Timestamp_Unix_CAL\n', 'P017_EMG_arm_Accel_WR_X_CAL\n',
+       'P017_EMG_arm_Accel_WR_Y_CAL\n', 'P017_EMG_arm_Accel_WR_Z_CAL\n',
+       'P017_EMG_arm_Gyro_X_CAL\n', 'P017_EMG_arm_Gyro_Y_CAL\n',
+       'P017_EMG_arm_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P046_ankle3_Timestamp_Unix_CAL\n', 'P046_ankle3_Accel_LN_X_CAL\n',
+       'P046_ankle3_Accel_LN_Y_CAL\n', 'P046_ankle3_Accel_LN_Z_CAL\n',
+       'P046_ankle3_Accel_WR_X_CAL\n', 'P046_ankle3_Accel_WR_Y_CAL\n',
+       'P046_ankle3_Accel_WR_Z_CAL\n', 'P046_ankle3_Gyro_X_CAL\n',
+       'P046_ankle3_Gyro_Y_CAL\n', 'P046_ankle3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P046_arm3_Timestamp_Unix_CAL\n', 'P046_arm3_Accel_LN_X_CAL\n',
+       'P046_arm3_Accel_LN_Y_CAL\n', 'P046_arm3_Accel_LN_Z_CAL\n',
+       'P046_arm3_Accel_WR_X_CAL\n', 'P046_arm3_Accel_WR_Y_CAL\n',
+       'P046_arm3_Accel_WR_Z_CAL\n', 'P046_arm3_Gyro_X_CAL\n',
+       'P046_arm3_Gyro_Y_CAL\n', 'P046_arm3_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P046_ankle1_Timestamp_Unix_CAL\n', 'P046_ankle1_Accel_LN_X_CAL\n',
+       'P046_ankle1_Accel_LN_Y_CAL\n', 'P046_ankle1_Accel_LN_Z_CAL\n',
+       'P046_ankle1_Accel_WR_X_CAL\n', 'P046_ankle1_Accel_WR_Y_CAL\n',
+       'P046_ankle1_Accel_WR_Z_CAL\n', 'P046_ankle1_Gyro_X_CAL\n',
+       'P046_ankle1_Gyro_Y_CAL\n', 'P046_ankle1_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P041_ankle4_Timestamp_Unix_CAL\n', 'P041_ankle4_Accel_LN_X_CAL\n',
+       'P041_ankle4_Accel_LN_Y_CAL\n', 'P041_ankle4_Accel_LN_Z_CAL\n',
+       'P041_ankle4_Accel_WR_X_CAL\n', 'P041_ankle4_Accel_WR_Y_CAL\n',
+       'P041_ankle4_Accel_WR_Z_CAL\n', 'P041_ankle4_Gyro_X_CAL\n',
+       'P041_ankle4_Gyro_Y_CAL\n', 'P041_ankle4_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P041_ankle6_Timestamp_Unix_CAL\n', 'P041_ankle6_Accel_LN_X_CAL\n',
+       'P041_ankle6_Accel_LN_Y_CAL\n', 'P041_ankle6_Accel_LN_Z_CAL\n',
+       'P041_ankle6_Accel_WR_X_CAL\n', 'P041_ankle6_Accel_WR_Y_CAL\n',
+       'P041_ankle6_Accel_WR_Z_CAL\n', 'P041_ankle6_Gyro_X_CAL\n',
+       'P041_ankle6_Gyro_Y_CAL\n', 'P041_ankle6_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P041_arm6_Timestamp_Unix_CAL\n', 'P041_arm6_Accel_LN_X_CAL\n',
+       'P041_arm6_Accel_LN_Y_CAL\n', 'P041_arm6_Accel_LN_Z_CAL\n',
+       'P041_arm6_Accel_WR_X_CAL\n', 'P041_arm6_Accel_WR_Y_CAL\n',
+       'P041_arm6_Accel_WR_Z_CAL\n', 'P041_arm6_Gyro_X_CAL\n',
+       'P041_arm6_Gyro_Y_CAL\n', 'P041_arm6_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P041_arm4_Timestamp_Unix_CAL\n', 'P041_arm4_Accel_LN_X_CAL\n',
+       'P041_arm4_Accel_LN_Y_CAL\n', 'P041_arm4_Accel_LN_Z_CAL\n',
+       'P041_arm4_Accel_WR_X_CAL\n', 'P041_arm4_Accel_WR_Y_CAL\n',
+       'P041_arm4_Accel_WR_Z_CAL\n', 'P041_arm4_Gyro_X_CAL\n',
+       'P041_arm4_Gyro_Y_CAL\n', 'P041_arm4_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P041_ankle2_Timestamp_Unix_CAL\n', 'P041_ankle2_Accel_LN_X_CAL\n',
+       'P041_ankle2_Accel_LN_Y_CAL\n', 'P041_ankle2_Accel_LN_Z_CAL\n',
+       'P041_ankle2_Accel_WR_X_CAL\n', 'P041_ankle2_Accel_WR_Y_CAL\n',
+       'P041_ankle2_Accel_WR_Z_CAL\n', 'P041_ankle2_Gyro_X_CAL\n',
+       'P041_ankle2_Gyro_Y_CAL\n', 'P041_ankle2_Gyro_Z_CAL\n'],
+      dtype='object')
+Index(['P018_ankle2_Timestamp_Unix_CAL\n', 'P018_ankle2_Accel_LN_X_CAL\n',
+       'P018_ankle2_Accel_LN_Y_CAL\n', 'P018_ankle2_Accel_LN_Z_CAL\n',
+       'P018_ankle2_Accel_WR_X_CAL\n', 'P018_ankle2_Accel_WR_Y_CAL\n',
+       'P018_ankle2_Accel_WR_Z_CAL\n', 'P018_ankle2_Gyro_X_CAL\n',
+       'P018_ankle2_Gyro_Y_CAL\n', 'P018_ankle2_Gyro_Z_CAL\n'],
+      dtype='object')
+
+Location emg dont recognized. Trying arm
+Index(['P018_EMG_arm_Timestamp_Unix_CAL\n', 'P018_EMG_arm_Accel_WR_X_CAL\n',
+       'P018_EMG_arm_Accel_WR_Y_CAL\n', 'P018_EMG_arm_Accel_WR_Z_CAL\n',
+       'P018_EMG_arm_Gyro_X_CAL\n', 'P018_EMG_arm_Gyro_Y_CAL\n',
+       'P018_EMG_arm_Gyro_Z_CAL\n'],
+      dtype='object')
