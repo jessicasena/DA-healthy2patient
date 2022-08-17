@@ -1,42 +1,33 @@
-# Author : Jessica
-
-# Modified : Necessary
-# Modified on : May 25th
-# Modified by : Ziyuan Guan
-# Change the curation output file locations
-
-
 import pandas as pd
-import os
 import fnmatch
+import sys
 import dateutil
 from tqdm import tqdm
+import os
 from loguru import logger
 from multiprocessing import Pool
 import multiprocessing
-
+import datetime
 
 def process_curate_files(curate_files_fold: str):
-    _projectID = os.path.basename(curate_files_fold).split('_')[0]
-    downtimes_file = pd.read_csv(os.path.join(curate_files_fold, '%s_accel_downtime.csv') % (_projectID))
+    end_reason_file = pd.read_csv(os.path.join(curate_files_fold, 'end_reason_time.csv'))
+    end_reason_file['subj_id'] = end_reason_file['subj_id'].str.upper()
+    downtimes_file = pd.read_csv(os.path.join(curate_files_fold, 'patients_downtime.csv'))
     downtimes_file['subj_id'] = downtimes_file['subj_id'].str.upper()
-    start_end_times_file = pd.read_csv(os.path.join(curate_files_fold, '%s_accel_start_end.csv') % (_projectID))
+    start_end_times_file = pd.read_csv(os.path.join(curate_files_fold, 'server_accel_times.csv'))
     start_end_times_file['subj_id'] = start_end_times_file['subj_id'].str.upper()
 
-    return downtimes_file, start_end_times_file
+    return end_reason_file, downtimes_file, start_end_times_file
 
 
-# folder containing the clinical team's .csv files
-curate_files_dir = "/data/datasets/ICU_Data/Curation_Files/1013_Sensor_Data"
-# root folder containing the accelerometer files
-acc_dir = "/data2/datasets/ICU_Data/1013_Sensor_Data"
-# folder where the filtered accelerometer files will be saved
-output_dir = "/home/jsenadesouza/DA-healthy2patient/1013_Sensor_Data/"
-# output_dir = "/data2/datasets/ICU_Data/1013_Sensor_Data"
-
-
+# # root folder containing the accelerometer files
+acc_dir = "/data/datasets/ICU_Data/354_Sensor_Data/"
+# # folder containing the clinical team's .csv files
+curate_files_dir = "/home/jsenadesouza/DA-healthy2patient/PAIN_downtimes/"
+# # folder where the filtered accelerometer files will be saved
+output_dir = "/home/jsenadesouza/DA-healthy2patient/354_Sensor_data/"
 # read Clinical team's notes
-downtimes_file, start_end_times_file = process_curate_files(curate_files_dir)
+end_reason_file, downtimes_file, start_end_times_file = process_curate_files(curate_files_dir)
 
 tzdict = {'EST': dateutil.tz.gettz('America/New_York'),
           'EDT': dateutil.tz.gettz('America/New_York')}
@@ -58,7 +49,7 @@ def read_acc_file(file_name: str):
     minimum_date = pd.Timestamp(2000, 1, 1)
     minimum_date = minimum_date.tz_localize('US/Eastern')
     if max(acc_file[timestamp_col]) < minimum_date:
-        raise Exception(f"File timestamps are out of the project time: {max(acc_file[timestamp_col])}")
+        raise Exception(f"File timestamps are out of the project time: {max(acc_file[timestamp_col])} column name: {acc_file.columns[0]}")
 
     return acc_file
 
@@ -70,9 +61,10 @@ def get_accs_files(dir_dataset: str):
             if file.endswith("SD.csv"):
                 acc_csv = os.path.join(root, file)
                 # just get csv files from Accelerometer directories
-                if fnmatch.fnmatch(root, f'{dir_dataset}/*'):
-                    if acc_csv not in accs and "Curated_file" not in root:
+                if fnmatch.fnmatch(root, f'{dir_dataset}*/Accel/*'):
+                    if acc_csv not in accs:
                         accs.append(acc_csv)
+
     return accs
 
 
@@ -98,9 +90,10 @@ def parse_location(array: list):
         elif 'emg' in string:
             location = 'arm'
         else:
-            raise Exception(f"Location {string} dont recognized. String:{array}. Fail")
+            sys.exit(f"\nLocation {string} dont recognized. String:{array}. Fail")
 
     return location
+
 
 def curate_acc(file_name):
     # read the accelerometer file
@@ -112,7 +105,7 @@ def curate_acc(file_name):
 
             # get patient id and location to filter clinical team's notes
             patient_id = timestamp_col.split("_")[0]
-            #check if there is ACC or GYR on the file
+            # check if there is ACC or GYR on the file
             hasmotionsensor = False
             for col in acc_file.columns:
                 col = col.lower()
@@ -124,6 +117,9 @@ def curate_acc(file_name):
             location = parse_location(timestamp_col.split("_"))
 
             # get information regarding this patient and body location on clinical team's notes
+            end_reason = end_reason_file[end_reason_file['subj_id'] == patient_id].values[0][-1]
+            if not pd.isna(end_reason):
+                end_reason = dateutil.parser.parse(end_reason + " EST", tzinfos=tzdict)
             downtimes = downtimes_file[
                 (downtimes_file['subj_id'] == patient_id) & (downtimes_file['location'] == location)].values
             start_end_times = start_end_times_file[
@@ -140,6 +136,10 @@ def curate_acc(file_name):
                     end = dateutil.parser.parse(start_end_times[0][-1] + " EST", tzinfos=tzdict)
                 else:
                     end = (pd.Timestamp.max - pd.Timedelta(days=1)).tz_localize('US/Eastern')
+
+            if not pd.isna(end_reason):
+                    if end > end_reason:
+                        end = end_reason
 
             # filter accelerometer file by the start and end times clinical teams said they put and removed the device
             acc_filtered = acc_file[(acc_file[timestamp_col] > start) & (acc_file[timestamp_col] < end)]
@@ -161,6 +161,7 @@ def curate_acc(file_name):
             for col in acc_filtered.columns:
                 if "timestamp" not in col.lower() and "accel" not in col.lower() and "gyr" not in col.lower():
                     copy_acc_filtered.drop(col, inplace=True, axis=1)
+
             if len(copy_acc_filtered) > 1:
 
                 # print(copy_acc_filtered.columns + '\n')
@@ -168,20 +169,19 @@ def curate_acc(file_name):
                 _folderName = file_name.split("/")[-2]
                 # created extra folder for curated files
                 _tempArray = [patient_id, patient_id + '_Accel', 'Curated_file', _folderName]
-                output_dir = output_dir + '/' + "/".join(_tempArray)
+                output_folder = output_dir + '/' + "/".join(_tempArray)
                 out_file_name = os.path.basename(file_name)
-                os.makedirs(output_dir, exist_ok=True)
-                copy_acc_filtered.to_csv(os.path.join(output_dir, out_file_name))
+                os.makedirs(output_folder, exist_ok=True)
+                copy_acc_filtered.to_csv(os.path.join(output_folder, out_file_name))
             else:
                 raise Exception(f"Filtered file has no data. Shape: {copy_acc_filtered.shape}")
-        else:
-            raise Exception("ACC file empty")
+
     except Exception as e:
         logger.error('    process ACCEL file : {} got error : {}', file_name, e)
 
 
 def curation():
-    logger.add("adapt_loguru.log", enqueue=True)
+    logger.add("pain_loguru.log", enqueue=True)
     # get accelerometer files
     acc_files = get_accs_files(acc_dir)
 
@@ -196,5 +196,4 @@ def curation():
 
 if __name__ == "__main__":
     curation()
-    #curate_acc("/data2/datasets/ICU_Data/1013_Sensor_Data/I037A/I037A_Accel/2022-05-03_11.30.07_I037A_arm1,2_SD_Session1/I037A_arm1,2_Session1_I037A_arm1,2_Calibrated_SD.csv")
-
+    #curate_acc("/data/datasets/ICU_Data/354_Sensor_Data/P026/Accel/2021-09-11_09.17.45_P026_arm2,3_SD_Session1/P026_EMG_arm_Session1_P026_arm2,3_Calibrated_SD.csv")

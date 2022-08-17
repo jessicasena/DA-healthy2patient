@@ -12,7 +12,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, LSTM, Conv2D, Lambda, Input
 from tensorflow.keras import optimizers
 from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras import backend as K
+from tensorflow.compat.v1.keras import backend as K
 from sklearn import metrics
 from layers import SelfAttention
 
@@ -68,8 +68,8 @@ F = 32
 D = 10
 DATA_FILES = ['WISDM.npz']
 MODE = 'LOTO'
-BASE_DIR = '../..;data/' + MODE + '/'
-SAVE_DIR = '/model_with_self_attn_' + MODE + '_results'
+BASE_DIR = '/home/jsenadesouza/DA-healthy2patient/code/ConvLSTMSelfAttention/data/' + MODE + '/'
+SAVE_DIR = '/home/jsenadesouza/DA-healthy2patient/code/ConvLSTMSelfAttention/' + MODE + '_results'
 
 if not os.path.exists(os.path.join(SAVE_DIR)):
     os.mkdir(os.path.join(SAVE_DIR))
@@ -125,7 +125,7 @@ if __name__ == '__main__':
                 num_conv_filters = CNN_FILTERS, batch_size = BATCH_SIZE, F = F, D= D)
 
             model_filename = SAVE_DIR + '/best_model_with_self_attn_' + str(DATA_FILE[0:-4]) + '_fold_' + str(i) + '.h5'
-            callbacks = [ModelCheckpoint(filepath=model_filename, monitor = 'val_acc', save_weights_only=True, save_best_only=True), EarlyStopping(monitor='val_acc', patience=PATIENCE)]#, LearningRateScheduler()]
+            callbacks = [ModelCheckpoint(filepath=model_filename, monitor = 'val_accuracy', save_weights_only=True, save_best_only=True), EarlyStopping(monitor='val_acc', patience=PATIENCE)]#, LearningRateScheduler()]
 
             opt = optimizers.Adam(clipnorm=1.)
 
