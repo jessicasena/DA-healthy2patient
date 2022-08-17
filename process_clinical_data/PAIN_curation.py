@@ -9,6 +9,7 @@ from multiprocessing import Pool
 import multiprocessing
 import datetime
 
+
 def process_curate_files(curate_files_fold: str):
     end_reason_file = pd.read_csv(os.path.join(curate_files_fold, 'end_reason_time.csv'))
     end_reason_file['subj_id'] = end_reason_file['subj_id'].str.upper()
@@ -174,7 +175,9 @@ def curate_acc(file_name):
                 os.makedirs(output_folder, exist_ok=True)
                 copy_acc_filtered.to_csv(os.path.join(output_folder, out_file_name))
             else:
-                raise Exception(f"Filtered file has no data. Shape: {copy_acc_filtered.shape}")
+                raise Exception(f"Filtered file has no data. Shape: {copy_acc_filtered.shape}. \n"
+                                f"Timestamps on file = min: {min(acc_file[timestamp_col])}, max: {max(acc_file[timestamp_col])}\n"
+                                f"Duration of the capture= Start: {start}, end: {end}")
 
     except Exception as e:
         logger.error('    process ACCEL file : {} got error : {}', file_name, e)
@@ -195,5 +198,5 @@ def curation():
 
 
 if __name__ == "__main__":
-    curation()
-    #curate_acc("/data/datasets/ICU_Data/354_Sensor_Data/P026/Accel/2021-09-11_09.17.45_P026_arm2,3_SD_Session1/P026_EMG_arm_Session1_P026_arm2,3_Calibrated_SD.csv")
+    #curation()
+    curate_acc("/data/datasets/ICU_Data/354_Sensor_Data/P052/Accel/2021-10-22_09.11.01_P052_ankle3_SD_Session1/P052_ankle3_Session1_P052_ankle3_Calibrated_SD.csv")

@@ -27,7 +27,7 @@ def model(x_train, num_labels, LSTM_units, num_conv_filters, batch_size, F, D):
     - num_conv_filters: number of CNN filters (int)
     - batch_size: number of samples to be processed in each batch
     - F: the attention length (int)
-    - D: the length of the output (int) 
+    - D: the length of the output (int)
     Returns
     - model: A Keras model
     """
@@ -76,7 +76,7 @@ if not os.path.exists(os.path.join(SAVE_DIR)):
     os.mkdir(os.path.join(SAVE_DIR))
 
 if __name__ == '__main__':
-    SEED = 0 
+    SEED = 0
     random.seed(SEED)
     np.random.seed(SEED)
     tf.compat.v1.set_random_seed(0)
@@ -120,7 +120,7 @@ if __name__ == '__main__':
                 y_test_one_hot = y_test_one_hot[0:-test_trailing_samples]
                 y_test = y_test[0:-test_trailing_samples]
 
-            print (y_train.shape, y_test.shape)   
+            print (y_train.shape, y_test.shape)
 
             rnn_model = model(x_train = X_train_, num_labels = NUM_LABELS, LSTM_units = LSTM_UNITS, \
                 num_conv_filters = CNN_FILTERS, batch_size = BATCH_SIZE, F = F, D= D)
@@ -141,7 +141,7 @@ if __name__ == '__main__':
             if early_stopping_epoch <= 0:
                 early_stopping_epoch = -100
 
-            # Evaluate model and predict data on TEST 
+            # Evaluate model and predict data on TEST
             print("******Evaluating TEST set*********")
             rnn_model.load_weights(model_filename)
 
