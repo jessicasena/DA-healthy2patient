@@ -194,14 +194,14 @@ def curation():
     # get accelerometer files
     acc_files = get_accs_files(acc_dir)
 
-    n_cpus = multiprocessing.cpu_count()
+    n_cpus = multiprocessing.cpu_count() // 2
     print(f"\n\nNUMBER OF CPUS: {n_cpus}.\n\n")
+
+    #sys.exit()
     start = time.monotonic()
 
     result = progress_imap(curate_acc, acc_files,
                            process_timeout=1800,
-                           initializer=memory_limit,
-                           initargs=(100,),
                            n_cpu=n_cpus)
     print(f'time took: {time.monotonic() - start:.1f}')
     print(result)
