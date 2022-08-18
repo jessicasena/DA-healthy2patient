@@ -31,9 +31,11 @@ def model(x_train, num_labels, LSTM_units, num_conv_filters, batch_size, F, D):
     Returns
     - model: A Keras model
     """
+    #Input size (N, 100, 3, 1)
     cnn_inputs = Input(shape=(x_train.shape[1], x_train.shape[2], 1), batch_size=batch_size, name='rnn_inputs')
     cnn_layer = Conv2D(num_conv_filters, kernel_size = (1, x_train.shape[2]), strides=(1, 1), padding='valid', data_format="channels_last")
     cnn_out = cnn_layer(cnn_inputs)
+    #transformer ()
 
     sq_layer = Lambda(lambda x: K.squeeze(x, axis = 2))
     sq_layer_out = sq_layer(cnn_out)
@@ -41,6 +43,8 @@ def model(x_train, num_labels, LSTM_units, num_conv_filters, batch_size, F, D):
     rnn_layer = LSTM(LSTM_units, return_sequences=True, name='lstm', return_state=True) #return_state=True
     rnn_layer_output, _, _ = rnn_layer(sq_layer_out)
 
+    #(16, 100, 32) -> accel
+    #(16, 101, 32)
     encoder_output, attention_weights = SelfAttention(size=F, num_hops=D, use_penalization=False, batch_size = batch_size)(rnn_layer_output)
     dense_layer = Dense(num_labels, activation = 'softmax')
     dense_layer_output = dense_layer(encoder_output)
