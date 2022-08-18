@@ -195,21 +195,22 @@ def curation():
     acc_files = get_accs_files(acc_dir)
 
     n_cpus = multiprocessing.cpu_count()
+    print(f"\n\nNUMBER OF CPUS: {n_cpus}.\n\n")
     start = time.monotonic()
 
     result = progress_imap(curate_acc, acc_files,
-                           process_timeout=1.5,
+                           process_timeout=1800,
                            initializer=memory_limit,
                            initargs=(100,),
                            n_cpu=n_cpus)
     print(f'time took: {time.monotonic() - start:.1f}')
     print(result)
 
-    with Pool(processes=n_cpus) as p:
-        max_ = len(acc_files)
-        with tqdm(total=max_) as pbar:
-            for _ in p.imap_unordered(curate_acc, acc_files):
-                pbar.update()
+    # with Pool(processes=n_cpus) as p:
+    #     max_ = len(acc_files)
+    #     with tqdm(total=max_) as pbar:
+    #         for _ in p.imap_unordered(curate_acc, acc_files):
+    #             pbar.update()
 
 
 if __name__ == "__main__":
