@@ -8,7 +8,13 @@ from loguru import logger
 from multiprocessing import Pool
 import multiprocessing
 import datetime
+import resource as rs
+from parallelbar import progress_imap
+import time
 
+def memory_limit(limit):
+    soft, hard = rs.getrlimit(rs.RLIMIT_AS)
+    rs.setrlimit(rs.RLIMIT_AS, (limit, hard))
 
 def process_curate_files(curate_files_fold: str):
     end_reason_file = pd.read_csv(os.path.join(curate_files_fold, 'end_reason_time.csv'))
@@ -189,6 +195,15 @@ def curation():
     acc_files = get_accs_files(acc_dir)
 
     n_cpus = multiprocessing.cpu_count()
+    start = time.monotonic()
+
+    result = progress_imap(curate_acc, acc_files,
+                           process_timeout=1.5,
+                           initializer=memory_limit,
+                           initargs=(100,),
+                           n_cpu=n_cpus)
+    print(f'time took: {time.monotonic() - start:.1f}')
+    print(result)
 
     with Pool(processes=n_cpus) as p:
         max_ = len(acc_files)
@@ -198,5 +213,5 @@ def curation():
 
 
 if __name__ == "__main__":
-    #curation()
-    curate_acc("/data/datasets/ICU_Data/354_Sensor_Data/P052/Accel/2021-10-22_09.11.01_P052_ankle3_SD_Session1/P052_ankle3_Session1_P052_ankle3_Calibrated_SD.csv")
+    curation()
+   # curate_acc("/data/datasets/ICU_Data/354_Sensor_Data/P052/Accel/2021-10-22_09.11.01_P052_ankle3_SD_Session1/P052_ankle3_Session1_P052_ankle3_Calibrated_SD.csv")
