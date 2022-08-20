@@ -16,7 +16,6 @@ from torch.utils.data import DataLoader
 from learn2learn.data.transforms import (ConsecutiveLabels, FusedNWaysKShots,
                                          LoadData, RemapLabels)
 
-
 def get_metrics(y_true, y_pred):
     return {
         'accuracy': accuracy_score(y_true, y_pred),
@@ -25,15 +24,16 @@ def get_metrics(y_true, y_pred):
         'confusion_matrix': confusion_matrix(y_true, y_pred)
     }
 
-def balanced_dataset(X, y):
-    from imblearn.under_sampling import RandomUnderSampler
-    from collections import Counter
-    under_sampler = RandomUnderSampler(random_state=42)
-    X_res, y_res = under_sampler.fit_resample(np.array(X).reshape(-1, 1), np.array(y).reshape(-1, 1))
-    print(f"Statistics before balancing: {Counter(y)}", flush=True)
-    print(f"Statistics after balancing: {Counter(y_res)}", flush=True)
-
-    return X_res.squeeze(), y_res.squeeze()
+#
+# def balanced_dataset(X, y):
+#     from imblearn.under_sampling import RandomUnderSampler
+#     from collections import Counter
+#     under_sampler = RandomUnderSampler(random_state=42)
+#     X_res, y_res = under_sampler.fit_resample(np.array(X).reshape(-1, 1), np.array(y).reshape(-1, 1))
+#     print(f"Statistics before balancing: {Counter(y)}", flush=True)
+#     print(f"Statistics after balancing: {Counter(y_res)}", flush=True)
+#
+#     return X_res.squeeze(), y_res.squeeze()
 
 
 def train(model, loader, optimizer, criterion, device, scheduler, writer, epochs=100, use_cuda=True, use_additional_data=False):
@@ -48,26 +48,26 @@ def train(model, loader, optimizer, criterion, device, scheduler, writer, epochs
                     acc, targets = acc.to(device), targets.to(device)
                     if use_additional_data:
                         add_data = add_data.to(device)
+                # zero the parameter gradients
+                optimizer.zero_grad()
 
+                # forward + backward + optimize
                 if use_additional_data:
                     preds = model(acc, add_data)
                 else:
                     preds = model(acc)
                 loss = criterion(preds, targets.long())
-
-                if use_cuda:
-                    targets = targets.cpu()
-                    
-                y_true = targets.numpy()
-                y_pred = np.argmax(preds.detach().cpu().numpy(), axis=1)
-
-                metrics = get_metrics(y_true, y_pred)
-
-                pbar.set_postfix(loss='{0:.6f}'.format(loss), accuracy='{0:.04f}'.format(metrics['accuracy']))
-
-                optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
+
+                # calculate metrics and print statistics
+                if use_cuda:
+                    targets = targets.cpu()
+                y_true = targets.numpy()
+                y_pred = np.argmax(preds.detach().cpu().numpy(), axis=1)
+                metrics = get_metrics(y_true, y_pred)
+                pbar.set_postfix(loss='{0:.6f}'.format(loss), accuracy='{0:.04f}'.format(metrics['accuracy']))
+
                 step += 1
                 writer.add_scalar('Loss/train', loss.item(), step)
                 writer.add_scalar('Metrics/acc', metrics['accuracy'], step)
@@ -75,156 +75,158 @@ def train(model, loader, optimizer, criterion, device, scheduler, writer, epochs
         scheduler.step()
 
 
-def train_withaddfeatures(model, loader, optimizer, criterion, device, epochs=100, use_cuda=True):
-    for epoch in range(epochs):
-        model.train()
-        with tqdm(loader) as pbar:
-            epoch_desc = 'Epoch {{0: <{0}d}}'.format(1 + int(math.log10(epochs))).format(epoch + 1)
-            pbar.set_description(epoch_desc)
-            for acc, poi, targets in pbar:
-                if use_cuda:
-                    acc, poi, targets = acc.to(device), poi.to(device), targets.to(device)
-                # optimizer.zero_grad()
-                model.zero_grad()
-                preds, _ = model(acc, poi)
-                loss = criterion(preds, targets.long())
-
-                if use_cuda:
-                    targets = targets.cpu()
-
-                y_true = targets.numpy()
-                y_pred = np.argmax(preds.detach().cpu().numpy(), axis=1)
-
-                metrics = get_metrics(y_true, y_pred)
-
-                pbar.set_postfix(loss='{0:.6f}'.format(loss), accuracy='{0:.04f}'.format(metrics['accuracy']))
-
-                # optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-
-
-def train_resnet(model, loader, optimizer, criterion, device, scheduler, writer, epochs=100, use_cuda=True):
-    step = 0
-    for epoch in range(epochs):
-        model.train()
-        with tqdm(loader) as pbar:
-            epoch_desc = 'Epoch {{0: <{0}d}}'.format(1 + int(math.log10(epochs))).format(epoch + 1)
-            pbar.set_description(epoch_desc)
-            for acc, poi, targets in pbar:
-                if use_cuda:
-                    acc, poi, targets = acc.to(device), poi.to(device), targets.to(device)
-
-                preds = model(acc, poi)
-                loss = criterion(preds, targets.long())
-
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-                step += 1
-
-                writer.add_scalar('Loss/train', loss.item(), step)
-
-                if use_cuda:
-                    targets = targets.cpu()
-
-                y_true = targets.numpy()
-                y_pred = np.argmax(preds.detach().cpu().numpy(), axis=1)
-
-                metrics = get_metrics(y_true, y_pred)
-
-                pbar.set_postfix(loss='{0:.6f}'.format(loss), accuracy='{0:.04f}'.format(metrics['accuracy']))
-                writer.add_scalar('Metrics/acc', metrics['accuracy'], step)
-                scheduler.step(epoch)
-
-
 def test(model, loader, device, use_cuda=True, use_additional_data=False):
-    model.eval()
     print('Eval model...')
     y_true = []
     y_pred = []
-    for inputs, add_data, targets in tqdm(loader):
-        if use_cuda:
-            inputs, targets = inputs.to(device), targets.to(device)
+    model.eval()
+    with torch.no_grad():
+        for inputs, add_data, targets in tqdm(loader):
+            if use_cuda:
+                inputs, targets = inputs.to(device), targets.to(device)
+                if use_additional_data:
+                    add_data = add_data.to(device)
+
             if use_additional_data:
-                add_data = add_data.to(device)
+                preds = model(inputs, add_data)
+            else:
+                preds = model(inputs)
 
-        if use_additional_data:
-            preds = model(inputs, add_data)
-        else:
-            preds = model(inputs)
+            if use_cuda:
+                targets = targets.cpu()
 
-        if use_cuda:
-            targets = targets.cpu()
-            
-        y_true.extend(targets.numpy())
-        y_pred.extend(np.argmax(preds.detach().cpu().numpy(), axis=1))
+            y_true.extend(targets.numpy())
+            y_pred.extend(np.argmax(preds.detach().cpu().numpy(), axis=1))
 
     return get_metrics(y_true, y_pred)
 
-
-def test_resnet(model, loader, device, use_cuda=True):
-    model.eval()
-    print('Eval model...')
-    y_true = []
-    y_pred = []
-    for inputs, targets in tqdm(loader):
-        if use_cuda:
-            inputs, targets = inputs.to(device), targets.to(device)
-
-        preds = model(inputs)
-
-        if use_cuda:
-            targets = targets.cpu()
-
-        y_true.extend(targets.numpy())
-        y_pred.extend(np.argmax(preds.detach().cpu().numpy(), axis=1))
-
-    return get_metrics(y_true, y_pred)
-
-
-def save_plot(test_interval, iteration, infos, title, results_path):
-    fig, ax = plt.subplots(1, 1, figsize=(12, 5))
-
-    ax.plot(range(test_interval, (iteration + 1) + test_interval, test_interval),
-            np.asarray(infos))
-    ax.set_title(title)
-
-    plt.savefig(os.path.join(results_path, f'{title}.pdf'))
-    plt.close(fig)
-
-
-def save_plot_2lines(acc, ma_acc, results_path):
-
-    plt.plot(np.asarray(acc), label="acc")
-
-    plt.plot(np.asarray(ma_acc), label="ma_acc")
-
-    plt.title('Train accuracy and mean average accuracy')
-
-    plt.legend()
-
-    plt.savefig(os.path.join(results_path, 'train_acc.pdf'))
-    plt.close()
-
-
-def save_plot_adapt_steps(adapt_values, accs, results_path):
-
-    plt.plot(adapt_values, accs)
-
-    plt.title('Accuracy x Tuning adaptation steps (mean 5 folds)')
-
-    plt.savefig(os.path.join(results_path, 'adapt_steps.pdf'))
-    plt.close()
-
-
-def moving_average(x, w):
-    return np.convolve(x, np.ones(w), 'valid') / w
-
-
-def accuracy(predictions, targets):
-    predictions = predictions.argmax(dim=1).view(targets.shape)
-    return (predictions == targets).sum().float() / targets.size(0)
+#
+# def train_withaddfeatures(model, loader, optimizer, criterion, device, epochs=100, use_cuda=True):
+#     for epoch in range(epochs):
+#         model.train()
+#         with tqdm(loader) as pbar:
+#             epoch_desc = 'Epoch {{0: <{0}d}}'.format(1 + int(math.log10(epochs))).format(epoch + 1)
+#             pbar.set_description(epoch_desc)
+#             for acc, poi, targets in pbar:
+#                 if use_cuda:
+#                     acc, poi, targets = acc.to(device), poi.to(device), targets.to(device)
+#                 # optimizer.zero_grad()
+#                 model.zero_grad()
+#                 preds, _ = model(acc, poi)
+#                 loss = criterion(preds, targets.long())
+#
+#                 if use_cuda:
+#                     targets = targets.cpu()
+#
+#                 y_true = targets.numpy()
+#                 y_pred = np.argmax(preds.detach().cpu().numpy(), axis=1)
+#
+#                 metrics = get_metrics(y_true, y_pred)
+#
+#                 pbar.set_postfix(loss='{0:.6f}'.format(loss), accuracy='{0:.04f}'.format(metrics['accuracy']))
+#
+#                 # optimizer.zero_grad()
+#                 loss.backward()
+#                 optimizer.step()
+#
+#
+# def train_resnet(model, loader, optimizer, criterion, device, scheduler, writer, epochs=100, use_cuda=True):
+#     step = 0
+#     for epoch in range(epochs):
+#         model.train()
+#         with tqdm(loader) as pbar:
+#             epoch_desc = 'Epoch {{0: <{0}d}}'.format(1 + int(math.log10(epochs))).format(epoch + 1)
+#             pbar.set_description(epoch_desc)
+#             for acc, poi, targets in pbar:
+#                 if use_cuda:
+#                     acc, poi, targets = acc.to(device), poi.to(device), targets.to(device)
+#
+#                 preds = model(acc, poi)
+#                 loss = criterion(preds, targets.long())
+#
+#                 optimizer.zero_grad()
+#                 loss.backward()
+#                 optimizer.step()
+#                 step += 1
+#
+#                 writer.add_scalar('Loss/train', loss.item(), step)
+#
+#                 if use_cuda:
+#                     targets = targets.cpu()
+#
+#                 y_true = targets.numpy()
+#                 y_pred = np.argmax(preds.detach().cpu().numpy(), axis=1)
+#
+#                 metrics = get_metrics(y_true, y_pred)
+#
+#                 pbar.set_postfix(loss='{0:.6f}'.format(loss), accuracy='{0:.04f}'.format(metrics['accuracy']))
+#                 writer.add_scalar('Metrics/acc', metrics['accuracy'], step)
+#                 scheduler.step(epoch)
+#
+#
+# def test_resnet(model, loader, device, use_cuda=True):
+#     model.eval()
+#     with torch.no_grad():
+#         print('Eval model...')
+#         y_true = []
+#         y_pred = []
+#         for inputs, targets in tqdm(loader):
+#             if use_cuda:
+#                 inputs, targets = inputs.to(device), targets.to(device)
+#
+#             preds = model(inputs)
+#
+#             if use_cuda:
+#                 targets = targets.cpu()
+#
+#             y_true.extend(targets.numpy())
+#             y_pred.extend(np.argmax(preds.detach().cpu().numpy(), axis=1))
+#
+#     return get_metrics(y_true, y_pred)
+#
+#
+# def save_plot(test_interval, iteration, infos, title, results_path):
+#     fig, ax = plt.subplots(1, 1, figsize=(12, 5))
+#
+#     ax.plot(range(test_interval, (iteration + 1) + test_interval, test_interval),
+#             np.asarray(infos))
+#     ax.set_title(title)
+#
+#     plt.savefig(os.path.join(results_path, f'{title}.pdf'))
+#     plt.close(fig)
+#
+#
+# def save_plot_2lines(acc, ma_acc, results_path):
+#
+#     plt.plot(np.asarray(acc), label="acc")
+#
+#     plt.plot(np.asarray(ma_acc), label="ma_acc")
+#
+#     plt.title('Train accuracy and mean average accuracy')
+#
+#     plt.legend()
+#
+#     plt.savefig(os.path.join(results_path, 'train_acc.pdf'))
+#     plt.close()
+#
+#
+# def save_plot_adapt_steps(adapt_values, accs, results_path):
+#
+#     plt.plot(adapt_values, accs)
+#
+#     plt.title('Accuracy x Tuning adaptation steps (mean 5 folds)')
+#
+#     plt.savefig(os.path.join(results_path, 'adapt_steps.pdf'))
+#     plt.close()
+#
+#
+# def moving_average(x, w):
+#     return np.convolve(x, np.ones(w), 'valid') / w
+#
+#
+# def accuracy(predictions, targets):
+#     predictions = predictions.argmax(dim=1).view(targets.shape)
+#     return (predictions == targets).sum().float() / targets.size(0)
 
 
 # def meta_train(model, device, loss, results_path, meta_loader, opt, scheduler, parameters, args):

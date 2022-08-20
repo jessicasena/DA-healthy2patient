@@ -198,7 +198,50 @@ class SensorDataset(data.Dataset):
         sample = np.transpose(sample, (1, 0))
 
         sample = sample.astype(np.float32)
-       # sample = np.pad(sample, ((0, 0), (self.padding_size, self.padding_size)), mode='constant')
+        sample = np.pad(sample, ((0, 0), (self.padding_size, self.padding_size)), mode='constant')
+        target = self.class_to_idx[self.labels[idx]]
+
+        if self.transform:
+            sample = self.transform(sample)
+
+        if self.target_transform:
+            target = self.target_transform(sample)
+
+        return (sample, add_data_sample, target)
+
+
+class SensorPublicDataset(data.Dataset):
+    def __init__(self, data, add_data, labels, transform=None, target_transform=None):
+        self.data = data
+        self.add_data = add_data
+        self.labels = labels
+        self.transform = transform
+        self.target_transform = target_transform
+        self.padding_size = padding(self.data[0].shape[0])
+        self.classes = np.unique(labels)
+        self.class_to_idx = {v: k for k, v in enumerate(self.classes)}
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        if torch.is_tensor(idx):
+            idx = idx.tolist()
+
+        sample = self.data[idx].squeeze()
+        add_data_sample = []
+        if self.add_data is not None:
+            add_data_sample = self.add_data[idx]
+
+        #sample = np.transpose(sample, (1, 0))
+        # if random.randrange(3) == 0:
+        #     sample = DA_Rotation(sample)
+        # if random.randrange(3) == 0:
+        #     sample = DA_Permutation(sample, minSegLength=20)
+        sample = np.transpose(sample, (1, 0))
+
+        sample = sample.astype(np.float32)
+        sample = np.pad(sample, ((0, 0), (self.padding_size, self.padding_size)), mode='constant')
         target = self.class_to_idx[self.labels[idx]]
 
         if self.transform:
