@@ -69,6 +69,19 @@ if __name__ == '__main__':
 
     y_col_names = list(dataset['y_col_names'])
     print(y_col_names)
+
+    print(f'Total of samples: {y.shape[0]}')
+    print(f'Total of hours: {y.shape[0] * 30 / 60}')
+    pain_samples = np.count_nonzero(np.char.find(np.array(y[:, -1]), "P") != -1)
+    adapt_samples = np.count_nonzero(np.char.find(np.array(y[:, -1]), "I") != -1)
+    print(
+        f"Intelligent ICU samples: {len(y) - pain_samples - adapt_samples}, PAIN samples: {pain_samples}, ADAPT samples: {adapt_samples}")
+    print(f'Total of patients: {len(np.unique(y[:, -1]))}')
+    pain_patients = np.count_nonzero(np.char.find(np.unique(y[:, -1]), "P") != -1)
+    adapt_patients = np.count_nonzero(np.char.find(np.unique(y[:, -1]), "I") != -1)
+    print(
+        f'Intelligent ICU patients: {len(np.unique(y[:, -1])) - adapt_patients - pain_patients}, PAIN patients: {pain_patients}, ADAPT patients: {adapt_patients}')
+
     col_idx_target = y_col_names.index(clin_variable_target)
     X, y = clean(X, y, col_idx_target)
     y_target = y[:, col_idx_target]
@@ -81,15 +94,15 @@ if __name__ == '__main__':
     labels2idx = {k: idx for idx, k in enumerate(np.unique(y))}
     use_cuda = torch.cuda.is_available()
     num_epochs = 20
-    batch_size_train = 16
+    batch_size_train = 40
     batch_size_test = 16
-    step = num_epochs / 5
+    #step = num_epochs / 5
 
     exp_name = f"exp_{time()}"
 
     device = torch.device('cuda:2') if use_cuda else torch.device('cpu')
 
-    cum_acc, cum_f1, cum_recall, cum_conf_matrices = [], [], [], []
+    cum_acc, cum_f1, cum_recall, cum_conf_matrices, cum_precision = [], [], [], [], []
 
     skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
@@ -119,7 +132,13 @@ if __name__ == '__main__':
         if use_additional_data:
             model = MetaSenseModeladdData(n_classes, add_data_train.shape[1])
         else:
-            model = TimeSeriesTransformer(n_classes, batch_first=True, dim_val=512)
+            model = TimeSeriesTransformer(n_classes, batch_first=False,
+                                      dim_val=512,
+                                      n_encoder_layers= 6,
+                                      n_heads = 8,
+                                      dropout_encoder = 0.1,
+                                      dropout_pos_enc = 0.1,
+                                      dim_feedforward_encoder= 128)
 
         model = model.to(device)
 
@@ -128,8 +147,8 @@ if __name__ == '__main__':
 
         criterion = nn.CrossEntropyLoss(weight=class_weights, reduction='mean')
         # criterion = nn.BCELoss()
-        optim = torch.optim.Adam(model.parameters(), lr=1e-2, weight_decay=1e-3)
-        scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=step, gamma=0.5)
+        optim = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-04)
+        scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=5, gamma=0.5)
 
         train(model, train_loader, optim, criterion, device, scheduler, writer, epochs=num_epochs, use_cuda=use_cuda, use_additional_data=use_additional_data)
 
@@ -137,16 +156,27 @@ if __name__ == '__main__':
 
         for k, v in metrics.items():
             if k != 'confusion_matrix':
-                print('Fold {} {}: {:.04f}'.format(folder_idx + 1, k.capitalize(), v))
+                print('Fold {} {}: {}'.format(folder_idx + 1, k.capitalize(), v))
 
         cum_acc.append(metrics['accuracy'])
         cum_f1.append(metrics['f1-score'])
         cum_recall.append(metrics['recall'])
+        cum_precision.append(metrics['precision'])
 
-    ci_mean = st.t.interval(0.9, len(cum_acc) - 1, loc=np.mean(cum_acc), scale=st.sem(cum_acc))
-    ci_f1 = st.t.interval(0.9, len(cum_f1) -1, loc=np.mean(cum_f1), scale=st.sem(cum_f1))
-    ci_recall = st.t.interval(0.9, len(cum_recall) -1, loc=np.mean(cum_recall), scale=st.sem(cum_recall))
+    for class_ in range(len(np.unique(y_target))):
+        print(f"Class: {class_}")
+        current_acc = np.array(cum_acc)
+        current_f1 = np.array(cum_f1)[:, class_]
+        current_recall = np.array(cum_recall)[:, class_]
+        current_prec = np.array(cum_precision)[:, class_]
+        ci_mean = st.t.interval(0.95, len(current_acc) - 1, loc=np.mean(current_acc), scale=st.sem(current_acc))
+        ci_f1 = st.t.interval(0.95, len(current_f1) -1, loc=np.mean(current_f1), scale=st.sem(current_f1))
+        ci_recall = st.t.interval(0.95, len(current_recall) -1, loc=np.mean(current_recall), scale=st.sem(current_recall))
+        #ci_auc = st.t.interval(0.95, len(cum_auc) -1, loc=np.mean(cum_auc), scale=st.sem(cum_auc))
+        # ci_AUROC = st.t.interval(0.95, len(cum_AUROC) -1, loc=np.mean(cum_AUROC), scale=st.sem(cum_AUROC))
+        ci_prec = st.t.interval(0.95, len(current_prec) -1, loc=np.mean(current_prec), scale=st.sem(current_prec))
 
-    print('accuracy: {:.2f} ± {:.2f}'.format(np.mean(cum_acc) * 100, abs(np.mean(cum_acc) - ci_mean[0]) * 100))
-    print('f1-score: {:.2f} ± {:.2f}'.format(np.mean(cum_f1) * 100, abs(np.mean(cum_f1) - ci_f1[0]) * 100))
-    print('recall: {:.2f} ± {:.2f}'.format(np.mean(cum_recall) * 100, abs(np.mean(cum_recall) - ci_recall[0]) * 100))
+        print('accuracy: {:.2f} ± {:.2f}'.format(np.mean(current_acc) * 100, abs(np.mean(current_acc) - ci_mean[0]) * 100))
+        print('recall: {:.2f} ± {:.2f}'.format(np.mean(current_recall) * 100, abs(np.mean(current_recall) - ci_recall[0]) * 100))
+        print('f1-score: {:.2f} ± {:.2f}'.format(np.mean(current_f1) * 100, abs(np.mean(current_f1) - ci_f1[0]) * 100))
+        print('precision: {:.2f} ± {:.2f}'.format(np.mean(current_prec) * 100, abs(np.mean(current_prec) - ci_prec[0]) * 100))

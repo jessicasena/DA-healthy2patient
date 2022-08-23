@@ -22,9 +22,19 @@ class TimeSeriesTransformer(nn.Module):
                  ):
 
         super().__init__()
+        self.window_size = 553
 
+        # self.encoder_input_layer = nn.Sequential(nn.Conv1d(3, dim_val, 1), nn.GELU(),
+        #                                 nn.Conv1d(dim_val, dim_val, 1), nn.GELU(),
+        #                                 nn.Conv1d(dim_val, dim_val, 1), nn.GELU(),
+        #                                 nn.Conv1d(dim_val, dim_val, 1), nn.GELU())
         self.encoder_input_layer = nn.Sequential(
-            nn.Conv1d(3, 32, kernel_size=10),
+            nn.Conv1d(3, 16, kernel_size=10),
+            nn.ReLU(True),
+            nn.BatchNorm1d(16),
+
+            nn.Conv1d(16, 32, kernel_size=10),
+            nn.MaxPool1d(2),
             nn.ReLU(True),
             nn.BatchNorm1d(32),
 
@@ -49,15 +59,31 @@ class TimeSeriesTransformer(nn.Module):
             nn.BatchNorm1d(512),
         )
 
-        self.positional_encoding_layer = PositionalEncoder(d_model=dim_val, dropout=dropout_pos_enc)
+        #self.positional_encoding_layer = PositionalEncoder(d_model=dim_val, dropout=dropout_pos_enc)
+
+        self.cls_token = nn.Parameter(torch.zeros((1, dim_val)), requires_grad=True)
+        self.position_embed = nn.Parameter(torch.randn(self.window_size + 1, 1, dim_val))#if batch_first else nn.Parameter(torch.randn(1, self.window_size + 1, dim_val))
 
         encoder_layer = nn.TransformerEncoderLayer(d_model=dim_val, nhead=n_heads,
                                                    dim_feedforward=dim_feedforward_encoder, dropout=dropout_encoder,
                                                    batch_first=batch_first)
 
         self.encoder = nn.TransformerEncoder(encoder_layer=encoder_layer, num_layers=n_encoder_layers, norm=None)
+        self.imu_head = nn.Sequential(
+            nn.LayerNorm(dim_val),
+            nn.Linear(dim_val, dim_val // 4),
+            nn.GELU(),
+            nn.Dropout(0.1),
+            nn.Linear(dim_val // 4, n_classes)
+        )
+        self.log_softmax = nn.LogSoftmax(dim=1)
 
-        self.linear_mapping = nn.Linear(in_features=dim_val, out_features=n_classes)
+        # init
+        for p in self.parameters():
+            if p.dim() > 1:
+                nn.init.xavier_uniform_(p)
+
+        #self.linear_mapping = nn.Linear(in_features=dim_val, out_features=n_classes)
 
     def forward(self, src: Tensor) -> Tensor:
         #print("Size of src as given to forward(): {}".format(src.size()))
@@ -67,21 +93,28 @@ class TimeSeriesTransformer(nn.Module):
 
         #print("Size of src after input layer: {}".format(src.size()))
 
-        src = src.permute(0, 2, 1)
+        src = src.permute(2, 0, 1)
+
+        # Prepend class token
+        cls_token = self.cls_token.unsqueeze(1).repeat(1, src.shape[1], 1)
+        src = torch.cat([cls_token, src])
+        src += self.position_embed
 
         #print("From model.forward(): Size of src after permute: {}".format(src.size()))
 
         # src shape: [batch_size, src length, dim_val] regardless of number of input features
-        src = self.positional_encoding_layer(src)
+        #src = self.positional_encoding_layer(src)
         #print("From model.forward(): Size of src after pos_enc layer: {}".format(src.size()))
 
-        # src shape: [batch_size, enc_seq_len, dim_val]
-        src = self.encoder(src=src)
+        # src shape: if batch first: [batch_size, enc_seq_len, dim_val] else: [enc_seq_len, batch_size, dim_val]
+
+        src = self.encoder(src=src)[0]
         #print("From model.forward(): Size of src after encoder: {}".format(src.size()))
 
-        src = torch.mean(src, dim=1)
+        #src = torch.mean(src, dim=1)
         # shape [batch_size, target seq len]
-        output = self.linear_mapping(src)
+        #output = self.linear_mapping(src)
+        output = self.log_softmax(self.imu_head(src))
         #print("From model.forward(): decoder_output size after linear_mapping = {}".format(output.size()))
 
         return output

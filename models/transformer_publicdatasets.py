@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
     use_cuda = torch.cuda.is_available()
     num_epochs = 50
-    batch_size_train = 256
+    batch_size_train = 16
     batch_size_test = 256
     step = num_epochs / 5
 
@@ -95,13 +95,13 @@ if __name__ == '__main__':
 
         test_loader = DataLoader(test_set, batch_size=batch_size_train, pin_memory=True)
 
-        model = TimeSeriesTransformer(n_classes, batch_first=True,
-                                      dim_val=32,
-                                      n_encoder_layers= 4,
+        model = TimeSeriesTransformer(n_classes, batch_first=False,
+                                      dim_val=512,
+                                      n_encoder_layers= 6,
                                       n_heads = 8,
-                                      dropout_encoder = 0.2,
+                                      dropout_encoder = 0.1,
                                       dropout_pos_enc = 0.1,
-                                      dim_feedforward_encoder= 2048)
+                                      dim_feedforward_encoder= 128)
 
         model = model.to(device)
 
@@ -110,8 +110,8 @@ if __name__ == '__main__':
 
         criterion = nn.CrossEntropyLoss(weight=class_weights, reduction='mean')
         # criterion = nn.BCELoss()
-        optim = torch.optim.Adam(model.parameters(), lr=1e-2, weight_decay=1e-3)
-        scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=step, gamma=0.5)
+        optim = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-04)
+        scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=5, gamma=0.5)
 
         train(model, train_loader, optim, criterion, device, scheduler, writer, epochs=num_epochs, use_cuda=use_cuda, use_additional_data=False)
 
