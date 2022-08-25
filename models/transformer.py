@@ -18,7 +18,7 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.utils import class_weight
 from tensorboardX import SummaryWriter
 from time import time
-
+import logging
 
 def rescale(x):
     x = (x - np.min(x) / (np.max(x) - np.min(x))) - 0.5
@@ -46,41 +46,63 @@ def get_clinical_data(y, y_col_names, target_col_name):
 
     clin_var = y[:, clin_var_idx]
 
-    print(f'Target = {y_col_names[col_target]}')
-    print("\nCLinical variables used:\n")
+    logging.info(f'Target = {y_col_names[col_target]}\n')
+    logging.info("\nCLinical variables used:")
     for idx in clin_var_idx:
-        print(f"{y_col_names[idx]}")
+       logging.info(f"{y_col_names[idx]}")
 
     return clin_var.astype(np.float32)
 
+def set_logger(filename):
+    # set up logging to file - see previous section for more details
+    logging.basicConfig(level=logging.DEBUG,
+                        format='%(asctime)s %(message)s',
+                        datefmt='%m-%d %H:%M',
+                        filename=filename,
+                        filemode='w')
+    # define a Handler which writes INFO messages or higher to the sys.stderr
+    console = logging.StreamHandler()
+    console.setLevel(logging.INFO)
+    # set a format which is simpler for console use
+    formatter = logging.Formatter('%(message)s')
+    # tell the handler to use this format
+    console.setFormatter(formatter)
+    # add the handler to the root logger
+    logging.getLogger().addHandler(console)
+
+    return logging
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Model baselines')
     parser.add_argument('-v', type=str, default="pain_score_class", help='Clinical variable to classify')
-
     args = parser.parse_args()
+
+    exp_name = f"exp_transformer_{args.v}_{time()}_focalloss.log"
+    out_folder = "/home/jsenadesouza/DA-healthy2patient/results/outcomes/classifier_results/"
+    logging = set_logger(os.path.join(out_folder, exp_name))
+
     filepath = "/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset/dataset_IntelligentICU_PAIN_ADAPT_Xchar_poi.npz"
     clin_variable_target = args.v
-    print(f"Clinical variable: {clin_variable_target}")
+    logging.info(f"Clinical variable: {clin_variable_target}")
     dataset = np.load(filepath, allow_pickle=True)
     X = dataset["X"]
     X = rescale(X)
     y = dataset["y"]
 
     y_col_names = list(dataset['y_col_names'])
-    print(y_col_names)
+    #out_file.write(y_col_names)
 
-    print(f'Total of samples: {y.shape[0]}')
-    print(f'Total of hours: {y.shape[0] * 30 / 60}')
+    logging.info(f'Total of samples: {y.shape[0]}\n')
+    logging.info(f'Total of hours: {y.shape[0] * 30 / 60}\n')
     pain_samples = np.count_nonzero(np.char.find(np.array(y[:, -1]), "P") != -1)
     adapt_samples = np.count_nonzero(np.char.find(np.array(y[:, -1]), "I") != -1)
-    print(
+    logging.info(
         f"Intelligent ICU samples: {len(y) - pain_samples - adapt_samples}, PAIN samples: {pain_samples}, ADAPT samples: {adapt_samples}")
-    print(f'Total of patients: {len(np.unique(y[:, -1]))}')
+    logging.info(f'Total of patients: {len(np.unique(y[:, -1]))}\n')
     pain_patients = np.count_nonzero(np.char.find(np.unique(y[:, -1]), "P") != -1)
     adapt_patients = np.count_nonzero(np.char.find(np.unique(y[:, -1]), "I") != -1)
-    print(
-        f'Intelligent ICU patients: {len(np.unique(y[:, -1])) - adapt_patients - pain_patients}, PAIN patients: {pain_patients}, ADAPT patients: {adapt_patients}')
+    logging.info(
+        f'Intelligent ICU patients: {len(np.unique(y[:, -1])) - adapt_patients - pain_patients}, PAIN patients: {pain_patients}, ADAPT patients: {adapt_patients}\n')
 
     col_idx_target = y_col_names.index(clin_variable_target)
     X, y = clean(X, y, col_idx_target)
@@ -98,7 +120,7 @@ if __name__ == '__main__':
     batch_size_test = 16
     #step = num_epochs / 5
 
-    exp_name = f"exp_{time()}"
+
 
     device = torch.device('cuda:2') if use_cuda else torch.device('cpu')
 
@@ -106,16 +128,17 @@ if __name__ == '__main__':
 
     skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
+    logging.info(str(np.unique(y_target, return_counts=True)) + "")
     for folder_idx, (train_index, test_index) in enumerate(skf.split(X, y_target)):
 
         writer = SummaryWriter(
-            f'/home/jsenadesouza/DA-healthy2patient/results/outcomes/tensorboard/cnnlstm/exp_name/run_{time()}')
+            f'/home/jsenadesouza/DA-healthy2patient/results/outcomes/tensorboard/transformers/exp_name/run_{time()}')
 
         train_data, train_labels = X[train_index].squeeze(), y_target[train_index].squeeze()
         test_data, test_labels = X[test_index].squeeze(),  y_target[test_index].squeeze()
         add_data_train, add_data_test = None, None
         # if use_additional_data:
-        #     print("Using additional data. shape: ", X_add.shape)
+        #    logging.info("Using additional data. shape: ", X_add.shape)
         #     add_data_train = X_add[train_index]
         #     add_data_test = X_add[test_index]
 
@@ -146,7 +169,6 @@ if __name__ == '__main__':
         class_weights = torch.tensor(class_weights, dtype=torch.float).to(device)
 
         criterion = nn.CrossEntropyLoss(weight=class_weights, reduction='mean')
-        # criterion = nn.BCELoss()
         optim = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-04)
         scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=5, gamma=0.5)
 
@@ -156,7 +178,7 @@ if __name__ == '__main__':
 
         for k, v in metrics.items():
             if k != 'confusion_matrix':
-                print('Fold {} {}: {}'.format(folder_idx + 1, k.capitalize(), v))
+               logging.info('Fold {} {}: {}\n'.format(folder_idx + 1, k.capitalize(), v))
 
         cum_acc.append(metrics['accuracy'])
         cum_f1.append(metrics['f1-score'])
@@ -164,7 +186,7 @@ if __name__ == '__main__':
         cum_precision.append(metrics['precision'])
 
     for class_ in range(len(np.unique(y_target))):
-        print(f"Class: {class_}")
+        logging.info(f"Class: {class_}")
         current_acc = np.array(cum_acc)
         current_f1 = np.array(cum_f1)[:, class_]
         current_recall = np.array(cum_recall)[:, class_]
@@ -176,7 +198,7 @@ if __name__ == '__main__':
         # ci_AUROC = st.t.interval(0.95, len(cum_AUROC) -1, loc=np.mean(cum_AUROC), scale=st.sem(cum_AUROC))
         ci_prec = st.t.interval(0.95, len(current_prec) -1, loc=np.mean(current_prec), scale=st.sem(current_prec))
 
-        print('accuracy: {:.2f} ± {:.2f}'.format(np.mean(current_acc) * 100, abs(np.mean(current_acc) - ci_mean[0]) * 100))
-        print('recall: {:.2f} ± {:.2f}'.format(np.mean(current_recall) * 100, abs(np.mean(current_recall) - ci_recall[0]) * 100))
-        print('f1-score: {:.2f} ± {:.2f}'.format(np.mean(current_f1) * 100, abs(np.mean(current_f1) - ci_f1[0]) * 100))
-        print('precision: {:.2f} ± {:.2f}'.format(np.mean(current_prec) * 100, abs(np.mean(current_prec) - ci_prec[0]) * 100))
+        logging.info('accuracy: {:.2f} ± {:.2f}\n'.format(np.mean(current_acc) * 100, abs(np.mean(current_acc) - ci_mean[0]) * 100))
+        logging.info('recall: {:.2f} ± {:.2f}\n'.format(np.mean(current_recall) * 100, abs(np.mean(current_recall) - ci_recall[0]) * 100))
+        logging.info('f1-score: {:.2f} ± {:.2f}\n'.format(np.mean(current_f1) * 100, abs(np.mean(current_f1) - ci_f1[0]) * 100))
+        logging.info('precision: {:.2f} ± {:.2f}\n'.format(np.mean(current_prec) * 100, abs(np.mean(current_prec) - ci_prec[0]) * 100))
