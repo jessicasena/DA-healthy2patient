@@ -91,9 +91,9 @@ if __name__ == '__main__':
     # X_add = np.concatenate([X_add, X_char], axis=1)
     use_additional_data = False
 
-    labels2idx = {k: idx for idx, k in enumerate(np.unique(y))}
+    labels2idx = {k: idx for idx, k in enumerate(np.unique(y_target))}
     use_cuda = torch.cuda.is_available()
-    num_epochs = 20
+    num_epochs = 1
     batch_size_train = 40
     batch_size_test = 16
     #step = num_epochs / 5
