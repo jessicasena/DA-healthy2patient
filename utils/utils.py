@@ -15,11 +15,14 @@ import learn2learn as l2l
 from torch.utils.data import DataLoader
 from learn2learn.data.transforms import (ConsecutiveLabels, FusedNWaysKShots,
                                          LoadData, RemapLabels)
+import torchvision
+
+
 
 def get_metrics(y_true, y_pred):
     return {
         'accuracy': accuracy_score(y_true, y_pred),
-        'f1-score': f1_score(y_true, y_pred, average=None, labels=[0,1], zero_division=0),
+        'f1-score': f1_score(y_true, y_pred, average=None, labels=[0,1]),
         'recall': recall_score(y_true, y_pred, average=None, zero_division=0),
         'confusion_matrix': confusion_matrix(y_true, y_pred),
         'precision': precision_score(y_true, y_pred, average=None, zero_division=0)
@@ -57,7 +60,7 @@ def train(model, loader, optimizer, criterion, device, scheduler, writer, epochs
                     preds = model(acc, add_data)
                 else:
                     preds = model(acc)
-                loss = criterion(preds, targets.long())
+                loss = criterion(preds, targets)
                 loss.backward()
                 optimizer.step()
 
@@ -65,7 +68,7 @@ def train(model, loader, optimizer, criterion, device, scheduler, writer, epochs
                 if use_cuda:
                     targets = targets.cpu()
                 y_true = targets.numpy()
-                y_pred = np.argmax(preds.detach().cpu().numpy(), axis=1)
+                y_pred = [1 if x > 0 else 0 for x in preds.detach().cpu().numpy()]
                 metrics = get_metrics(y_true, y_pred)
                 #pbar.set_postfix(loss='{0:.6f}'.format(loss), accuracy='{0:.04f}'.format(metrics['accuracy']))
                 pbar.set_postfix(loss='{0:.6f}'.format(loss),
@@ -98,7 +101,7 @@ def test(model, loader, device, use_cuda=True, use_additional_data=False):
                 targets = targets.cpu()
 
             y_true.extend(targets.numpy())
-            y_pred.extend(np.argmax(preds.detach().cpu().numpy(), axis=1))
+            y_pred.extend([1 if x > 0 else 0 for x in preds.detach().cpu().numpy()])
 
     return get_metrics(y_true, y_pred)
 

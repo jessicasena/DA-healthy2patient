@@ -3,11 +3,25 @@ import torch
 from torch import nn, Tensor
 import torch.nn.functional as F
 import math
+import torchvision
 
+
+class FocalLoss(nn.Module):
+    def __init__(self, alpha=0.25, gamma=2, reduction='mean'):
+        super(FocalLoss, self).__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+        self.reduction = reduction
+
+    def forward(self, inputs, targets):
+        loss = torchvision.ops.sigmoid_focal_loss(inputs.float(), targets.reshape(-1, 1).float(),
+                                           reduction=self.reduction, gamma=self.gamma, alpha=self.alpha)
+        return loss
 
 class TimeSeriesTransformer(nn.Module):
     """
     code from: https://towardsdatascience.com/how-to-make-a-pytorch-transformer-for-time-series-forecasting-69e073d4061e
+    https://github.com/yolish/har-with-imu-transformer/
     """
 
     def __init__(self,
@@ -74,9 +88,12 @@ class TimeSeriesTransformer(nn.Module):
             nn.Linear(dim_val, dim_val // 4),
             nn.GELU(),
             nn.Dropout(0.1),
-            nn.Linear(dim_val // 4, n_classes)
+            #nn.Linear(dim_val // 4, n_classes)
+            nn.Linear(dim_val // 4, 1)
         )
         self.log_softmax = nn.LogSoftmax(dim=1)
+        self.softmax = nn.Softmax()
+        self.sigmoid = nn.Sigmoid()
 
         # init
         for p in self.parameters():
@@ -114,10 +131,13 @@ class TimeSeriesTransformer(nn.Module):
         #src = torch.mean(src, dim=1)
         # shape [batch_size, target seq len]
         #output = self.linear_mapping(src)
-        output = self.log_softmax(self.imu_head(src))
+        #output = self.log_softmax(self.imu_head(src))
+        #output = self.softmax(self.imu_head(src))
+        logits = self.imu_head(src)
+        #output = self.sigmoid(logits)
         #print("From model.forward(): decoder_output size after linear_mapping = {}".format(output.size()))
 
-        return output
+        return logits
 
 
 class PositionalEncoder(nn.Module):
