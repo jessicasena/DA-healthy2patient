@@ -35,11 +35,24 @@ files_before = get_accs_files_before(before)
 files_after = get_accs_files_after(after)
 
 folder_diff = set(files_before).difference(set(files_after))
+patients_before = []
+for file in files_before:
+    patient_id = file.split("_")[0]
+    if patient_id not in patients_before:
+        patients_before.append(patient_id)
 
+patients_after = []
+for file in files_after:
+    patient_id = file.split("_")[0]
+    if patient_id not in patients_after:
+        patients_after.append(patient_id)
+
+pat_diff = set(patients_before).difference(set(patients_after))
 log = open("/home/jsenadesouza/DA-healthy2patient/code/process_clinical_data/pain_loguru.log")
 files_excluded = []
 
 df_array = []
+
 for line in log:
     if "354_Sensor_Data" in line:
         f = line.split("/")[-1].split(".csv")[0]

@@ -12,29 +12,52 @@ import resource as rs
 from parallelbar import progress_imap
 import time
 
+project = "ADAPT"
+
 def memory_limit(limit):
     soft, hard = rs.getrlimit(rs.RLIMIT_AS)
     rs.setrlimit(rs.RLIMIT_AS, (limit, hard))
 
 def process_curate_files(curate_files_fold: str):
-    end_reason_file = pd.read_csv(os.path.join(curate_files_fold, 'end_reason_time.csv'))
-    end_reason_file['subj_id'] = end_reason_file['subj_id'].str.upper()
-    downtimes_file = pd.read_csv(os.path.join(curate_files_fold, 'patients_downtime.csv'))
-    downtimes_file['subj_id'] = downtimes_file['subj_id'].str.upper()
-    start_end_times_file = pd.read_csv(os.path.join(curate_files_fold, 'server_accel_times.csv'))
+    if project == "PAIN":
+        end_reason_file = pd.read_csv(os.path.join(curate_files_fold, 'end_reason_time.csv'))
+        end_reason_file['subj_id'] = end_reason_file['subj_id'].str.upper()
+        downtimes_file = pd.read_csv(os.path.join(curate_files_fold, 'patients_downtime.csv'))
+        downtimes_file['subj_id'] = downtimes_file['subj_id'].str.upper()
+        start_end_times_file = pd.read_csv(os.path.join(curate_files_fold, 'server_accel_times.csv'))
+    else:
+        downtimes_file = pd.read_csv(os.path.join(curate_files_fold, '1013_accel_downtime.csv'))
+        downtimes_file['subj_id'] = downtimes_file['subj_id'].str.upper()
+        start_end_times_file = pd.read_csv(os.path.join(curate_files_fold, '1013_accel_start_end.csv'))
     start_end_times_file['subj_id'] = start_end_times_file['subj_id'].str.upper()
+    if project == "PAIN":
+        return end_reason_file, downtimes_file, start_end_times_file
+    else:
+        return downtimes_file, start_end_times_file
 
-    return end_reason_file, downtimes_file, start_end_times_file
+
+if project == "PAIN":
+    # # root folder containing the accelerometer files
+    acc_dir = "/data/datasets/ICU_Data/354_Sensor_Data/"
+    # # folder containing the clinical team's .csv files
+    curate_files_dir = "/home/jsenadesouza/DA-healthy2patient/PAIN_downtimes/"
+    # # folder where the filtered accelerometer files will be saved
+    output_dir = "/home/jsenadesouza/DA-healthy2patient/354_Sensor_data/"
+elif project == "ADAPT":
+
+    # root folder containing the accelerometer files
+    acc_dir = "/data2/datasets/ICU_Data/1013_Sensor_Data"
+    # folder containing the clinical team's .csv files
+    curate_files_dir = "/data/datasets/ICU_Data/Curation_Files/1013_Sensor_Data"
+    # folder where the filtered accelerometer files will be saved
+    output_dir = "/home/jsenadesouza/DA-healthy2patient/1013_Sensor_Data/"
 
 
-# # root folder containing the accelerometer files
-acc_dir = "/data/datasets/ICU_Data/354_Sensor_Data/"
-# # folder containing the clinical team's .csv files
-curate_files_dir = "/home/jsenadesouza/DA-healthy2patient/PAIN_downtimes/"
-# # folder where the filtered accelerometer files will be saved
-output_dir = "/home/jsenadesouza/DA-healthy2patient/354_Sensor_data/"
 # read Clinical team's notes
-end_reason_file, downtimes_file, start_end_times_file = process_curate_files(curate_files_dir)
+if project == "PAIN":
+    end_reason_file, downtimes_file, start_end_times_file = process_curate_files(curate_files_dir)
+else:
+    downtimes_file, start_end_times_file = process_curate_files(curate_files_dir)
 
 tzdict = {'EST': dateutil.tz.gettz('America/New_York'),
           'EDT': dateutil.tz.gettz('America/New_York')}
@@ -61,7 +84,7 @@ def read_acc_file(file_name: str):
     return acc_file
 
 
-def get_accs_files(dir_dataset: str):
+def get_accs_files_pain(dir_dataset: str):
     accs = []
     for root, dirs, files in os.walk(dir_dataset):
         for file in files:
@@ -72,6 +95,19 @@ def get_accs_files(dir_dataset: str):
                     if acc_csv not in accs:
                         accs.append(acc_csv)
 
+    return accs
+
+
+def get_accs_files_adapt(dir_dataset: str):
+    accs = []
+    for root, dirs, files in os.walk(dir_dataset):
+        for file in files:
+            if file.endswith("SD.csv"):
+                acc_csv = os.path.join(root, file)
+                # just get csv files from Accelerometer directories
+                if fnmatch.fnmatch(root, f'{dir_dataset}/*'):
+                    if acc_csv not in accs and "Curated_file" not in root:
+                        accs.append(acc_csv)
     return accs
 
 
@@ -124,9 +160,10 @@ def curate_acc(file_name):
             location = parse_location(timestamp_col.split("_"))
 
             # get information regarding this patient and body location on clinical team's notes
-            end_reason = end_reason_file[end_reason_file['subj_id'] == patient_id].values[0][-1]
-            if not pd.isna(end_reason):
-                end_reason = dateutil.parser.parse(end_reason + " EST", tzinfos=tzdict)
+            if project == "PAIN":
+                end_reason = end_reason_file[end_reason_file['subj_id'] == patient_id].values[0][-1]
+                if not pd.isna(end_reason):
+                    end_reason = dateutil.parser.parse(end_reason + " EST", tzinfos=tzdict)
             downtimes = downtimes_file[
                 (downtimes_file['subj_id'] == patient_id) & (downtimes_file['location'] == location)].values
             start_end_times = start_end_times_file[
@@ -143,10 +180,10 @@ def curate_acc(file_name):
                     end = dateutil.parser.parse(start_end_times[0][-1] + " EST", tzinfos=tzdict)
                 else:
                     end = (pd.Timestamp.max - pd.Timedelta(days=1)).tz_localize('US/Eastern')
-
-            if not pd.isna(end_reason):
-                    if end > end_reason:
-                        end = end_reason
+            if project == "PAIN":
+                if not pd.isna(end_reason):
+                        if end > end_reason:
+                            end = end_reason
 
             # filter accelerometer file by the start and end times clinical teams said they put and removed the device
             acc_filtered = acc_file[(acc_file[timestamp_col] > start) & (acc_file[timestamp_col] < end)]
@@ -190,9 +227,15 @@ def curate_acc(file_name):
 
 
 def curation():
-    logger.add("pain_loguru.log", enqueue=True)
     # get accelerometer files
-    acc_files = get_accs_files(acc_dir)
+    if project == "PAIN":
+        acc_files = get_accs_files_pain(acc_dir)
+        logger.add("pain_curation.log", enqueue=True)
+    elif project == "ADAPT":
+        acc_files = get_accs_files_adapt(acc_dir)
+        logger.add("adapt_curation.log", enqueue=True)
+    else:
+        sys.exit(f"Project name not recognized: {project}")
 
     n_cpus = multiprocessing.cpu_count() // 2
     print(f"\n\nNUMBER OF CPUS: {n_cpus}.\n\n")
