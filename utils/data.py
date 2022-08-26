@@ -176,7 +176,7 @@ class SensorDataset(data.Dataset):
         self.target_transform = target_transform
         self.padding_size = padding(self.data[0].shape[-1])
         self.classes = np.unique(labels)
-        self.class_to_idx = {v: k for k, v in enumerate(self.classes)}
+        #self.class_to_idx = {v: k for k, v in enumerate(self.classes)}
 
     def __len__(self):
         return len(self.data)
@@ -199,7 +199,8 @@ class SensorDataset(data.Dataset):
 
         sample = sample.astype(np.float32)
         sample = np.pad(sample, ((0, 0), (self.padding_size, self.padding_size)), mode='constant')
-        target = self.class_to_idx[self.labels[idx]]
+        #target = self.class_to_idx[self.labels[idx]]
+        target = self.labels[idx]
 
         if self.transform:
             sample = self.transform(sample)
