@@ -19,10 +19,10 @@ from learn2learn.data.transforms import (ConsecutiveLabels, FusedNWaysKShots,
 def get_metrics(y_true, y_pred):
     return {
         'accuracy': accuracy_score(y_true, y_pred),
-        'f1-score': f1_score(y_true, y_pred, average=None),
+        'f1-score': f1_score(y_true, y_pred, average=None, labels=[0,1]),
         'recall': recall_score(y_true, y_pred, average=None, zero_division=0),
         'confusion_matrix': confusion_matrix(y_true, y_pred),
-        'precision': precision_score(y_true, y_pred, average=None)
+        'precision': precision_score(y_true, y_pred, average=None, zero_division=0)
     }
 
 #
@@ -67,8 +67,9 @@ def train(model, loader, optimizer, criterion, device, scheduler, writer, epochs
                 y_true = targets.numpy()
                 y_pred = np.argmax(preds.detach().cpu().numpy(), axis=1)
                 metrics = get_metrics(y_true, y_pred)
-                pbar.set_postfix(loss='{0:.6f}'.format(loss), accuracy='{0:.04f}'.format(metrics['accuracy']))
-
+                #pbar.set_postfix(loss='{0:.6f}'.format(loss), accuracy='{0:.04f}'.format(metrics['accuracy']))
+                pbar.set_postfix(loss='{0:.6f}'.format(loss),
+                                 f1='{}'.format(metrics['f1-score']))
                 step += 1
                 writer.add_scalar('Loss/train', loss.item(), step)
                 writer.add_scalar('Metrics/acc', metrics['accuracy'], step)
