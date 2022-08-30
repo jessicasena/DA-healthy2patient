@@ -3,6 +3,38 @@ import fnmatch
 import pandas as pd
 
 
+def check_place_sensor(dir_dataset):
+    if "1013" in dir_dataset:
+        files = get_accs_files_adapt(dir_dataset, get_folder=True)
+    else:
+        files = get_accs_files_pain(dir_dataset, get_folder=True)
+    for file_path in files:
+        arm, ankle = False, False
+        file_columns = pd.read_csv(file_path, skiprows=[0, 2], delimiter='\t', nrows=10).columns
+        for col in file_columns:
+            if "arm" in col:
+                arm = True
+            if "ankle" in col:
+                ankle = True
+            if "leg" in col:
+                ankle = True
+            if "emg" in col:
+                arm = True
+        if "arm" in file_path.lower():
+            arm = True
+        if "ankle" in file_path.lower():
+            ankle = True
+        if "leg" in file_path.lower():
+            ankle = True
+        if "emg" in file_path.lower():
+            arm = True
+
+        if sum([arm, ankle]) != 1:
+            print(f"file = {file_path}\n column name: {file_columns[0]}")
+            print("\n")
+
+
+
 def check_folder_file_name(dir_dataset):
     if "1013" in dir_dataset:
         files = get_accs_files_adapt(dir_dataset, get_folder=True)
@@ -118,10 +150,14 @@ def check_curation(PROJECT, before, after):
     df.to_csv('reason_exclusion_curation_ADAPT.csv', index=False)
 
 
+
+
 if __name__ == "__main__":
     PROJECT = "1013"
     before = "/data2/datasets/ICU_Data/1013_Sensor_Data/"
     after = "/home/jsenadesouza/DA-healthy2patient/1013_Sensor_Data/"
     #check_curation(PROJECT, before, after)
     #check_folder_file_name("/data2/datasets/ICU_Data/1013_Sensor_Data/")
-    check_folder_file_name("/data/datasets/ICU_Data/354_Sensor_Data/")
+    #check_folder_file_name("/data/datasets/ICU_Data/354_Sensor_Data/")
+    check_place_sensor("/data2/datasets/ICU_Data/1013_Sensor_Data/")
+    check_place_sensor("/data/datasets/ICU_Data/354_Sensor_Data/")
