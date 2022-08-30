@@ -15,10 +15,26 @@ def padding(h):
     pad = (ideal_size - h) / 2
     return int(pad)
 
+# Data augmentation for time-series data
+# T. T. Um et al., “Data augmentation of wearable sensor data for parkinson’s disease monitoring using convolutional neural networks,” in Proceedings of the 19th ACM International Conference on Multimodal Interaction, ser. ICMI 2017. New York, NY, USA: ACM, 2017, pp. 216–220.
+
+# https://dl.acm.org/citation.cfm?id=3136817
+#
+# https://arxiv.org/abs/1706.00527
+
 def DA_Rotation(X):
     axis = np.random.uniform(low=-1, high=1, size=X.shape[1])
     angle = np.random.uniform(low=-np.pi, high=np.pi)
     return np.matmul(X, axangle2mat(axis, angle))
+
+def DA_TimeWarp(X, sigma=0.2):
+    tt_new = DistortTimesteps(X, sigma)
+    X_new = np.zeros(X.shape)
+    x_range = np.arange(X.shape[0])
+    X_new[:,0] = np.interp(x_range, tt_new[:,0], X[:,0])
+    X_new[:,1] = np.interp(x_range, tt_new[:,1], X[:,1])
+    X_new[:,2] = np.interp(x_range, tt_new[:,2], X[:,2])
+    return X_new
 
 def DA_Permutation(X, nPerm=4, minSegLength=10):
     X_new = np.zeros(X.shape)
@@ -190,12 +206,14 @@ class SensorDataset(data.Dataset):
         if self.add_data is not None:
             add_data_sample = self.add_data[idx]
 
-        #sample = np.transpose(sample, (1, 0))
-        # if random.randrange(3) == 0:
-        #     sample = DA_Rotation(sample)
-        # if random.randrange(3) == 0:
-        #     sample = DA_Permutation(sample, minSegLength=20)
         sample = np.transpose(sample, (1, 0))
+        if random.randrange(3) == 0:
+            sample = DA_Rotation(sample)
+        if random.randrange(3) == 0:
+            sample = DA_Permutation(sample, minSegLength=20)
+        if random.randrange(3) == 0:
+            sample = DA_TimeWarp()
+        #sample = np.transpose(sample, (1, 0))
 
         sample = sample.astype(np.float32)
         sample = np.pad(sample, ((0, 0), (self.padding_size, self.padding_size)), mode='constant')
