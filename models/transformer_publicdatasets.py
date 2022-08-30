@@ -2,7 +2,6 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import argparse
 import numpy as np
 
 import torch
@@ -10,9 +9,8 @@ import torch.nn as nn
 from scipy import stats as st
 from torch.utils.data import DataLoader
 
-from utils.data import SensorDataset, SensorPublicDataset
-from utils.models import MetaSenseModel, MetaSenseModeladdData
-from utils.transformer_model import TimeSeriesTransformer
+from utils.data import SensorPublicDataset
+from models.transformer_model import TimeSeriesTransformer
 from utils.utils import train, test
 from sklearn.model_selection import StratifiedKFold
 from sklearn.utils import class_weight

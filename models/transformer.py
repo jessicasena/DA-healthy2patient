@@ -8,11 +8,11 @@ import numpy as np
 import torch
 import torch.nn as nn
 from scipy import stats as st
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, WeightedRandomSampler
 
 from utils.data import SensorDataset
-from utils.models import MetaSenseModel, MetaSenseModeladdData
-from utils.transformer_model import TimeSeriesTransformer
+from utils.models import MetaSenseModeladdData
+from models.transformer_model import TimeSeriesTransformer
 from utils.utils import train, test
 from sklearn.model_selection import StratifiedKFold
 from sklearn.utils import class_weight
@@ -73,6 +73,7 @@ def set_logger(filename):
     return logging
 
 if __name__ == '__main__':
+    start = time()
     parser = argparse.ArgumentParser('Model baselines')
     parser.add_argument('-v', type=str, default="pain_score_class", help='Clinical variable to classify')
     args = parser.parse_args()
@@ -115,14 +116,14 @@ if __name__ == '__main__':
 
     labels2idx = {k: idx for idx, k in enumerate(np.unique(y_target))}
     use_cuda = torch.cuda.is_available()
-    num_epochs = 1
+    num_epochs = 100
     batch_size_train = 40
     batch_size_test = 16
     #step = num_epochs / 5
 
 
 
-    device = torch.device('cuda:2') if use_cuda else torch.device('cpu')
+    device = torch.device('cuda:1') if use_cuda else torch.device('cpu')
 
     cum_acc, cum_f1, cum_recall, cum_conf_matrices, cum_precision = [], [], [], [], []
 
@@ -145,10 +146,19 @@ if __name__ == '__main__':
         train_labels = np.array([labels2idx[label] for label in train_labels])
         test_labels = np.array([labels2idx[label] for label in test_labels])
 
+        class_sample_count = np.array(
+            [len(np.where(train_labels == t)[0]) for t in np.unique(train_labels)])
+        weight = 1. / class_sample_count
+        samples_weight = np.array([weight[t] for t in train_labels])
+
+        samples_weight = torch.from_numpy(samples_weight)
+        samples_weigth = samples_weight.double()
+        sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
+
         train_set = SensorDataset(train_data, add_data_train, train_labels)
         test_set = SensorDataset(test_data, add_data_test, test_labels)
 
-        train_loader = DataLoader(train_set, batch_size=batch_size_train, pin_memory=True, shuffle=True)
+        train_loader = DataLoader(train_set, batch_size=batch_size_train, pin_memory=True, sampler=sampler)
 
         test_loader = DataLoader(test_set, batch_size=batch_size_train, pin_memory=True)
 
@@ -178,7 +188,7 @@ if __name__ == '__main__':
 
         for k, v in metrics.items():
             if k != 'confusion_matrix':
-               logging.info('Fold {} {}: {}\n'.format(folder_idx + 1, k.capitalize(), v))
+                logging.info('Fold {} {}: {}\n'.format(folder_idx + 1, k.capitalize(), v))
 
         cum_acc.append(metrics['accuracy'])
         cum_f1.append(metrics['f1-score'])
@@ -202,3 +212,6 @@ if __name__ == '__main__':
         logging.info('recall: {:.2f} ± {:.2f}\n'.format(np.mean(current_recall) * 100, abs(np.mean(current_recall) - ci_recall[0]) * 100))
         logging.info('f1-score: {:.2f} ± {:.2f}\n'.format(np.mean(current_f1) * 100, abs(np.mean(current_f1) - ci_f1[0]) * 100))
         logging.info('precision: {:.2f} ± {:.2f}\n'.format(np.mean(current_prec) * 100, abs(np.mean(current_prec) - ci_prec[0]) * 100))
+
+    end = time()
+    logging.info('Epochs: {} Time: {:.2f} seconds\n'.format(num_epochs, (end - start)))
