@@ -2,7 +2,8 @@ import numpy as np
 import torch
 
 from torch.utils import data
-from transforms3d.axangles import axangle2mat
+from scipy.interpolate import CubicSpline      # for warping
+from transforms3d.axangles import axangle2mat  # for rotation
 import random
 
 def padding(h):
@@ -16,6 +17,7 @@ def padding(h):
     return int(pad)
 
 # Data augmentation for time-series data
+# https://github.com/terryum/Data-Augmentation-For-Wearable-Sensor-Data
 # T. T. Um et al., “Data augmentation of wearable sensor data for parkinson’s disease monitoring using convolutional neural networks,” in Proceedings of the 19th ACM International Conference on Multimodal Interaction, ser. ICMI 2017. New York, NY, USA: ACM, 2017, pp. 216–220.
 
 # https://dl.acm.org/citation.cfm?id=3136817
@@ -26,6 +28,33 @@ def DA_Rotation(X):
     axis = np.random.uniform(low=-1, high=1, size=X.shape[1])
     angle = np.random.uniform(low=-np.pi, high=np.pi)
     return np.matmul(X, axangle2mat(axis, angle))
+
+## This example using cubic splice is not the best approach to generate random curves.
+## You can use other aprroaches, e.g., Gaussian process regression, Bezier curve, etc.
+def GenerateRandomCurves(X, sigma=0.2, knot=4):
+    xx = (np.ones((X.shape[1],1))*(np.arange(0,X.shape[0], (X.shape[0]-1)/(knot+1)))).transpose()
+    yy = np.random.normal(loc=1.0, scale=sigma, size=(knot+2, X.shape[1]))
+    x_range = np.arange(X.shape[0])
+    cs_x = CubicSpline(xx[:,0], yy[:,0])
+    cs_y = CubicSpline(xx[:,1], yy[:,1])
+    cs_z = CubicSpline(xx[:,2], yy[:,2])
+    return np.array([cs_x(x_range),cs_y(x_range),cs_z(x_range)]).transpose()
+
+def DistortTimesteps(X, sigma=0.2):
+    tt = GenerateRandomCurves(X, sigma) # Regard these samples aroun 1 as time intervals
+    tt_cum = np.cumsum(tt, axis=0)        # Add intervals to make a cumulative graph
+    # Make the last value to have X.shape[0]
+    t_scale = [(X.shape[0]-1)/tt_cum[-1,0],(X.shape[0]-1)/tt_cum[-1,1],(X.shape[0]-1)/tt_cum[-1,2]]
+    tt_cum[:,0] = tt_cum[:,0]*t_scale[0]
+    tt_cum[:,1] = tt_cum[:,1]*t_scale[1]
+    tt_cum[:,2] = tt_cum[:,2]*t_scale[2]
+    return tt_cum
+
+# ## 4. Time Warping
+
+# #### Hyperparameters :  sigma = STD of the random knots for generating curves
+#
+# #### knot = # of knots for the random curves (complexity of the curves)
 
 def DA_TimeWarp(X, sigma=0.2):
     tt_new = DistortTimesteps(X, sigma)
@@ -206,14 +235,14 @@ class SensorDataset(data.Dataset):
         if self.add_data is not None:
             add_data_sample = self.add_data[idx]
 
-        sample = np.transpose(sample, (1, 0))
+        #sample = np.transpose(sample, (1, 0))
         if random.randrange(3) == 0:
             sample = DA_Rotation(sample)
         if random.randrange(3) == 0:
             sample = DA_Permutation(sample, minSegLength=20)
         if random.randrange(3) == 0:
-            sample = DA_TimeWarp()
-        #sample = np.transpose(sample, (1, 0))
+            sample = DA_TimeWarp(sample)
+        sample = np.transpose(sample, (1, 0))
 
         sample = sample.astype(np.float32)
         sample = np.pad(sample, ((0, 0), (self.padding_size, self.padding_size)), mode='constant')
