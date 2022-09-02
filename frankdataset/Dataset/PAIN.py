@@ -139,16 +139,15 @@ def check_columns(acc_fold: str):
             spl_c = c.split("_")
             array.append("_".join(spl_c[2:]))
         string_col.append("-".join(array))
-        #print(f'\n{"-".join(array)}')
 
     print(np.unique(string_col, return_counts=True))
 
+
 class Outcomes_20_22(Dataset):
-    def __init__(self, name, dir_dataset, dir_save, freq = 100, trials_per_file=100000, time_wd=1800, time_drop=900):
-        super().__init__(name, dir_dataset, dir_save, freq, trials_per_file)
-        self.reduce_rate = 10
-        self.time_wd = time_wd * (self.freq/self.reduce_rate)
-        self.time_drop = time_drop * (self.freq/self.reduce_rate)
+    def __init__(self, name, dir_dataset, dir_save, logger, final_freq, trials_per_file=100000):
+        super().__init__(name, dir_dataset, dir_save, trials_per_file)
+        self.final_freq = final_freq
+        self.logger = logger
         self.patient_map = self.set_patient_map()
         self.outcomes_file = self.read_labels_file()
 
@@ -159,7 +158,6 @@ class Outcomes_20_22(Dataset):
                 positions: dominant wrist, chest and dominant side's ankle
                 sensors: heart rate, temperature, acc, gyr and mag
                 """
-
 
     def set_patient_map(self):
         # create a map between the subject_deiden_id and the patient id
@@ -192,7 +190,6 @@ class Outcomes_20_22(Dataset):
         df['timestamp'] = df['timestamp'].apply(lambda x: dateutil.parser.parse(x + " EST", tzinfos=tzdict))
         return df
 
-
     def get_labels(self, patient_id, init_day, last_day):
         df = self.outcomes_file
         df = df[(df['patient_id'] == patient_id) & (df['timestamp'] >= init_day) & (df['timestamp'] <= last_day)]
@@ -205,65 +202,67 @@ class Outcomes_20_22(Dataset):
         accs_files = self.get_accs_files()
         trial_id = 1
         output_dir = self.dir_save
-        outfile = open('outcomes_acc_20_22.txt', 'w', buffering=1)
 
         for file in tqdm(accs_files):
             samples_extracted = 0
-            #try:
-            if 'wrist' not in file and 'arm' not in file:
-                outfile.write(f"\nDiscarding: {file}")
+            try:
+                if 'wrist' not in file and 'arm' not in file:
+                    self.logger.error("File {}, message: not wrist or arm", file)
+                else:
+                    self.logger.info("File {}, message: processing", file)
+                    file_acc = read_acc_file(file)
+                    init_day = np.min(file_acc[:, 0])
+                    last_day = np.max(file_acc[:, 0])
+
+                    patient_id = file.split("/")[5]
+
+                    outcomes_filtered_df, pain_filtered = self.get_labels(patient_id, init_day, last_day)
+                    if len(outcomes_filtered_df) > 0 and len(pain_filtered) > 0:
+
+                        # resampled the data
+                        df = pd.DataFrame(file_acc[:, 0])
+                        self.freq = 1 / df.diff().median()[0].total_seconds()
+                        reduce_rate = self.freq / self.final_freq
+                        file_acc = sampling_rate(file_acc, reduce_rate)
+                        acc_ts_list = file_acc[:, 0]
+
+                        time_wd = self.time_wd * (self.freq / reduce_rate)
+                        time_drop = self.time_drop * (self.freq / reduce_rate)
+                        self.logger.info("File {}, message: Frequency: {}, Reduce rate: {}, Time window: {}", file,
+                                         self.freq, reduce_rate, time_wd)
+
+                        for pain_datetime in pain_filtered:
+
+                            idx = bisect_left(acc_ts_list, pain_datetime)
+                            idx = idx - 1 if idx >= len(acc_ts_list) else idx
+                            # check if there is at least 45 minutes of data before the pain measurement
+                            if idx > time_wd + time_drop:
+                                margin = timedelta(minutes=5)
+                                if abs(pain_datetime - acc_ts_list[idx]) <= margin:
+                                    # get 30 minutes before 15 minutes from the pain measurement
+                                    # 15 minutes are dropped because the nurse can be in the room doing some procedures
+                                    start_idx = int(idx - time_wd - time_drop)
+                                    end_idx = int(idx - time_drop)
+
+                                    ts_sample = file_acc[start_idx:end_idx, 0]
+                                    # check if the timestamps in the sample are continuous
+                                    if np.mean(np.diff(ts_sample)) < timedelta(minutes=1):
+                                        start_ts = ts_sample[0]
+                                        end_ts = ts_sample[-1]
+                                        sample = file_acc[start_idx:end_idx]
+                                        # add labels
+                                        label = process_labels(outcomes_filtered_df, start_ts, end_ts)
+                                        if len(label) > 0:
+                                            label = "_".join(label.astype(str))
+                                            self.add_info_data(label, patient_id, trial_id, sample, output_dir)
+                                            trial_id += 1
+                                            samples_extracted += 1
+            except Exception as e:
+                self.logger.critical("File {}, message: {}", file, e)
+            if not samples_extracted:
+                self.logger.error("File {}, message: no sample extracted", file)
             else:
-                outfile.write(f'\nKeeping: {file}')
-                file_acc = read_acc_file(file)
-                init_day = np.min(file_acc[:, 0])
-                last_day = np.max(file_acc[:, 0])
-                #print(f'start = {init_day}')
-               #print(f'end = {last_day}')
-                #continue
-
-                patient_id = file.split("/")[5]
-
-                outcomes_filtered_df, pain_filtered = self.get_labels(patient_id, init_day, last_day)
-                if len(outcomes_filtered_df) > 0 and len(pain_filtered) > 0:
-
-                    # converting string to datetime
-                    #pool = mp.Pool()
-                    #file_acc[:, 0] = list(pool.map(convert_to_date, file_acc[:, 0]))
-                    acc_ts_list = file_acc[:, 0]
-
-                    for pain_datetime in pain_filtered:
-
-                        idx = bisect_left(acc_ts_list, pain_datetime)
-                        idx = idx - 1 if idx >= len(acc_ts_list) else idx
-                        # check if there is at least 45 minutes of data before the pain measurement
-                        if idx > self.time_wd + self.time_drop:
-                            margin = timedelta(minutes=5)
-                            if abs(pain_datetime - acc_ts_list[idx]) <= margin:
-                                # get 30 minutes before 15 minutes from the pain measurement
-                                # 15 minutes are dropped because the nurse can be in the room doing some procedures
-                                start_idx = int(idx - self.time_wd - self.time_drop)
-                                end_idx = int(idx - self.time_drop)
-
-                                ts_sample = file_acc[start_idx:end_idx, 0]
-                                # check if the timestamps in the sample are continuous
-                                if np.mean(np.diff(ts_sample)) < timedelta(minutes=1):
-                                    start_ts = ts_sample[0]
-                                    end_ts = ts_sample[-1]
-                                    sample = file_acc[start_idx:end_idx]
-                                    # add labels
-                                    label = process_labels(outcomes_filtered_df, start_ts, end_ts)
-                                    if len(label) > 0:
-                                        label = "_".join(label.astype(str))
-                                        self.add_info_data(label, patient_id, trial_id, sample, output_dir)
-                                        trial_id += 1
-                                        samples_extracted += 1
-            # except:
-            #     print("Error on file: ", file)
-            if samples_extracted == 0:
-                outfile.write(f'\nNo samples extracted for {file}')
-            else:
-                outfile.write(f'\n{samples_extracted} samples extracted for {file}')
-
+                self.logger.success("File {}, message: sample extracted", file)
         self.save_data(output_dir)
 
 if __name__ == "__main__":
