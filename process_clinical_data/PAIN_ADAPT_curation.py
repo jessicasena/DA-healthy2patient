@@ -4,13 +4,13 @@ import sys
 import dateutil
 from tqdm import tqdm
 import os
-from loguru import logger
 from multiprocessing import Pool
 import multiprocessing
 import datetime
 import resource as rs
 from parallelbar import progress_imap
 import time
+# todo - turn into a class
 
 project = "ADAPT"
 
@@ -92,8 +92,11 @@ def get_accs_files_pain(dir_dataset: str):
                 acc_csv = os.path.join(root, file)
                 # just get csv files from Accelerometer directories
                 if fnmatch.fnmatch(root, f'{dir_dataset}*/Accel/*'):
-                    if acc_csv not in accs:
-                        accs.append(acc_csv)
+                    if 'P051' not in acc_csv and 'P052' not in acc_csv:
+                        if acc_csv not in accs:
+                            accs.append(acc_csv)
+                    else:
+                        logger.error('    process ACCEL file : {} got error : {}', acc_csv, "File contains P051 or P052.")
 
     return accs
 
@@ -229,11 +232,11 @@ def curate_acc(file_name):
 def curation():
     # get accelerometer files
     if project == "PAIN":
+        logger.add("/home/jsenadesouza/DA-healthy2patient/results/curation/pain_curation.log", enqueue=True)
         acc_files = get_accs_files_pain(acc_dir)
-        logger.add("pain_curation.log", enqueue=True)
     elif project == "ADAPT":
+        logger.add("/home/jsenadesouza/DA-healthy2patient/results/curation/adapt_curation.log", enqueue=True)
         acc_files = get_accs_files_adapt(acc_dir)
-        logger.add("adapt_curation.log", enqueue=True)
     else:
         sys.exit(f"Project name not recognized: {project}")
 
@@ -257,5 +260,5 @@ def curation():
 
 
 if __name__ == "__main__":
-    #curation()
-    curate_acc("/data2/datasets/ICU_Data/1013_Sensor_Data/I017N/I017_Accel/2022-03-05_10.40.50_I017A_ankle1_SD_Session1/I017A_ankle1_Session1_I017A_ankle1_Calibrated_SD.csv")
+    curation()
+    #curate_acc("/data2/datasets/ICU_Data/1013_Sensor_Data/I017N/I017_Accel/2022-03-05_10.40.50_I017A_ankle1_SD_Session1/I017A_ankle1_Session1_I017A_ankle1_Calibrated_SD.csv")

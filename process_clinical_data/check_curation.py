@@ -111,7 +111,7 @@ def get_accs_files_after(dir_dataset: str):
     return accs
 
 
-def check_curation(PROJECT, before, after):
+def check_curation(PROJECT, before, after, curation_log, output_csv):
     if PROJECT == "1013":
         files_before = get_accs_files_adapt(before)
     else:
@@ -132,7 +132,10 @@ def check_curation(PROJECT, before, after):
             patients_after.append(patient_id)
 
     pat_diff = set(patients_before).difference(set(patients_after))
-    log = open("/home/jsenadesouza/DA-healthy2patient/results/curation/adapt_curation_backup.log")
+    print(f"{len(patients_after)} patients in after\n")
+    print(f"{len(patients_before)} patients in before\n")
+    print(f"{len(pat_diff)} patients are missing after curation: {pat_diff}")
+    log = open(curation_log)
     files_excluded = []
 
     df_array = []
@@ -145,19 +148,24 @@ def check_curation(PROJECT, before, after):
             error = line.split("got error : ")[-1].split("\n")[0]
             df_array.append([patient_id, error, f])
 
-    df = pd.DataFrame(df_array, columns = ['patient','reason','file'])
+    df = pd.DataFrame(df_array, columns=['patient', 'reason', 'file'])
 
-    df.to_csv('reason_exclusion_curation_ADAPT.csv', index=False)
-
-
+    df.to_csv(output_csv, index=False)
 
 
 if __name__ == "__main__":
     PROJECT = "1013"
     before = "/data2/datasets/ICU_Data/1013_Sensor_Data/"
     after = "/home/jsenadesouza/DA-healthy2patient/1013_Sensor_Data/"
-    #check_curation(PROJECT, before, after)
+    curation_log = "/home/jsenadesouza/DA-healthy2patient/results/curation/adapt_curation.log"
+    output_csv = '/home/jsenadesouza/DA-healthy2patient/results/curation/reason_exclusion_curation_ADAPT.csv'
+    # PROJECT = "354"
+    # before = "/data/datasets/ICU_Data/354_Sensor_Data/"
+    # after = "/home/jsenadesouza/DA-healthy2patient/354_Sensor_data/"
+    # curation_log = "/home/jsenadesouza/DA-healthy2patient/results/curation/pain_curation.log"
+    # output_csv = '/home/jsenadesouza/DA-healthy2patient/results/curation/reason_exclusion_curation_PAIN.csv'
+    check_curation(PROJECT, before, after, curation_log, output_csv)
     #check_folder_file_name("/data2/datasets/ICU_Data/1013_Sensor_Data/")
     #check_folder_file_name("/data/datasets/ICU_Data/354_Sensor_Data/")
-    check_place_sensor("/data2/datasets/ICU_Data/1013_Sensor_Data/")
-    check_place_sensor("/data/datasets/ICU_Data/354_Sensor_Data/")
+    #check_place_sensor("/data2/datasets/ICU_Data/1013_Sensor_Data/")
+    #check_place_sensor("/data/datasets/ICU_Data/354_Sensor_Data/")
