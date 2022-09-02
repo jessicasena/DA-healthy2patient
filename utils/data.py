@@ -213,12 +213,11 @@ class SensorSequence(data.Dataset):
 
 
 class SensorDataset(data.Dataset):
-    def __init__(self, data, add_data, labels, transform=None, target_transform=None):
+    def __init__(self, data, add_data, labels, dataaug=False):
         self.data = data
         self.add_data = add_data
         self.labels = labels
-        self.transform = transform
-        self.target_transform = target_transform
+        self.dataaug = dataaug
         self.padding_size = padding(self.data[0].shape[-1])
         self.classes = np.unique(labels)
         self.class_to_idx = {v: k for k, v in enumerate(self.classes)}
@@ -235,24 +234,19 @@ class SensorDataset(data.Dataset):
         if self.add_data is not None:
             add_data_sample = self.add_data[idx]
 
-        #sample = np.transpose(sample, (1, 0))
-        if random.randrange(3) == 0:
-            sample = DA_Rotation(sample)
-        if random.randrange(3) == 0:
-            sample = DA_Permutation(sample, minSegLength=20)
-        if random.randrange(3) == 0:
-            sample = DA_TimeWarp(sample)
+        if self.dataaug:
+            if random.randrange(3) == 0:
+                sample = DA_Rotation(sample)
+            if random.randrange(3) == 0:
+                sample = DA_Permutation(sample, minSegLength=20)
+            if random.randrange(3) == 0:
+                sample = DA_TimeWarp(sample)
         sample = np.transpose(sample, (1, 0))
 
         sample = sample.astype(np.float32)
         sample = np.pad(sample, ((0, 0), (self.padding_size, self.padding_size)), mode='constant')
         target = self.class_to_idx[self.labels[idx]]
 
-        if self.transform:
-            sample = self.transform(sample)
-
-        if self.target_transform:
-            target = self.target_transform(sample)
 
         return (sample, add_data_sample, target)
 

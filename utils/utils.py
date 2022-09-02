@@ -19,7 +19,7 @@ from learn2learn.data.transforms import (ConsecutiveLabels, FusedNWaysKShots,
 def get_metrics(y_true, y_pred):
     return {
         'accuracy': accuracy_score(y_true, y_pred),
-        'f1-score': f1_score(y_true, y_pred, average=None, labels=[0,1]),
+        'f1-score': f1_score(y_true, y_pred, average=None, labels=[0,1], zero_division=0),
         'recall': recall_score(y_true, y_pred, average=None, zero_division=0),
         'confusion_matrix': confusion_matrix(y_true, y_pred),
         'precision': precision_score(y_true, y_pred, average=None, zero_division=0)

@@ -82,7 +82,7 @@ if __name__ == '__main__':
     out_folder = "/home/jsenadesouza/DA-healthy2patient/results/outcomes/classifier_results/"
     logging = set_logger(os.path.join(out_folder, exp_name))
 
-    filepath = "/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset/dataset_IntelligentICU_PAIN_ADAPT_Xchar_poi.npz"
+    filepath = "/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset/f10_t1800_IntelligentICU.npz"
     clin_variable_target = args.v
     logging.info(f"Clinical variable: {clin_variable_target}")
     dataset = np.load(filepath, allow_pickle=True)
@@ -159,6 +159,7 @@ if __name__ == '__main__':
         test_set = SensorDataset(test_data, add_data_test, test_labels)
 
         train_loader = DataLoader(train_set, batch_size=batch_size_train, pin_memory=True, sampler=sampler)
+       # train_loader = DataLoader(train_set, batch_size=batch_size_train, pin_memory=True)
 
         test_loader = DataLoader(test_set, batch_size=batch_size_train, pin_memory=True)
 
