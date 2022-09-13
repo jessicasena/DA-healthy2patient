@@ -15,7 +15,7 @@ from utils.data import SensorDataset
 from utils.models import MetaSenseModeladdData
 from models.transformer_model import TimeSeriesTransformer
 from utils.utils import train, test
-from utils.transformer_model import FocalLoss
+from models.transformer_model import FocalLoss
 from sklearn.model_selection import StratifiedKFold
 from sklearn.utils import class_weight
 from tensorboardX import SummaryWriter
@@ -23,6 +23,7 @@ from time import time
 import torchvision
 import logging
 from sklearn.preprocessing import OneHotEncoder
+import random
 
 
 def rescale(x):
@@ -88,8 +89,9 @@ if __name__ == '__main__':
     exp_name = f"exp_transformer_{args.v}_{time()}_focalloss.log"
     out_folder = "/home/jsenadesouza/DA-healthy2patient/results/outcomes/classifier_results/"
     logging = set_logger(os.path.join(out_folder, exp_name))
+    logging.info(f"Experiment name: crossentropy + class_weights + WeightedSampler + Data augmentation")
 
-    filepath = "/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset/f10_t1800_IntelligentICU.npz"
+    filepath = "/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset/f10_t1800_IntelligentICU_PAIN_ADAPT.npz"
     clin_variable_target = args.v
     logging.info(f"Clinical variable: {clin_variable_target}")
     dataset = np.load(filepath, allow_pickle=True)
@@ -122,6 +124,7 @@ if __name__ == '__main__':
     use_additional_data = False
 
     labels2idx = {k: idx for idx, k in enumerate(np.unique(y_target))}
+    logging.info(str(np.unique(y_target, return_counts=True)) + "")
     use_cuda = torch.cuda.is_available()
     num_epochs = 100
     batch_size_train = 40
@@ -138,10 +141,17 @@ if __name__ == '__main__':
 
     cum_acc, cum_f1, cum_recall, cum_conf_matrices, cum_precision = [], [], [], [], []
 
-    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    patients = np.unique(y[:,-1])
+    random.shuffle(patients)
+    patient_splits = np.array_split(patients, 5)
 
-    logging.info(str(np.unique(y_target, return_counts=True)) + "")
-    for folder_idx, (train_index, test_index) in enumerate(skf.split(X, y_target)):
+    for folder_idx in range(5):
+
+        # split samples based on patients k-fold cross validation
+        test_index, train_index = [], []
+        for patient in patient_splits[folder_idx]:
+            test_index.extend(list(np.where(y[:,-1] == patient)[0]))
+        train_index = np.setdiff1d(np.arange(y.shape[0]), test_index)
 
         writer = SummaryWriter(
             f'/home/jsenadesouza/DA-healthy2patient/results/outcomes/tensorboard/transformers/exp_name/run_{time()}')
@@ -230,4 +240,4 @@ if __name__ == '__main__':
 
     end = time()
     logging.info('Epochs: {} Time: {:.2f} seconds\n'.format(num_epochs, (end - start)))
-                                                           abs(np.mean(current_prec) - ci_prec[0]) * 100))
+
