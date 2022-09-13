@@ -17,10 +17,11 @@ import dateutil
 from zoneinfo import ZoneInfo
 import multiprocessing
 
+
 def parse_date(x):
     return dateutil.parser.parse(x)
 
-def read_acc_file(file_name, outfile):
+def read_acc_file(file_name, logger):
     um_acc_raw = pd.read_csv(file_name)
     copy_acc_filtered = um_acc_raw.copy()
     timestamp_flag = 0
@@ -30,35 +31,33 @@ def read_acc_file(file_name, outfile):
         if "timestamp" not in col.lower() and "accel" not in col.lower():
             copy_acc_filtered.drop(col, inplace=True, axis=1)
     if timestamp_flag and len(copy_acc_filtered) >= 4:
-        #debug
-        print("ok\n")
+        # in case there is more than one accelerometer
         um_acc_raw = copy_acc_filtered.filter(items=copy_acc_filtered.columns[:4], axis=1)
         um_acc_raw = um_acc_raw.to_numpy()
-        num_cores = multiprocessing.cpu_count()
-        pool = multiprocessing.Pool(num_cores)
+        pool = multiprocessing.Pool()
         timestamp = list(pool.map(parse_date, um_acc_raw[:, 0]))
         um_acc = np.hstack([np.expand_dims(timestamp, axis=1), um_acc_raw[:, 1:]])
         um_acc = um_acc[um_acc[:, 0].argsort()]
-        um_acc = sampling_rate(um_acc, 10)
         return um_acc
     else:
         #debug
         if not timestamp_flag:
-            print("No timestamp ")
+            logger.error("File {}, message: No timestamp ", file_name)
         if len(copy_acc_filtered) <= 4:
-            print("Not enough columns")
+            logger.error("File {}, message: Not enough columns ", file_name)
         if len(copy_acc_filtered) == 0:
-            print("Empty")
-        print("\n")
-        outfile.write(f"Not enough columns or no timestamp. Columns:{copy_acc_filtered.columns}")
+            logger.error("File {}, message: Empty file ", file_name)
         return None
 
 
 def sampling_rate(data, rate_reduc):
-    number_samp = data.shape[0]
-    samples_slct = list(range(0,number_samp,rate_reduc))
-    new_data = data[samples_slct]
-    return np.array(new_data)
+    if rate_reduc != 0:
+        number_samp = data.shape[0]
+        samples_slct = list(range(0,number_samp,int(rate_reduc)))
+        new_data = data[samples_slct]
+        return np.array(new_data)
+    else:
+        return data
 
 
 def convert_to_date(value):
@@ -147,26 +146,28 @@ def process_labels(df, start_ts, end_ts):
              sofa_score, sofa_score_class, map, map_class, braden_score, braden_score_class, spo2, spo2_class, cam],
             nan=-1)
 
-def check_columns(acc_fold: str):
-    acc_files = get_accs_files(acc_fold)
-    string_col = []
-    for file_name in acc_files:
-        acc_file = read_acc_file(file_name)
-        array = []
-        for c in acc_file.columns:
-            spl_c = c.split("_")
-            array.append("_".join(spl_c[2:]))
-        string_col.append("-".join(array))
-        #print(f'\n{"-".join(array)}')
+# def check_columns(acc_fold: str, logger):
+#     acc_files = get_accs_files(acc_fold, logger)
+#     string_col = []
+#     for file_name in acc_files:
+#         acc_file = read_acc_file(file_name)
+#         array = []
+#         for c in acc_file.columns:
+#             spl_c = c.split("_")
+#             array.append("_".join(spl_c[2:]))
+#         string_col.append("-".join(array))
+#         #print(f'\n{"-".join(array)}')
+#
+#     print(np.unique(string_col, return_counts=True))
 
-    print(np.unique(string_col, return_counts=True))
 
 class Outcomes_ADAPT(Dataset):
-    def __init__(self, name, dir_dataset, dir_save, freq = 100, trials_per_file=100000, time_wd=1800, time_drop=900):
-        super().__init__(name, dir_dataset, dir_save, freq, trials_per_file)
-        self.reduce_rate = 10
-        self.time_wd = time_wd * (self.freq/self.reduce_rate)
-        self.time_drop = time_drop * (self.freq/self.reduce_rate)
+    def __init__(self, name, dir_dataset, dir_save, logger, final_freq, trials_per_file=100000, time_wd=1800, time_drop=900):
+        super().__init__(name, dir_dataset, dir_save, trials_per_file=trials_per_file)
+        self.final_freq = final_freq
+        self.logger = logger
+        self.time_wd = time_wd
+        self.time_drop = time_drop
         self.patient_map = self.set_patient_map()
         self.outcomes_file = self.read_labels_file()
 
@@ -221,70 +222,75 @@ class Outcomes_ADAPT(Dataset):
 
     def preprocess(self):
         accs_files = self.get_accs_files()
-        #accs_files = ["/home/jsenadesouza/DA-healthy2patient/1013_Sensor_Data/I021A/I021A_Accel/Curated_file/2022-03-16_08.55.34_I021A_arm3,4_SD_Session1/I021A_arm3,4_Session1_I021A_arm3,4_Calibrated_SD.csv"]
+        #accs_files = ["/home/jsenadesouza/DA-healthy2patient/1013_Sensor_Data/I005A/I005A_Accel/Curated_file/2022-01-31_08.44.31_I005A_arm6_SD_Session1/I005A_arm6_Session1_I005A_arm6_Calibrated_SD.csv"]
         trial_id = 1
         output_dir = self.dir_save
-        outfile = open('outcomes_acc_PAIN.txt', 'w', buffering=1)
 
         for file in tqdm(accs_files):
-            samples_extracted = 0
-            #try:
-            if 'wrist' not in file and 'arm' not in file:
-                outfile.write(f"\nDiscarding: {file}")
-            else:
-                file_acc = read_acc_file(file, outfile)
-                if file_acc is None:
-                    outfile.write(f"\nDiscarding: {file}")
+            try:
+                if 'wrist' not in file.lower() and 'arm' not in file.lower() and 'emg' not in file.lower():
+                    self.logger.error("File {}, message: not wrist or arm", file)
                 else:
-                    outfile.write(f'\nKeeping: {file}')
-                    init_day = np.min(file_acc[:, 0])
-                    last_day = np.max(file_acc[:, 0])
-                    #print(f'start = {init_day}')
-                   #print(f'end = {last_day}')
-                    #continue
+                    file_acc = read_acc_file(file, self.logger)
+                    if file_acc is not None:
+                        #self.logger.info("File {}, message: processing", file)
+                        init_day = np.min(file_acc[:, 0])
+                        last_day = np.max(file_acc[:, 0])
+                        last_day = last_day + timedelta(hours=23, minutes=59)
+                        patient_id = file.split("/")[5]
 
-                    patient_id = file.split("/")[5]
+                        outcomes_filtered_df, pain_filtered = self.get_labels(patient_id, init_day, last_day)
+                        if len(pain_filtered) > 0:
+                            samples_extracted = 0
+                            # resampled the data
+                            df = pd.DataFrame(file_acc[:, 0])
+                            self.freq = 1 / df.diff().median()[0].total_seconds()
+                            reduce_rate = self.freq / self.final_freq
+                            file_acc = sampling_rate(file_acc, reduce_rate)
+                            acc_ts_list = file_acc[:, 0]
 
-                    outcomes_filtered_df, pain_filtered = self.get_labels(patient_id, init_day, last_day)
-                    if len(outcomes_filtered_df) > 0 and len(pain_filtered) > 0:
+                            time_wd = self.time_wd * (self.freq / reduce_rate)
+                            time_drop = self.time_drop * (self.freq / reduce_rate)
+                            self.logger.info("File {}, message: Frequency: {}, Reduce rate: {}, Time window: {}", file,
+                                             self.freq, reduce_rate, time_wd)
+                            for pain_datetime in pain_filtered:
 
-                        # converting string to datetime
-                        #pool = mp.Pool()
-                        #file_acc[:, 0] = list(pool.map(convert_to_date, file_acc[:, 0]))
-                        acc_ts_list = file_acc[:, 0]
+                                idx = bisect_left(acc_ts_list, pain_datetime)
+                                idx = idx - 1 if idx >= len(acc_ts_list) else idx
+                                # check if there is at least 45 minutes of data before the pain measurement
+                                if idx > time_wd + time_drop:
+                                    margin = timedelta(minutes=5)
+                                    if abs(pain_datetime - acc_ts_list[idx]) <= margin:
+                                        # get 30 minutes before 15 minutes from the pain measurement
+                                        # 15 minutes are dropped because the nurse can be in the room doing some procedures
+                                        start_idx = int(idx - time_wd - time_drop)
+                                        end_idx = int(idx - time_drop)
 
-                        for pain_datetime in pain_filtered:
+                                        ts_sample = file_acc[start_idx:end_idx, 0]
+                                        # check if the timestamps in the sample are continuous
+                                        if np.mean(np.diff(ts_sample)) < timedelta(minutes=1):
+                                            start_ts = ts_sample[0]
+                                            end_ts = ts_sample[-1]
+                                            sample = file_acc[start_idx:end_idx]
+                                            # add labels
+                                            label = process_labels(outcomes_filtered_df, start_ts, end_ts)
+                                            if len(label) > 0:
+                                                label = "_".join(label.astype(str))
+                                                self.add_info_data(label, patient_id, trial_id, sample, output_dir)
+                                                trial_id += 1
+                                                samples_extracted += 1
+                            if not samples_extracted:
+                                self.logger.error("File {}, message: no sample extracted", file)
+                            else:
+                                self.logger.success("File {}, message: sample extracted", file)
+                        else:
+                            self.logger.error("File {}, message: No pain measurements", file)
 
-                            idx = bisect_left(acc_ts_list, pain_datetime)
-                            idx = idx - 1 if idx >= len(acc_ts_list) else idx
-                            # check if there is at least 45 minutes of data before the pain measurement
-                            if idx > self.time_wd + self.time_drop:
-                                margin = timedelta(minutes=5)
-                                if abs(pain_datetime - acc_ts_list[idx]) <= margin:
-                                    # get 30 minutes before 15 minutes from the pain measurement
-                                    # 15 minutes are dropped because the nurse can be in the room doing some procedures
-                                    start_idx = int(idx - self.time_wd - self.time_drop)
-                                    end_idx = int(idx - self.time_drop)
+                    else:
+                        self.logger.error("File {}, message: No data", file)
 
-                                    ts_sample = file_acc[start_idx:end_idx, 0]
-                                    # check if the timestamps in the sample are continuous
-                                    if np.mean(np.diff(ts_sample)) < timedelta(minutes=1):
-                                        start_ts = ts_sample[0]
-                                        end_ts = ts_sample[-1]
-                                        sample = file_acc[start_idx:end_idx]
-                                        # add labels
-                                        label = process_labels(outcomes_filtered_df, start_ts, end_ts)
-                                        if len(label) > 0:
-                                            label = "_".join(label.astype(str))
-                                            self.add_info_data(label, patient_id, trial_id, sample, output_dir)
-                                            trial_id += 1
-                                            samples_extracted += 1
-            # except:
-            #     print("Error on file: ", file)
-            if samples_extracted == 0:
-                outfile.write(f'\nNo samples extracted for {file}')
-            else:
-                outfile.write(f'\n{samples_extracted} samples extracted for {file}')
+            except Exception as e:
+                self.logger.critical("File {}, message: {}", file, e)
 
         self.save_data(output_dir)
 
