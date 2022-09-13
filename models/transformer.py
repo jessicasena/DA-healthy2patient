@@ -82,7 +82,7 @@ if __name__ == '__main__':
     out_folder = "/home/jsenadesouza/DA-healthy2patient/results/outcomes/classifier_results/"
     logging = set_logger(os.path.join(out_folder, exp_name))
 
-    filepath = "/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset/f10_t1800_IntelligentICU.npz"
+    filepath = "/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset/f10_t1800_IntelligentICU_PAIN_ADAPT.npz"
     clin_variable_target = args.v
     logging.info(f"Clinical variable: {clin_variable_target}")
     dataset = np.load(filepath, allow_pickle=True)
