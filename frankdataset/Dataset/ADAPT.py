@@ -21,7 +21,6 @@ import multiprocessing
 def parse_date(x):
     return dateutil.parser.parse(x)
 
-
 def read_acc_file(file_name, logger):
     um_acc_raw = pd.read_csv(file_name)
     copy_acc_filtered = um_acc_raw.copy()
@@ -32,14 +31,13 @@ def read_acc_file(file_name, logger):
         if "timestamp" not in col.lower() and "accel" not in col.lower():
             copy_acc_filtered.drop(col, inplace=True, axis=1)
     if timestamp_flag and len(copy_acc_filtered) >= 4:
+        # in case there is more than one accelerometer
         um_acc_raw = copy_acc_filtered.filter(items=copy_acc_filtered.columns[:4], axis=1)
         um_acc_raw = um_acc_raw.to_numpy()
-        num_cores = multiprocessing.cpu_count()
-        pool = multiprocessing.Pool(num_cores)
+        pool = multiprocessing.Pool()
         timestamp = list(pool.map(parse_date, um_acc_raw[:, 0]))
         um_acc = np.hstack([np.expand_dims(timestamp, axis=1), um_acc_raw[:, 1:]])
         um_acc = um_acc[um_acc[:, 0].argsort()]
-        um_acc = sampling_rate(um_acc, 10)
         return um_acc
     else:
         #debug
@@ -53,10 +51,13 @@ def read_acc_file(file_name, logger):
 
 
 def sampling_rate(data, rate_reduc):
-    number_samp = data.shape[0]
-    samples_slct = list(range(0,number_samp,rate_reduc))
-    new_data = data[samples_slct]
-    return np.array(new_data)
+    if rate_reduc != 0:
+        number_samp = data.shape[0]
+        samples_slct = list(range(0,number_samp,int(rate_reduc)))
+        new_data = data[samples_slct]
+        return np.array(new_data)
+    else:
+        return data
 
 
 def convert_to_date(value):
@@ -161,10 +162,12 @@ def process_labels(df, start_ts, end_ts):
 
 
 class Outcomes_ADAPT(Dataset):
-    def __init__(self, name, dir_dataset, dir_save, logger, final_freq, trials_per_file=100000):
+    def __init__(self, name, dir_dataset, dir_save, logger, final_freq, trials_per_file=100000, time_wd=1800, time_drop=900):
         super().__init__(name, dir_dataset, dir_save, trials_per_file=trials_per_file)
         self.final_freq = final_freq
         self.logger = logger
+        self.time_wd = time_wd
+        self.time_drop = time_drop
         self.patient_map = self.set_patient_map()
         self.outcomes_file = self.read_labels_file()
 
@@ -219,26 +222,26 @@ class Outcomes_ADAPT(Dataset):
 
     def preprocess(self):
         accs_files = self.get_accs_files()
-        #accs_files = ["/home/jsenadesouza/DA-healthy2patient/1013_Sensor_Data/I021A/I021A_Accel/Curated_file/2022-03-16_08.55.34_I021A_arm3,4_SD_Session1/I021A_arm3,4_Session1_I021A_arm3,4_Calibrated_SD.csv"]
+        #accs_files = ["/home/jsenadesouza/DA-healthy2patient/1013_Sensor_Data/I005A/I005A_Accel/Curated_file/2022-01-31_08.44.31_I005A_arm6_SD_Session1/I005A_arm6_Session1_I005A_arm6_Calibrated_SD.csv"]
         trial_id = 1
         output_dir = self.dir_save
 
         for file in tqdm(accs_files):
-            samples_extracted = 0
             try:
-                if 'wrist' not in file and 'arm' not in file:
+                if 'wrist' not in file.lower() and 'arm' not in file.lower() and 'emg' not in file.lower():
                     self.logger.error("File {}, message: not wrist or arm", file)
                 else:
                     file_acc = read_acc_file(file, self.logger)
                     if file_acc is not None:
-                        self.logger.info("File {}, message: processing", file)
+                        #self.logger.info("File {}, message: processing", file)
                         init_day = np.min(file_acc[:, 0])
                         last_day = np.max(file_acc[:, 0])
-
+                        last_day = last_day + timedelta(hours=23, minutes=59)
                         patient_id = file.split("/")[5]
 
                         outcomes_filtered_df, pain_filtered = self.get_labels(patient_id, init_day, last_day)
-                        if len(outcomes_filtered_df) > 0 and len(pain_filtered) > 0:
+                        if len(pain_filtered) > 0:
+                            samples_extracted = 0
                             # resampled the data
                             df = pd.DataFrame(file_acc[:, 0])
                             self.freq = 1 / df.diff().median()[0].total_seconds()
@@ -276,12 +279,19 @@ class Outcomes_ADAPT(Dataset):
                                                 self.add_info_data(label, patient_id, trial_id, sample, output_dir)
                                                 trial_id += 1
                                                 samples_extracted += 1
+                            if not samples_extracted:
+                                self.logger.error("File {}, message: no sample extracted", file)
+                            else:
+                                self.logger.success("File {}, message: sample extracted", file)
+                        else:
+                            self.logger.error("File {}, message: No pain measurements", file)
+
+                    else:
+                        self.logger.error("File {}, message: No data", file)
+
             except Exception as e:
                 self.logger.critical("File {}, message: {}", file, e)
-            if not samples_extracted:
-                self.logger.error("File {}, message: no sample extracted", file)
-            else:
-                self.logger.success("File {}, message: sample extracted", file)
+
         self.save_data(output_dir)
 
 if __name__ == "__main__":

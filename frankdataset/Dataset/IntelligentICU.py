@@ -182,8 +182,8 @@ class Outcomes_16_19(Dataset):
         for file in tqdm(accs_files):
             samples_extracted = False
             try:
-                placement = file.split("/")[-1].split("_")[0]
-                if placement != 'WRIST' and placement != 'ARM':
+                placement = file.split("/")[-1].split("_")[0].lower()
+                if placement != 'wrist' and placement != 'arm' and placement != 'emg':
                     self.logger.error("File {}, message: not wrist or arm", file)
                 else:
                     self.logger.info("File {}, message: processing", file)

@@ -111,6 +111,26 @@ def get_accs_files_after(dir_dataset: str):
     return accs
 
 
+def log_to_csv(curation_log, PROJECT_NAME):
+    output_csv = curation_log.replace(".log", ".csv")
+    log = open(curation_log)
+    files_excluded = []
+
+    df_array = []
+
+    for line in log:
+        if PROJECT_NAME + "_Sensor_Data" in line:
+            f = line.split("/")[-1].split(".csv")[0]
+            files_excluded.append(f)
+            patient_id = line.split("/")[-1].split("_")[0]
+            error = line.split(", message:")[-1].split("\n")[0]
+            df_array.append([patient_id, error, f])
+
+    df = pd.DataFrame(df_array, columns=['patient', 'reason', 'file'])
+
+    df.to_csv(output_csv, index=False)
+
+
 def check_curation(PROJECT, before, after, curation_log, output_csv):
     if PROJECT == "1013":
         files_before = get_accs_files_adapt(before)
@@ -164,8 +184,9 @@ if __name__ == "__main__":
     # after = "/home/jsenadesouza/DA-healthy2patient/354_Sensor_data/"
     # curation_log = "/home/jsenadesouza/DA-healthy2patient/results/curation/pain_curation.log"
     # output_csv = '/home/jsenadesouza/DA-healthy2patient/results/curation/reason_exclusion_curation_PAIN.csv'
-    check_curation(PROJECT, before, after, curation_log, output_csv)
+    #check_curation(PROJECT, before, after, curation_log, output_csv)
     #check_folder_file_name("/data2/datasets/ICU_Data/1013_Sensor_Data/")
     #check_folder_file_name("/data/datasets/ICU_Data/354_Sensor_Data/")
     #check_place_sensor("/data2/datasets/ICU_Data/1013_Sensor_Data/")
     #check_place_sensor("/data/datasets/ICU_Data/354_Sensor_Data/")
+    log_to_csv("/home/jsenadesouza/DA-healthy2patient/results/outcomes/ADAPT.log", "1013")

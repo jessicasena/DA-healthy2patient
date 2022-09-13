@@ -66,7 +66,7 @@ if __name__ == "__main__":
 
     logger.remove(0)
     logger.add('/home/jsenadesouza/DA-healthy2patient/results/outcomes/' + exp_name + ".log", enqueue=True,
-               format="{time} | {level} | {message}", colorize=True)
+               format="{time} | {level} | {message}", colorize=True, mode="w")
     logger.add(sys.stderr, enqueue=True, format="{time} | {level} | {message}", colorize=True)
 
     overlapping = 0.5
@@ -80,7 +80,7 @@ if __name__ == "__main__":
 
     datasets = instanciate_dataset(dir_datasets, logger)
 
-    process_datasets(datasets)
+    #process_datasets(datasets)
     #sys.exit("\nDatasets preprocessing done.\n")
 
     create_dataset(datasets, dir_save_file, dir_datasets, exp_name,
