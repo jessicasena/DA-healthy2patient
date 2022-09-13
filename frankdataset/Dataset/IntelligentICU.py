@@ -1,3 +1,4 @@
+import multiprocessing
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -13,19 +14,22 @@ from operator import itemgetter
 import multiprocessing as mp
 
 
-def read_acc_file(file_name):
+def read_acc_file(file_name, logger):
     um_acc_raw = pd.read_csv(file_name, header=10)
+    if "Timestamp" not in um_acc_raw.columns[0]:
+        logger.error("File {} has no timestamp column".format(file_name))
+        return None
     um_acc_raw = um_acc_raw.to_numpy()
-    # resampled the data to 10Hz
-    um_acc_raw = sampling_rate(um_acc_raw, 10)
+
     return um_acc_raw
 
 
 def sampling_rate(data, rate_reduc):
     number_samp = data.shape[0]
-    samples_slct = list(range(0,number_samp,rate_reduc))
+    samples_slct = list(range(0,number_samp,int(rate_reduc)))
     new_data = data[samples_slct]
     return np.array(new_data)
+
 
 def convert_to_date(value):
     return datetime.strptime(value, '%m/%d/%Y %H:%M:%S.%f')
@@ -115,12 +119,14 @@ def process_labels(df, start_ts, end_ts):
 
 
 class Outcomes_16_19(Dataset):
-    def __init__(self, name, dir_dataset, dir_save, freq = 100, trials_per_file=100000, time_wd=1800, time_drop=900):
-        super().__init__(name, dir_dataset, dir_save, freq, trials_per_file)
-        self.reduce_rate = 10
-        self.time_wd = time_wd * (self.freq/self.reduce_rate)
-        self.time_drop = time_drop * (self.freq/self.reduce_rate)
+    def __init__(self, name, dir_dataset, dir_save, logger, final_freq = 10, trials_per_file=100000, time_wd=1800, time_drop=900):
+        super().__init__(name, dir_dataset, dir_save, trials_per_file=trials_per_file)
+        self.time_wd = time_wd
+        self.final_freq = final_freq
+        self.time_drop = time_drop
+        self.logger = logger
         self.outcomes_file = self.read_labels_file()
+
 
     def print_info(self):
         return """
@@ -131,8 +137,8 @@ class Outcomes_16_19(Dataset):
                 """
 
     def get_accs_files(self):
-        accs = {}
-        no_acc = 0
+        accs = []
+        patients = {}
         for root, dirs, files in os.walk(self.dir_dataset):
             for file in files:
                 if file.endswith("RAW.csv"):
@@ -140,14 +146,19 @@ class Outcomes_16_19(Dataset):
                     timestamp = file.split("(")[-1].split(")")[0]
                     bodypart = file.split("_")[0]
                     acc_csv = os.path.join(root, file)
+                    if patient not in patients:
+                        patients[patient] = False
                     # just get csv files from Accelerometer directories
                     if os.path.join(self.dir_dataset, f"Patient_{patient}", "Accelerometer") in root:
+                        patients[patient] = True
                         if acc_csv not in accs:
-                            accs[acc_csv] = {'patient': patient, 'timestamp': timestamp, "bodypart": bodypart}
-                    else:
-                        no_acc += 1
+                            accs.append(acc_csv)
 
-        return accs, no_acc
+        for pat, acc_flag in patients.items():
+            if not acc_flag:
+                self.logger.error("Patient {}, message: not accelerometer in directory", pat)
+
+        return accs
 
     def read_labels_file(self):
         df = pd.read_csv(
@@ -164,59 +175,83 @@ class Outcomes_16_19(Dataset):
         return df, pain_measurements
 
     def preprocess(self):
-        accs_files, no_acc = self.get_accs_files()
+        accs_files = self.get_accs_files()
         trial_id = 1
         output_dir = self.dir_save
 
-        for file in tqdm(accs_files.keys()):
+        for file in tqdm(accs_files):
             samples_extracted = False
             try:
-                placement = file.split("/")[-1].split("_")[0]
-                if placement != 'WRIST' and placement != 'ARM':
-                    print("\nDiscarding: ", file)
+                placement = file.split("/")[-1].split("_")[0].lower()
+                if placement != 'wrist' and placement != 'arm' and placement != 'emg':
+                    self.logger.error("File {}, message: not wrist or arm", file)
                 else:
-                    print(f'\nKeeping: {file}')
+                    self.logger.info("File {}, message: processing", file)
                     patient_id = file.split("/")[5].split("_")[1]
                     init_day = datetime.strptime(file.split("/")[-2].split(" ")[1], '%m.%d.%y')
                     last_day = datetime.strptime(file.split("/")[-2].split(" ")[3], '%m.%d.%y')
                     last_day = last_day + timedelta(hours=23, minutes=59)
                     outcomes_filtered_df, pain_filtered = self.get_labels(patient_id, init_day, last_day)
                     if len(outcomes_filtered_df) > 0 and len(pain_filtered) > 0:
-                        file_acc = read_acc_file(file)
+                        file_acc = read_acc_file(file, self.logger)
+                        if file_acc is not None:
+                            # converting string to datetime
+                            pool = mp.Pool()
+                            file_acc[:, 0] = list(pool.map(convert_to_date, file_acc[:, 0]))
 
-                        # converting string to datetime
-                        pool = mp.Pool()
-                        file_acc[:, 0] = list(pool.map(convert_to_date, file_acc[:, 0]))
-                        acc_ts_list = file_acc[:, 0]
+                            # resampled the data
 
-                        for pain_datetime in pain_filtered:
+                            df = pd.DataFrame(file_acc[:, 0])
+                            self.freq = 1/df.diff().median()[0].total_seconds()
+                            reduce_rate = self.freq / self.final_freq
+                            file_acc = sampling_rate(file_acc, reduce_rate)
+                            acc_ts_list = file_acc[:, 0]
 
-                            idx = bisect_left(acc_ts_list, pain_datetime)
-                            idx = idx - 1 if idx >= len(acc_ts_list) else idx
-                            if idx > self.time_wd + self.time_drop:
-                                margin = timedelta(minutes=5)
-                                if abs(pain_datetime - acc_ts_list[idx]) <= margin:
-                                    # get 30 minutes before 15 minutes from the pain measurement
-                                    # 15 minutes are dropped because the nurse can be in the room doing some procedures
-                                    start_idx = int(idx - self.time_wd - self.time_drop)
-                                    end_idx = int(idx - self.time_drop)
+                            time_wd = self.time_wd * (self.freq / reduce_rate)
+                            time_drop = self.time_drop * (self.freq / reduce_rate)
+                            self.logger.info("File {}, message: Frequency: {}, Reduce rate: {}, Time window: {}", file,
+                                             self.freq, reduce_rate, time_wd)
 
-                                    ts_sample = file_acc[start_idx:end_idx, 0]
-                                    # check if the timestamps in the sample are continuous
-                                    if np.mean(np.diff(ts_sample)) < timedelta(minutes=1):
-                                        start_ts = ts_sample[0]
-                                        end_ts = ts_sample[-1]
-                                        sample = file_acc[start_idx:end_idx, 1:4]
-                                        # add labels
-                                        label = process_labels(outcomes_filtered_df, start_ts, end_ts)
-                                        if len(label) > 0:
-                                            label = "_".join(label.astype(str))
-                                            self.add_info_data(label, patient_id, trial_id, sample, output_dir)
-                                            trial_id += 1
-                                            samples_extracted = True
-            except:
-                print("Error on file: ", file)
+                            for pain_datetime in pain_filtered:
+
+                                idx = bisect_left(acc_ts_list, pain_datetime)
+                                idx = idx - 1 if idx >= len(acc_ts_list) else idx
+                                if idx > time_wd + time_drop:
+                                    margin = timedelta(minutes=5)
+                                    if abs(pain_datetime - acc_ts_list[idx]) <= margin:
+                                        # get 30 minutes before 15 minutes from the pain measurement
+                                        # 15 minutes are dropped because the nurse can be in the room doing some procedures
+                                        start_idx = int(idx - time_wd - time_drop)
+                                        end_idx = int(idx - time_drop)
+
+                                        ts_sample = file_acc[start_idx:end_idx, 0]
+                                        # check if the timestamps in the sample are continuous
+                                        if np.mean(np.diff(ts_sample)) < timedelta(minutes=1):
+                                            start_ts = ts_sample[0]
+                                            end_ts = ts_sample[-1]
+                                            sample = file_acc[start_idx:end_idx, 1:4]
+                                            # add labels
+                                            label = process_labels(outcomes_filtered_df, start_ts, end_ts)
+                                            if len(label) > 0:
+                                                label = "_".join(label.astype(str))
+                                                self.add_info_data(label, patient_id, trial_id, sample, output_dir)
+                                                trial_id += 1
+                                                samples_extracted = True
+            except Exception as e:
+                self.logger.critical("File {}, message: {}", file, e)
             if not samples_extracted:
-                print(f'No samples extracted for {file}')
+                self.logger.error("File {}, message: no sample extracted", file)
+            else:
+                self.logger.success("File {}, message: sample extracted", file)
 
         self.save_data(output_dir)
+
+if __name__ == "__main__":
+    outcomesacc_fold = "/data/datasets/ICU_Data/Sensor_Data/"
+    dir_datasets = '/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset_preprocess/'
+    from loguru import logger
+
+    logger.add('/home/jsenadesouza/DA-healthy2patient/results/outcomes/' + "test" + ".log", enqueue=True,
+               format="{time} | {level} | {message}", colorize=True)
+    outcomes_data = Outcomes_16_19('acc_outcomes_16_19', outcomesacc_fold, dir_datasets, logger, final_freq=10, trials_per_file=100)
+    outcomes_data.preprocess()

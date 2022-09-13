@@ -9,23 +9,23 @@ from Process.Manager import preprocess_datasets
 from Process.Protocol import outcomeACCProtocol
 import time
 import argparse
+from loguru import logger
 
-
-def instanciate_dataset(dir_datasets):
+def instanciate_dataset(dir_datasets, logger):
     datasets = []
 
     outcomesacc_fold = "/data/datasets/ICU_Data/Sensor_Data/"
-    outcomes_data = Outcomes_16_19('acc_outcomes_16_19', outcomesacc_fold, dir_datasets, freq=100, trials_per_file=100)
+    outcomes_data = Outcomes_16_19('acc_outcomes_16_19', outcomesacc_fold, dir_datasets, logger, final_freq=10, trials_per_file=1000)
 
     datasets.append(outcomes_data)
 
     outcomesacc_fold = "/home/jsenadesouza/DA-healthy2patient/354_Sensor_data/"
-    outcomes_data = Outcomes_20_22('acc_outcomes_PAIN', outcomesacc_fold, dir_datasets, freq=100, trials_per_file=100)
+    outcomes_data = Outcomes_20_22('acc_outcomes_PAIN', outcomesacc_fold, dir_datasets, logger, final_freq=10, trials_per_file=1000)
 
     datasets.append(outcomes_data)
 
     outcomesacc_fold = "/home/jsenadesouza/DA-healthy2patient/1013_Sensor_Data/"
-    outcomes_data = Outcomes_ADAPT('acc_outcomes_ADAPT', outcomesacc_fold, dir_datasets, freq=100, trials_per_file=100)
+    outcomes_data = Outcomes_ADAPT('acc_outcomes_ADAPT', outcomesacc_fold, dir_datasets, logger, final_freq=10, trials_per_file=1000)
     datasets.append(outcomes_data)
 
     return datasets
@@ -59,9 +59,15 @@ if __name__ == "__main__":
     parser.add_argument('--debug', action='store_true')
 
     args = parser.parse_args()
+    exp_name = "IntelligentICU_PAIN_ADAPT"
 
     dir_datasets = '/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset_preprocess/'
     dir_save_file = '/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset'
+
+    logger.remove(0)
+    logger.add('/home/jsenadesouza/DA-healthy2patient/results/outcomes/' + exp_name + ".log", enqueue=True,
+               format="{time} | {level} | {message}", colorize=True, mode="w")
+    logger.add(sys.stderr, enqueue=True, format="{time} | {level} | {message}", colorize=True)
 
     overlapping = 0.5
     time_wd = 1800
@@ -72,12 +78,11 @@ if __name__ == "__main__":
     if not os.path.exists(dir_save_file):
         os.makedirs(dir_save_file)
 
-    datasets = instanciate_dataset(dir_datasets)
+    datasets = instanciate_dataset(dir_datasets, logger)
 
     #process_datasets(datasets)
     #sys.exit("\nDatasets preprocessing done.\n")
 
-    exp_name = "outcomesscore_IntelligentICU_PAIN"
     create_dataset(datasets, dir_save_file, dir_datasets, exp_name,
                    overlapping, time_wd, new_freq)
     end = time.time()

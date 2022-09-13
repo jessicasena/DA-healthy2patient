@@ -133,7 +133,10 @@ if __name__ == '__main__':
     # one_hot_y = encoder.transform(y_target.reshape(-1, 1))
     # one_hot_y = one_hot_y.astype(np.float32)
 
-    device = torch.device('cuda:1') if use_cuda else torch.device('cpu')
+<<<<<<< HEAD
+=======
+
+>>>>>>> ba40c31cf151c2409a924dca74d5373ef30915c7
     device = torch.device('cuda:1') if use_cuda else torch.device('cpu')
 
     cum_acc, cum_f1, cum_recall, cum_conf_matrices, cum_precision = [], [], [], [], []
@@ -170,7 +173,10 @@ if __name__ == '__main__':
         test_set = SensorDataset(test_data, add_data_test, test_labels)
 
         train_loader = DataLoader(train_set, batch_size=batch_size_train, pin_memory=True, sampler=sampler)
+<<<<<<< HEAD
+=======
        # train_loader = DataLoader(train_set, batch_size=batch_size_train, pin_memory=True)
+>>>>>>> ba40c31cf151c2409a924dca74d5373ef30915c7
 
         test_loader = DataLoader(test_set, batch_size=batch_size_train, pin_memory=True)
 
@@ -217,10 +223,23 @@ if __name__ == '__main__':
         current_recall = np.array(cum_recall)[:, class_]
         current_prec = np.array(cum_precision)[:, class_]
         ci_mean = st.t.interval(0.95, len(current_acc) - 1, loc=np.mean(current_acc), scale=st.sem(current_acc))
-        ci_f1 = st.t.interval(0.95, len(current_f1) -1, loc=np.mean(current_f1), scale=st.sem(current_f1))
-        ci_recall = st.t.interval(0.95, len(current_recall) -1, loc=np.mean(current_recall), scale=st.sem(current_recall))
-        #ci_auc = st.t.interval(0.95, len(cum_auc) -1, loc=np.mean(cum_auc), scale=st.sem(cum_auc))
+        ci_f1 = st.t.interval(0.95, len(current_f1) - 1, loc=np.mean(current_f1), scale=st.sem(current_f1))
+        ci_recall = st.t.interval(0.95, len(current_recall) - 1, loc=np.mean(current_recall),
+                                  scale=st.sem(current_recall))
+        # ci_auc = st.t.interval(0.95, len(cum_auc) -1, loc=np.mean(cum_auc), scale=st.sem(cum_auc))
         # ci_AUROC = st.t.interval(0.95, len(cum_AUROC) -1, loc=np.mean(cum_AUROC), scale=st.sem(cum_AUROC))
+<<<<<<< HEAD
+        ci_prec = st.t.interval(0.95, len(current_prec) - 1, loc=np.mean(current_prec), scale=st.sem(current_prec))
+
+        logging.info('accuracy: {:.2f} ± {:.2f}\n'.format(np.mean(current_acc) * 100,
+                                                          abs(np.mean(current_acc) - ci_mean[0]) * 100))
+        logging.info('recall: {:.2f} ± {:.2f}\n'.format(np.mean(current_recall) * 100,
+                                                        abs(np.mean(current_recall) - ci_recall[0]) * 100))
+        logging.info(
+            'f1-score: {:.2f} ± {:.2f}\n'.format(np.mean(current_f1) * 100, abs(np.mean(current_f1) - ci_f1[0]) * 100))
+        logging.info('precision: {:.2f} ± {:.2f}\n'.format(np.mean(current_prec) * 100,
+                                                           abs(np.mean(current_prec) - ci_prec[0]) * 100))
+=======
         ci_prec = st.t.interval(0.95, len(current_prec) -1, loc=np.mean(current_prec), scale=st.sem(current_prec))
 
         logging.info('accuracy: {:.2f} ± {:.2f}\n'.format(np.mean(current_acc) * 100, abs(np.mean(current_acc) - ci_mean[0]) * 100))
@@ -230,4 +249,4 @@ if __name__ == '__main__':
 
     end = time()
     logging.info('Epochs: {} Time: {:.2f} seconds\n'.format(num_epochs, (end - start)))
-                                                           abs(np.mean(current_prec) - ci_prec[0]) * 100))
+>>>>>>> ba40c31cf151c2409a924dca74d5373ef30915c7
