@@ -50,6 +50,24 @@ def DistortTimesteps(X, sigma=0.2):
     tt_cum[:,2] = tt_cum[:,2]*t_scale[2]
     return tt_cum
 
+
+def RandSampleTimesteps(X, nSample=1000):
+    X_new = np.zeros(X.shape)
+    tt = np.zeros((nSample,X.shape[1]), dtype=int)
+    tt[1:-1,0] = np.sort(np.random.randint(1,X.shape[0]-1,nSample-2))
+    tt[1:-1,1] = np.sort(np.random.randint(1,X.shape[0]-1,nSample-2))
+    tt[1:-1,2] = np.sort(np.random.randint(1,X.shape[0]-1,nSample-2))
+    tt[-1,:] = X.shape[0]-1
+    return tt
+
+def DA_RandSampling(X, nSample=1000):
+    tt = RandSampleTimesteps(X, nSample)
+    X_new = np.zeros(X.shape)
+    X_new[:,0] = np.interp(np.arange(X.shape[0]), tt[:,0], X[tt[:,0],0])
+    X_new[:,1] = np.interp(np.arange(X.shape[0]), tt[:,1], X[tt[:,1],1])
+    X_new[:,2] = np.interp(np.arange(X.shape[0]), tt[:,2], X[tt[:,2],2])
+    return X_new
+
 # ## 4. Time Warping
 
 # #### Hyperparameters :  sigma = STD of the random knots for generating curves
@@ -81,6 +99,18 @@ def DA_Permutation(X, nPerm=4, minSegLength=10):
         X_new[pp:pp+len(x_temp),:] = x_temp
         pp += len(x_temp)
     return(X_new)
+
+def DA_Jitter(X, sigma=0.05):
+    myNoise = np.random.normal(loc=0, scale=sigma, size=X.shape)
+    return X+myNoise
+
+def DA_Scaling(X, sigma=0.1):
+    scalingFactor = np.random.normal(loc=1.0, scale=sigma, size=(1,X.shape[1])) # shape=(1,3)
+    myNoise = np.matmul(np.ones((X.shape[0],1)), scalingFactor)
+    return X*myNoise
+
+def DA_MagWarp(X, sigma):
+    return X * GenerateRandomCurves(X, sigma)
 
 # Meta-dataset.
 class MetaDataset(data.Dataset):
@@ -234,13 +264,7 @@ class SensorDataset(data.Dataset):
         if self.add_data is not None:
             add_data_sample = self.add_data[idx]
 
-        if self.dataaug:
-            if random.randrange(3) == 0:
-                sample = DA_Rotation(sample)
-            if random.randrange(3) == 0:
-                sample = DA_Permutation(sample, minSegLength=20)
-            if random.randrange(3) == 0:
-                sample = DA_TimeWarp(sample)
+
         sample = np.transpose(sample, (1, 0))
 
         sample = sample.astype(np.float32)

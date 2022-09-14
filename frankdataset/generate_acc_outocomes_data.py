@@ -19,14 +19,14 @@ def instanciate_dataset(dir_datasets, logger):
 
     datasets.append(outcomes_data)
 
-    outcomesacc_fold = "/home/jsenadesouza/DA-healthy2patient/354_Sensor_data/"
-    outcomes_data = Outcomes_20_22('acc_outcomes_PAIN', outcomesacc_fold, dir_datasets, logger, final_freq=10, trials_per_file=1000)
-
-    datasets.append(outcomes_data)
-
-    outcomesacc_fold = "/home/jsenadesouza/DA-healthy2patient/1013_Sensor_Data/"
-    outcomes_data = Outcomes_ADAPT('acc_outcomes_ADAPT', outcomesacc_fold, dir_datasets, logger, final_freq=10, trials_per_file=1000)
-    datasets.append(outcomes_data)
+    # outcomesacc_fold = "/home/jsenadesouza/DA-healthy2patient/354_Sensor_data/"
+    # outcomes_data = Outcomes_20_22('acc_outcomes_PAIN', outcomesacc_fold, dir_datasets, logger, final_freq=10, trials_per_file=1000)
+    #
+    # datasets.append(outcomes_data)
+    #
+    # outcomesacc_fold = "/home/jsenadesouza/DA-healthy2patient/1013_Sensor_Data/"
+    # outcomes_data = Outcomes_ADAPT('acc_outcomes_ADAPT', outcomesacc_fold, dir_datasets, logger, final_freq=10, trials_per_file=1000)
+    # datasets.append(outcomes_data)
 
     return datasets
 
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     parser.add_argument('--debug', action='store_true')
 
     args = parser.parse_args()
-    exp_name = "IntelligentICU_PAIN_ADAPT"
+    exp_name = "IntelligentICU"
 
     dir_datasets = '/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset_preprocess/'
     dir_save_file = '/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset'
