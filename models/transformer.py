@@ -1,5 +1,6 @@
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import argparse
 import numpy as np
@@ -15,6 +16,7 @@ from utils.data import DA_Jitter, DA_Scaling, DA_TimeWarp, DA_MagWarp, DA_Permut
 from sklearn.utils import class_weight
 from tensorboardX import SummaryWriter
 from time import time
+import torchvision
 import logging
 import random
 from tqdm import tqdm
@@ -104,7 +106,6 @@ if __name__ == '__main__':
     logging.info(f"Experiment name: crossentropy + class_weights + WeightedSampler + Data augmentation")
 
     #filepath = "/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset/f10_t1800_IntelligentICU_PAIN_ADAPT.npz"
-    filepath = "/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset/f10_t1800_IntelligentICU.npz"
     clin_variable_target = args.v
     logging.info(f"Clinical variable: {clin_variable_target}")
     dataset = np.load(filepath, allow_pickle=True)
@@ -154,8 +155,8 @@ if __name__ == '__main__':
     # one_hot_y = one_hot_y.astype(np.float32)
 
     device = torch.device('cuda:0') if use_cuda else torch.device('cpu')
-
     cum_acc, cum_f1, cum_recall, cum_conf_matrices, cum_precision, cum_auc = [], [], [], [], [], []
+    device = torch.device('cuda:2') if use_cuda else torch.device('cpu')
 
     patients = np.unique(y[:,-1])
     random.shuffle(patients)
@@ -261,6 +262,8 @@ if __name__ == '__main__':
             criterion = nn.BCEWithLogitsLoss(reduction='mean')
 
         # criterion = nn.BCELoss()
+        criterion = FocalLoss()
+        # criterion = nn.BCELoss()
         optim = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-04)
         scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=5, gamma=0.5)
 
@@ -295,19 +298,20 @@ if __name__ == '__main__':
         current_prec = np.array(cum_precision)[:, class_]
         current_auc = np.array(cum_auc)
         ci_mean = st.t.interval(0.95, len(current_acc) - 1, loc=np.mean(current_acc), scale=st.sem(current_acc))
-        ci_f1 = st.t.interval(0.95, len(current_f1) -1, loc=np.mean(current_f1), scale=st.sem(current_f1))
-        ci_recall = st.t.interval(0.95, len(current_recall) -1, loc=np.mean(current_recall), scale=st.sem(current_recall))
-        #ci_auc = st.t.interval(0.95, len(cum_auc) -1, loc=np.mean(cum_auc), scale=st.sem(cum_auc))
+        ci_f1 = st.t.interval(0.95, len(current_f1) - 1, loc=np.mean(current_f1), scale=st.sem(current_f1))
+        ci_recall = st.t.interval(0.95, len(current_recall) - 1, loc=np.mean(current_recall),
+                                  scale=st.sem(current_recall))
+        # ci_auc = st.t.interval(0.95, len(cum_auc) -1, loc=np.mean(cum_auc), scale=st.sem(cum_auc))
         # ci_AUROC = st.t.interval(0.95, len(cum_AUROC) -1, loc=np.mean(cum_AUROC), scale=st.sem(cum_AUROC))
-        ci_prec = st.t.interval(0.95, len(current_prec) -1, loc=np.mean(current_prec), scale=st.sem(current_prec))
+        ci_prec = st.t.interval(0.95, len(current_prec) - 1, loc=np.mean(current_prec), scale=st.sem(current_prec))
         ci_auc = st.t.interval(0.95, len(current_auc) -1, loc=np.mean(current_auc), scale=st.sem(current_auc))
 
-        logging.info('accuracy: {:.2f} ± {:.2f}\n'.format(np.mean(current_acc) * 100, abs(np.mean(current_acc) - ci_mean[0]) * 100))
-        logging.info('recall: {:.2f} ± {:.2f}\n'.format(np.mean(current_recall) * 100, abs(np.mean(current_recall) - ci_recall[0]) * 100))
-        logging.info('f1-score: {:.2f} ± {:.2f}\n'.format(np.mean(current_f1) * 100, abs(np.mean(current_f1) - ci_f1[0]) * 100))
-        logging.info('precision: {:.2f} ± {:.2f}\n'.format(np.mean(current_prec) * 100, abs(np.mean(current_prec) - ci_prec[0]) * 100))
+        logging.info('accuracy: {:.2f} ± {:.2f}\n'.format(np.mean(current_acc) * 100,
+                                                          abs(np.mean(current_acc) - ci_mean[0]) * 100))
+        logging.info('recall: {:.2f} ± {:.2f}\n'.format(np.mean(current_recall) * 100,
+                                                        abs(np.mean(current_recall) - ci_recall[0]) * 100))
         logging.info('roc_auc: {:.2f} ± {:.2f}\n'.format(np.mean(current_auc) * 100, abs(np.mean(current_auc) - ci_auc[0]) * 100))
-
-    end = time()
-    logging.info('Epochs: {} Time: {:.2f} seconds\n'.format(num_epochs, (end - start)))
+            'f1-score: {:.2f} ± {:.2f}\n'.format(np.mean(current_f1) * 100, abs(np.mean(current_f1) - ci_f1[0]) * 100))
+        logging.info('precision: {:.2f} ± {:.2f}\n'.format(np.mean(current_prec) * 100,
+                                                           abs(np.mean(current_prec) - ci_prec[0]) * 100))
 
