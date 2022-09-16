@@ -44,7 +44,7 @@ def get_metrics(y_true, y_pred):
 #     return X_res.squeeze(), y_res.squeeze()
 
 
-def validation(model, loader, device, criterion, use_cuda=True, use_additional_data=False):
+def validation(model, loader, device, criterion, focal_loss=False, use_cuda=True, use_additional_data=False):
     model.eval()
     y_true = []
     y_pred = []
@@ -62,7 +62,10 @@ def validation(model, loader, device, criterion, use_cuda=True, use_additional_d
             else:
                 preds = model(inputs)
 
-            loss = criterion(preds, targets)
+            if focal_loss:
+                loss = criterion(preds, targets)
+            else:
+                loss = criterion(torch.squeeze(preds).float(), targets.float())
             loss_total += loss.item()
 
             if use_cuda:
@@ -74,7 +77,7 @@ def validation(model, loader, device, criterion, use_cuda=True, use_additional_d
     return loss_total / len(loader), get_metrics(y_true, y_pred)
 
 
-def train(model, train_loader, early_stopping, optimizer, criterion, device, scheduler, writer, best_model_folder, epochs=100, use_cuda=True, use_additional_data=False):
+def train(model, train_loader, early_stopping, optimizer, criterion, device, scheduler, writer, best_model_folder, focal_loss= False, epochs=100, use_cuda=True, use_additional_data=False):
     step = 0
     for epoch in tqdm(range(epochs)):
         start = time()
@@ -93,7 +96,12 @@ def train(model, train_loader, early_stopping, optimizer, criterion, device, sch
                 preds = model(acc, add_data)
             else:
                 preds = model(acc)
-            loss = criterion(preds, targets)
+
+            if focal_loss:
+                loss = criterion(preds, targets)
+            else:
+                loss = criterion(torch.squeeze(preds).float(), targets.float())
+
             loss.backward()
             optimizer.step()
 
@@ -108,7 +116,7 @@ def train(model, train_loader, early_stopping, optimizer, criterion, device, sch
 
         scheduler.step()
         # early stopping
-        current_loss, current_metric = validation(model, early_stopping["val_loader"], device, criterion, use_cuda, use_additional_data)
+        current_loss, current_metric = validation(model, early_stopping["val_loader"], device, criterion, focal_loss, use_cuda, use_additional_data)
         end = time()
         epoch_desc = 'Epoch {{0: <{0}d}}'.format(1 + int(math.log10(epochs))).format(epoch + 1)
         epoch_fin = 'loss: {:.6f}, F1: {} [{}]'.format(current_loss, current_metric['f1-score'], str(datetime.timedelta(seconds=(end - start))))

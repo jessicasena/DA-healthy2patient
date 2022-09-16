@@ -1,30 +1,21 @@
 import sys
 import os
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 import argparse
 import numpy as np
-
 import torch
 import torch.nn as nn
 from scipy import stats as st
 from torch.utils.data import DataLoader, WeightedRandomSampler
-
 from utils.data import SensorDataset
-from utils.models import MetaSenseModeladdData
 from models.transformer_model import TimeSeriesTransformer
 from utils.utils import train, test
 from models.transformer_model import FocalLoss
 from utils.data import DA_Jitter, DA_Scaling, DA_TimeWarp, DA_MagWarp, DA_Permutation, DA_Rotation, DA_RandSampling
-from sklearn.model_selection import StratifiedKFold
-from sklearn.model_selection import train_test_split
 from sklearn.utils import class_weight
 from tensorboardX import SummaryWriter
 from time import time
-import torchvision
 import logging
-from sklearn.preprocessing import OneHotEncoder
 import random
 from tqdm import tqdm
 
@@ -148,10 +139,13 @@ if __name__ == '__main__':
     labels2idx = {k: idx for idx, k in enumerate(np.unique(y_target))}
     logging.info(str(np.unique(y_target, return_counts=True)) + "")
     use_cuda = torch.cuda.is_available()
-    num_epochs = 100
+    num_epochs = 50
     batch_size_train = 40
     batch_size_test = 16
     data_aug = False
+    focal_loss = False
+    logging.info(f"Data augmentation: {data_aug}")
+    logging.info(f"Focal loss: {focal_loss}")
     # step = num_epochs / 5
 
     # encoder = OneHotEncoder(sparse=False)
@@ -159,22 +153,24 @@ if __name__ == '__main__':
     # one_hot_y = encoder.transform(y_target.reshape(-1, 1))
     # one_hot_y = one_hot_y.astype(np.float32)
 
-    device = torch.device('cuda:1') if use_cuda else torch.device('cpu')
-    device = torch.device('cuda:1') if use_cuda else torch.device('cpu')
+    device = torch.device('cuda:0') if use_cuda else torch.device('cpu')
 
     cum_acc, cum_f1, cum_recall, cum_conf_matrices, cum_precision, cum_auc = [], [], [], [], [], []
 
     patients = np.unique(y[:,-1])
     random.shuffle(patients)
-    patient_splits = np.array_split(patients, 5)
+    patient_splits = np.array_split(patients, 6)
 
     for folder_idx in range(5):
 
         # split samples based on patients k-fold cross validation
-        test_index, train_index = [], []
+        test_index, val_index, train_index = [], []
         for patient in patient_splits[folder_idx]:
-            test_index.extend(list(np.where(y[:,-1] == patient)[0]))
-        train_index = np.setdiff1d(np.arange(y.shape[0]), test_index)
+            test_index.extend(list(np.where(y[:, -1] == patient)[0]))
+        for patient in patient_splits[folder_idx+1]:
+            val_index.extend(list(np.where(y[:, -1] == patient)[0]))
+
+        train_index = np.setdiff1d(np.arange(y.shape[0]), np.concatenate([test_index, val_index]))
 
         writer = SummaryWriter(
             f'/home/jsenadesouza/DA-healthy2patient/results/outcomes/tensorboard/transformers/exp_name/run_{time()}')
@@ -182,10 +178,8 @@ if __name__ == '__main__':
         _train_data, _train_labels = X[train_index].squeeze(), y_target[train_index].squeeze()
         test_data, test_labels = X[test_index].squeeze(), y_target[test_index].squeeze()
         # get validation set
-        train_data, val_data, train_labels, val_labels = train_test_split(_train_data, _train_labels, test_size=0.1, random_state=42)
 
-
-        add_data_train, add_data_test = None, None
+        #add_data_train, add_data_test = None, None
         # if use_additional_data:
         #    logging.info("Using additional data. shape: ", X_add.shape)
         #     add_data_train = X_add[train_index]
@@ -231,7 +225,7 @@ if __name__ == '__main__':
         test_labels = np.array([labels2idx[label] for label in test_labels])
         val_labels = np.array([labels2idx[label] for label in val_labels])
 
-        logging.info(f"Folder {folder_idx}")
+        logging.info(f"Folder {folder_idx + 1}")
         logging.info(f"Train data: {get_class_distribution(np.unique(train_labels, return_counts=True))}")
         logging.info(f"Test data: {get_class_distribution(np.unique(test_labels, return_counts=True))}")
         logging.info(f"Val data: {get_class_distribution(np.unique(val_labels, return_counts=True))}")
@@ -245,28 +239,32 @@ if __name__ == '__main__':
         samples_weigth = samples_weight.double()
         sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
 
-        train_set = SensorDataset(train_data, add_data_train, train_labels)
-        test_set = SensorDataset(test_data, add_data_test, test_labels)
+        train_set = SensorDataset(train_data, None, train_labels)
+        test_set = SensorDataset(test_data, None, test_labels)
+        val_set = SensorDataset(val_data, None, val_labels)
 
         train_loader = DataLoader(train_set, batch_size=batch_size_train, pin_memory=True, sampler=sampler)
        # train_loader = DataLoader(train_set, batch_size=batch_size_train, pin_memory=True)
 
         test_loader = DataLoader(test_set, batch_size=batch_size_train, pin_memory=True)
-        val_loader = DataLoader(test_set, batch_size=batch_size_train, pin_memory=True)
+        val_loader = DataLoader(val_set, batch_size=batch_size_train, pin_memory=True)
 
         model = create_model(n_classes)
         model = model.to(device)
 
-        # class_weights = class_weight.compute_class_weight('balanced', classes=np.unique(train_labels), y=train_labels)
-        # class_weights = torch.tensor(class_weights, dtype=torch.float).to(device)
+        if focal_loss:
+            criterion = FocalLoss(alpha=0.9, gamma=3)
+        else:
+            # class_weights = class_weight.compute_class_weight('balanced', classes=np.unique(train_labels), y=train_labels)
+            # class_weights = torch.tensor(class_weights, dtype=torch.float).to(device)
+            #criterion = nn.CrossEntropyLoss(weight=class_weights, reduction='mean')
+            criterion = nn.BCEWithLogitsLoss(reduction='mean')
 
-        # criterion = nn.CrossEntropyLoss(weight=class_weights, reduction='mean')
-        criterion = FocalLoss(alpha=0.8, gamma=2)
         # criterion = nn.BCELoss()
         optim = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-04)
         scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=5, gamma=0.5)
 
-        earling_stopping = {"val_loader": val_loader, "last_loss": 100, "patience": 10, "triggertimes": 0}
+        earling_stopping = {"val_loader": test_loader, "last_loss": 100, "patience": 10, "triggertimes": 0}
 
         best_model_path = os.path.join(best_model_folder, 'best-model-parameters.pt')
         train(model, train_loader, earling_stopping, optim, criterion, device, scheduler, writer, best_model_folder, epochs=num_epochs, use_cuda=use_cuda,
@@ -295,7 +293,7 @@ if __name__ == '__main__':
         current_f1 = np.array(cum_f1)[:, class_]
         current_recall = np.array(cum_recall)[:, class_]
         current_prec = np.array(cum_precision)[:, class_]
-        current_auc = np.array(cum_auc)[:, class_]
+        current_auc = np.array(cum_auc)
         ci_mean = st.t.interval(0.95, len(current_acc) - 1, loc=np.mean(current_acc), scale=st.sem(current_acc))
         ci_f1 = st.t.interval(0.95, len(current_f1) -1, loc=np.mean(current_f1), scale=st.sem(current_f1))
         ci_recall = st.t.interval(0.95, len(current_recall) -1, loc=np.mean(current_recall), scale=st.sem(current_recall))
