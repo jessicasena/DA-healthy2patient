@@ -16,7 +16,6 @@ class FocalLoss(nn.Module):
                                            reduction=self.reduction, gamma=self.gamma, alpha=self.alpha)
         return loss
 
-
 class TimeSeriesTransformer(nn.Module):
     """
     code from: https://towardsdatascience.com/how-to-make-a-pytorch-transformer-for-time-series-forecasting-69e073d4061e
@@ -79,9 +78,15 @@ class TimeSeriesTransformer(nn.Module):
             nn.Linear(dim_val, dim_val // 4),
             nn.GELU(),
             nn.Dropout(0.1),
+<<<<<<< HEAD
+=======
+            #nn.Linear(dim_val // 4, n_classes)
+>>>>>>> ef08c981ea1bb2969b7a69ae606d652a07ae1e12
             nn.Linear(dim_val // 4, 1)
         )
         self.log_softmax = nn.LogSoftmax(dim=1)
+        self.softmax = nn.Softmax()
+        self.sigmoid = nn.Sigmoid()
 
         # init
         for p in self.parameters():
@@ -98,7 +103,18 @@ class TimeSeriesTransformer(nn.Module):
 
         src = self.encoder(src=src)[0]
 
+<<<<<<< HEAD
         logits = self.imu_head(src)
+=======
+        #src = torch.mean(src, dim=1)
+        # shape [batch_size, target seq len]
+        #output = self.linear_mapping(src)
+        #output = self.log_softmax(self.imu_head(src))
+        #output = self.softmax(self.imu_head(src))
+        logits = self.imu_head(src)
+        #output = self.sigmoid(logits)
+        #print("From model.forward(): decoder_output size after linear_mapping = {}".format(output.size()))
+>>>>>>> ef08c981ea1bb2969b7a69ae606d652a07ae1e12
 
         return logits
 
