@@ -430,7 +430,7 @@ def process_2022_outcomes(output_dir):
     # interpolate missing values
     df = fill_missing_values(df, 'heart_rate', 3)
     df = fill_missing_values(df, 'temp_farenheit', 3)
-    df = fill_missing_values(df, 'pain_score', 5)
+    #df = fill_missing_values(df, 'pain_score', 5)
     df = fill_missing_values(df, 'sofa_score', 25)
     df = fill_missing_values(df, 'blood_pressure', 3)
     df = fill_missing_values(df, 'braden_score', 25)

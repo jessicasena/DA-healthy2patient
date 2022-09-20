@@ -188,7 +188,7 @@ class Outcomes_20_22(Dataset):
 
     def read_labels_file(self):
         df = pd.read_csv(
-            '/home/jsenadesouza/DA-healthy2patient/data/clinical_data/2020-2022_clinical_data_outcomes.csv')
+            '/home/jsenadesouza/DA-healthy2patient/data/clinical_data/PAINandADAPT_clinical_data_outcomes.csv')
         tzdict = {'EST': dateutil.tz.gettz('America/New_York'),
                   'EDT': dateutil.tz.gettz('America/New_York')}
         df['timestamp'] = df['timestamp'].apply(lambda x: dateutil.parser.parse(x + " EST", tzinfos=tzdict))

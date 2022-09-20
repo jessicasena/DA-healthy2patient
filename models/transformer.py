@@ -324,7 +324,7 @@ if __name__ == '__main__':
     best_model_folder = "/home/jsenadesouza/DA-healthy2patient/results/best_models/pain_transformer"
     filepath = "/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset/f10_t1800_IntelligentICU_PAIN_ADAPT.npz"
 
-    num_epochs = 1
+    num_epochs = 100
     batch_size = 40
     data_aug = True
     loss = "CE"
