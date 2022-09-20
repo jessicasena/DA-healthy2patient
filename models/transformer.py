@@ -176,7 +176,8 @@ class Transformer:
 
             # load best model
             model = create_model()
-            model.load_state_dict(torch.load(best_model_path))
+            checkpoint = torch.load(best_model_path, map_location=lambda storage, loc: storage.cuda(self.device))
+            model.load_state_dict(checkpoint["model"])
             model = model.to(self.device)
 
             metrics = test(model, test_loader, self.device, use_cuda=self.use_cuda)
@@ -324,7 +325,7 @@ if __name__ == '__main__':
     best_model_folder = "/home/jsenadesouza/DA-healthy2patient/results/best_models/pain_transformer"
     filepath = "/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset/f10_t1800_IntelligentICU_PAIN_ADAPT.npz"
 
-    num_epochs = 100
+    num_epochs = 1
     batch_size = 40
     data_aug = True
     loss = "CE"

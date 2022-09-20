@@ -21,6 +21,27 @@ from time import time
 import datetime
 from sklearn.utils import class_weight
 
+import gc
+
+# Timing utilities
+start_time = None
+
+
+def start_timer():
+    global start_time
+    gc.collect()
+    torch.cuda.empty_cache()
+    torch.cuda.reset_max_memory_allocated()
+    torch.cuda.synchronize()
+    start_time = time()
+
+
+def end_timer_and_print(local_msg):
+    torch.cuda.synchronize()
+    end_time = time()
+    print("\n" + local_msg)
+    print("Total execution time = {:.3f} sec".format(end_time - start_time))
+    print("Max memory used by tensors = {} bytes".format(torch.cuda.max_memory_allocated()))
 
 
 def get_metrics(y_true, y_pred):
@@ -80,6 +101,13 @@ def validation(model, loader, device, criterion, focal_loss=False, use_cuda=True
 
 def train(model, train_loader, early_stopping, optimizer, criterion, device, scheduler, best_model_folder, focal_loss= False, epochs=100, use_cuda=True, use_additional_data=False):
     step = 0
+    start_timer()
+    # Constructs scaler once, at the beginning of the convergence run, using default args.
+    # If your network fails to converge with default GradScaler args, please file an issue.
+    # The same GradScaler instance should be used for the entire convergence run.
+    # If you perform multiple convergence runs in the same script, each run should use
+    # a dedicated fresh GradScaler instance.  GradScaler instances are lightweight.
+    scaler = torch.cuda.amp.GradScaler()
     for epoch in tqdm(range(epochs)):
         start = time()
         model.train()
@@ -91,27 +119,45 @@ def train(model, train_loader, early_stopping, optimizer, criterion, device, sch
             #     print(f"\nClass {n[0]/len(targets)*100}/{n[1]/len(targets)*100}", flush=True)
             # else:
             #     print(f"\nClass {c[0]} {n[0]/len(targets)*100}", flush=True)
-            if use_cuda:
-                acc, targets = acc.to(device), targets.to(device)
+            # Runs the forward pass under autocast.
+            with torch.autocast(device_type='cuda', dtype=torch.float16):
+                if use_cuda:
+                    acc, targets = acc.to(device), targets.to(device)
+                    if use_additional_data:
+                        add_data = add_data.to(device)
+
+                # zero the parameter gradients
+                optimizer.zero_grad()
+
+                # forward + backward + optimize
                 if use_additional_data:
-                    add_data = add_data.to(device)
+                    preds = model(acc, add_data)
+                else:
+                    preds = model(acc)
 
-            # zero the parameter gradients
-            optimizer.zero_grad()
+                # output is float16 because linear layers autocast to float16.
+                assert preds.dtype is torch.float16
 
-            # forward + backward + optimize
-            if use_additional_data:
-                preds = model(acc, add_data)
-            else:
-                preds = model(acc)
+                if focal_loss:
+                    loss = criterion(preds, targets)
+                else:
+                    loss = criterion(torch.squeeze(preds).float(), targets.float())
 
-            if focal_loss:
-                loss = criterion(preds, targets)
-            else:
-                loss = criterion(torch.squeeze(preds).float(), targets.float())
+                # loss is float32 because mse_loss layers autocast to float32.
+                assert loss.dtype is torch.float32
+            # Exits autocast before backward().
+            # Backward passes under autocast are not recommended.
+            # Backward ops run in the same dtype autocast chose for corresponding forward ops.
+            # Scales loss.  Calls backward() on scaled loss to create scaled gradients.
+            scaler.scale(loss).backward()
+            # scaler.step() first unscales the gradients of the optimizer's assigned params.
+            # If these gradients do not contain infs or NaNs, optimizer.step() is then called,
+            # otherwise, optimizer.step() is skipped.
+            scaler.step(optimizer)
+            # Updates the scale for next iteration.
+            scaler.update()
 
-            loss.backward()
-            optimizer.step()
+            optimizer.zero_grad()  # set_to_none=True here can modestly improve performance
 
             # calculate metrics and print statistics
             # if use_cuda:
@@ -140,9 +186,13 @@ def train(model, train_loader, early_stopping, optimizer, criterion, device, sch
                 return model
         else:
             early_stopping["trigger_times"] = 0
-            torch.save(model.state_dict(), best_model_folder)
+            checkpoint = {"model": model.state_dict(),
+                          "optimizer": optimizer.state_dict(),
+                          "scaler": scaler.state_dict()}
+            torch.save(checkpoint, best_model_folder)
 
         early_stopping["last_loss"] = current_loss
+    end_timer_and_print("Mixed precision:")
 
 
 def test(model, loader, device, use_cuda=True, use_additional_data=False):

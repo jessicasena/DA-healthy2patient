@@ -10,6 +10,7 @@ import datetime
 import resource as rs
 from parallelbar import progress_imap
 import time
+from loguru import logger
 # todo - turn into a class
 
 project = "ADAPT"
