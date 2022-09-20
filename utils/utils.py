@@ -19,6 +19,7 @@ from learn2learn.data.transforms import (ConsecutiveLabels, FusedNWaysKShots,
 import torchvision
 from time import time
 import datetime
+from sklearn.utils import class_weight
 
 
 
@@ -77,17 +78,24 @@ def validation(model, loader, device, criterion, focal_loss=False, use_cuda=True
     return loss_total / len(loader), get_metrics(y_true, y_pred)
 
 
-def train(model, train_loader, early_stopping, optimizer, criterion, device, scheduler, writer, best_model_folder, focal_loss= False, epochs=100, use_cuda=True, use_additional_data=False):
+def train(model, train_loader, early_stopping, optimizer, criterion, device, scheduler, best_model_folder, focal_loss= False, epochs=100, use_cuda=True, use_additional_data=False):
     step = 0
     for epoch in tqdm(range(epochs)):
         start = time()
         model.train()
 
         for acc, add_data, targets in train_loader:
+            # print class distribution
+            # c, n = np.unique(targets, return_counts=True)
+            # if len(n) > 1:
+            #     print(f"\nClass {n[0]/len(targets)*100}/{n[1]/len(targets)*100}", flush=True)
+            # else:
+            #     print(f"\nClass {c[0]} {n[0]/len(targets)*100}", flush=True)
             if use_cuda:
                 acc, targets = acc.to(device), targets.to(device)
                 if use_additional_data:
                     add_data = add_data.to(device)
+
             # zero the parameter gradients
             optimizer.zero_grad()
 
@@ -106,10 +114,10 @@ def train(model, train_loader, early_stopping, optimizer, criterion, device, sch
             optimizer.step()
 
             # calculate metrics and print statistics
-            if use_cuda:
-                targets = targets.cpu()
-            y_true = targets.numpy()
-            y_pred = [1 if x > 0 else 0 for x in preds.detach().cpu().numpy()]
+            # if use_cuda:
+            #     targets = targets.cpu()
+            # y_true = targets.numpy()
+            # y_pred = [1 if x > 0 else 0 for x in preds.detach().cpu().numpy()]
             # metrics = get_metrics(y_true, y_pred)
 
             step += 1
@@ -122,8 +130,8 @@ def train(model, train_loader, early_stopping, optimizer, criterion, device, sch
         epoch_fin = 'loss: {:.6f}, F1: {} [{}]'.format(current_loss, current_metric['f1-score'], str(datetime.timedelta(seconds=(end - start))))
         print(epoch_desc + epoch_fin, flush=True)
 
-        writer.add_scalar('Loss/train', current_loss, epoch)
-        writer.add_scalar('Metrics/acc', current_metric['accuracy'], epoch)
+        # writer.add_scalar('Loss/train', current_loss, epoch)
+        # writer.add_scalar('Metrics/acc', current_metric['accuracy'], epoch)
 
         if current_loss > early_stopping["last_loss"]:
             early_stopping["trigger_times"] += 1
@@ -132,7 +140,7 @@ def train(model, train_loader, early_stopping, optimizer, criterion, device, sch
                 return model
         else:
             early_stopping["trigger_times"] = 0
-            torch.save(model.state_dict(), os.path.join(best_model_folder,'best-model-parameters.pt'))
+            torch.save(model.state_dict(), best_model_folder)
 
         early_stopping["last_loss"] = current_loss
 

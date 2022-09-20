@@ -16,6 +16,7 @@ class FocalLoss(nn.Module):
                                            reduction=self.reduction, gamma=self.gamma, alpha=self.alpha)
         return loss
 
+
 class TimeSeriesTransformer(nn.Module):
     """
     code from: https://towardsdatascience.com/how-to-make-a-pytorch-transformer-for-time-series-forecasting-69e073d4061e
@@ -79,11 +80,8 @@ class TimeSeriesTransformer(nn.Module):
             nn.GELU(),
             nn.Dropout(0.1),
             nn.Linear(dim_val // 4, 1)
-            nn.Linear(dim_val // 4, 1)
         )
         self.log_softmax = nn.LogSoftmax(dim=1)
-        self.softmax = nn.Softmax()
-        self.sigmoid = nn.Sigmoid()
 
         # init
         for p in self.parameters():
@@ -101,9 +99,6 @@ class TimeSeriesTransformer(nn.Module):
         src = self.encoder(src=src)[0]
 
         logits = self.imu_head(src)
-        #output = self.softmax(self.imu_head(src))
-        logits = self.imu_head(src)
-        #output = self.sigmoid(logits)
 
         return logits
 

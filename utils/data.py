@@ -264,16 +264,17 @@ class SensorDataset(data.Dataset):
         if self.add_data is not None:
             add_data_sample = self.add_data[idx]
 
+        if self.dataaug:
+            if np.random.rand() > 0.5:
+                sample = DA_Rotation(sample)
 
         sample = np.transpose(sample, (1, 0))
 
         sample = sample.astype(np.float32)
         sample = np.pad(sample, ((0, 0), (self.padding_size, self.padding_size)), mode='constant')
-        #target = self.class_to_idx[self.labels[idx]]
         target = self.labels[idx]
 
-
-        return (sample, add_data_sample, target)
+        return sample, add_data_sample, target
 
 
 class SensorPublicDataset(data.Dataset):
