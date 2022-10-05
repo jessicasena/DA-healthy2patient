@@ -12,7 +12,7 @@ class FocalLoss(nn.Module):
         self.reduction = reduction
 
     def forward(self, inputs, targets):
-        loss = torchvision.ops.sigmoid_focal_loss(inputs.float(), targets.reshape(-1, 1).float(),
+        loss = torchvision.ops.sigmoid_focal_loss(inputs.float(), targets.float(),
                                            reduction=self.reduction, gamma=self.gamma, alpha=self.alpha)
         return loss
 
@@ -24,6 +24,7 @@ class TimeSeriesTransformer(nn.Module):
     """
 
     def __init__(self,
+                 n_classes,
                  batch_first: bool,
                  dim_val: int = 512,
                  n_encoder_layers: int = 4,
@@ -33,36 +34,36 @@ class TimeSeriesTransformer(nn.Module):
                  ):
 
         super().__init__()
-        self.window_size = 553
+        self.window_size = 272
 
         self.encoder_input_layer = nn.Sequential(
             nn.Conv1d(3, 16, kernel_size=10),
-            nn.ReLU(True),
+            nn.SiLU(True),
             nn.BatchNorm1d(16),
 
             nn.Conv1d(16, 32, kernel_size=10),
             nn.MaxPool1d(2),
-            nn.ReLU(True),
+            nn.SiLU(True),
             nn.BatchNorm1d(32),
 
             nn.Conv1d(32, 64, kernel_size=10),
             nn.MaxPool1d(2),
-            nn.ReLU(True),
+            nn.SiLU(True),
             nn.BatchNorm1d(64),
 
             nn.Conv1d(64, 128, kernel_size=10),
             nn.MaxPool1d(2),
             nn.BatchNorm1d(128),
-            nn.ReLU(True),
+            nn.SiLU(True),
 
             nn.Conv1d(128, 256, kernel_size=10),
             nn.MaxPool1d(2),
-            nn.ReLU(True),
+            nn.SiLU(True),
             nn.BatchNorm1d(256),
 
             nn.Conv1d(256, 512, kernel_size=10),
             nn.MaxPool1d(2),
-            nn.ReLU(True),
+            nn.SiLU(True),
             nn.BatchNorm1d(512),
         )
 
@@ -79,7 +80,7 @@ class TimeSeriesTransformer(nn.Module):
             nn.Linear(dim_val, dim_val // 4),
             nn.GELU(),
             nn.Dropout(0.1),
-            nn.Linear(dim_val // 4, 1)
+            nn.Linear(dim_val // 4, n_classes)
         )
         self.log_softmax = nn.LogSoftmax(dim=1)
 

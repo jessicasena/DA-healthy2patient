@@ -19,10 +19,10 @@ from learn2learn.data.transforms import (ConsecutiveLabels, FusedNWaysKShots,
 import torchvision
 from time import time
 import datetime
-from sklearn.utils import class_weight
+
 
 import gc
-
+import optuna
 # Timing utilities
 start_time = None
 
@@ -48,10 +48,13 @@ def get_metrics(y_true, y_pred):
     return {
         'accuracy': accuracy_score(y_true, y_pred),
         'f1-score': f1_score(y_true, y_pred, average=None, labels=[0,1]),
+        'f1-score_macro': f1_score(y_true, y_pred, average="macro", labels=[0, 1]),
         'recall': recall_score(y_true, y_pred, average=None, zero_division=0),
+        'recall_macro': recall_score(y_true, y_pred, average="macro", zero_division=0),
         'confusion_matrix': confusion_matrix(y_true, y_pred),
         'precision': precision_score(y_true, y_pred, average=None, zero_division=0),
-        'roc_auc': roc_auc_score(y_true, y_pred, average=None)
+        'precision_macro': precision_score(y_true, y_pred, average="macro", zero_division=0),
+        'roc_auc': roc_auc_score(y_true, y_pred, average="macro")
     }
 
 #
@@ -93,13 +96,13 @@ def validation(model, loader, device, criterion, focal_loss=False, use_cuda=True
             if use_cuda:
                 targets = targets.cpu()
 
-            y_true.extend(targets.numpy())
-            y_pred.extend([1 if x > 0 else 0 for x in preds.detach().cpu().numpy()])
+            y_true.extend(np.argmax(targets, axis=1))
+            y_pred.extend(np.argmax(preds.detach().cpu(), axis=1))
 
     return loss_total / len(loader), get_metrics(y_true, y_pred)
 
 
-def train(model, train_loader, early_stopping, optimizer, criterion, device, scheduler, best_model_folder, focal_loss= False, epochs=100, use_cuda=True, use_additional_data=False):
+def train(model, train_loader, early_stopping, optimizer, criterion, device, scheduler, best_model_folder, writer, trial, focal_loss= False, epochs=100, use_cuda=True, use_additional_data=False):
     step = 0
     start_timer()
     # Constructs scaler once, at the beginning of the convergence run, using default args.
@@ -108,7 +111,8 @@ def train(model, train_loader, early_stopping, optimizer, criterion, device, sch
     # If you perform multiple convergence runs in the same script, each run should use
     # a dedicated fresh GradScaler instance.  GradScaler instances are lightweight.
     scaler = torch.cuda.amp.GradScaler()
-    for epoch in tqdm(range(epochs)):
+    #for epoch in tqdm(range(epochs)):
+    for epoch in range(epochs):
         start = time()
         model.train()
 
@@ -141,7 +145,7 @@ def train(model, train_loader, early_stopping, optimizer, criterion, device, sch
                 if focal_loss:
                     loss = criterion(preds, targets)
                 else:
-                    loss = criterion(torch.squeeze(preds).float(), targets.float())
+                    loss = criterion(preds, targets.float())
 
                 # loss is float32 because mse_loss layers autocast to float32.
                 assert loss.dtype is torch.float32
@@ -176,8 +180,8 @@ def train(model, train_loader, early_stopping, optimizer, criterion, device, sch
         epoch_fin = 'loss: {:.6f}, F1: {} [{}]'.format(current_loss, current_metric['f1-score'], str(datetime.timedelta(seconds=(end - start))))
         print(epoch_desc + epoch_fin, flush=True)
 
-        # writer.add_scalar('Loss/train', current_loss, epoch)
-        # writer.add_scalar('Metrics/acc', current_metric['accuracy'], epoch)
+        writer.add_scalar('Loss/train', current_loss, epoch)
+        writer.add_scalar('Metrics/f1_macro', current_metric['f1-score_macro'], epoch)
 
         if current_loss > early_stopping["last_loss"]:
             early_stopping["trigger_times"] += 1
@@ -192,7 +196,13 @@ def train(model, train_loader, early_stopping, optimizer, criterion, device, sch
             torch.save(checkpoint, best_model_folder)
 
         early_stopping["last_loss"] = current_loss
-    end_timer_and_print("Mixed precision:")
+        if trial is not None:
+            trial.report(current_metric['f1-score_macro'], epoch)
+
+            # Handle pruning based on the intermediate value.
+            if trial.should_prune():
+                raise optuna.exceptions.TrialPruned()
+    end_timer_and_print(f"Training session ({epochs}epochs)")
 
 
 def test(model, loader, device, use_cuda=True, use_additional_data=False):
@@ -201,7 +211,8 @@ def test(model, loader, device, use_cuda=True, use_additional_data=False):
     y_pred = []
     model.eval()
     with torch.no_grad():
-        for inputs, add_data, targets in tqdm(loader):
+        #for inputs, add_data, targets in tqdm(loader):
+        for inputs, add_data, targets in loader:
             if use_cuda:
                 inputs, targets = inputs.to(device), targets.to(device)
                 if use_additional_data:

@@ -172,6 +172,13 @@ def check_curation(PROJECT, before, after, curation_log, output_csv):
 
     df.to_csv(output_csv, index=False)
 
+def check_accel_arm(folder):
+    files = get_accs_files_after(folder)
+    pat_id = []
+    for f in files:
+        if "arm" in f.lower() or "wrist" in f.lower():
+            pat_id.append(f.split("_")[0])
+
 
 if __name__ == "__main__":
     PROJECT = "1013"
@@ -189,4 +196,6 @@ if __name__ == "__main__":
     #check_folder_file_name("/data/datasets/ICU_Data/354_Sensor_Data/")
     #check_place_sensor("/data2/datasets/ICU_Data/1013_Sensor_Data/")
     #check_place_sensor("/data/datasets/ICU_Data/354_Sensor_Data/")
-    log_to_csv("/home/jsenadesouza/DA-healthy2patient/results/outcomes/ADAPT.log", "1013")
+    #log_to_csv("/home/jsenadesouza/DA-healthy2patient/results/outcomes/ADAPT.log", "1013")
+
+    check_accel_arm(after)

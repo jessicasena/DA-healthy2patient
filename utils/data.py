@@ -1,4 +1,4 @@
-import numpy as np
+import numpy as np 
 import torch
 
 from torch.utils import data
@@ -7,7 +7,7 @@ from transforms3d.axangles import axangle2mat  # for rotation
 import random
 
 def padding(h):
-    sizes = np.arange(11)
+    sizes = np.arange(20)
     ideal_size = 0
     for x in sizes:
         if (2 ** x) >= h:
@@ -248,9 +248,8 @@ class SensorDataset(data.Dataset):
         self.add_data = add_data
         self.labels = labels
         self.dataaug = dataaug
-        self.padding_size = padding(self.data[0].shape[-1])
+        self.padding_size = padding(self.data[1].shape[-1])
         self.classes = np.unique(labels)
-        #self.class_to_idx = {v: k for k, v in enumerate(self.classes)}
 
     def __len__(self):
         return len(self.data)
@@ -268,13 +267,21 @@ class SensorDataset(data.Dataset):
             if np.random.rand() > 0.5:
                 sample = DA_Rotation(sample)
 
-        sample = np.transpose(sample, (1, 0))
+        # normalizacao
+        if np.isnan(sample).any():
+            raise ValueError('Nan values in sample before')
+        sample1 = sample
+        #sample1 = ((sample - np.min(sample)) / (np.max(sample) - np.min(sample))) * 2 - 1
+        sample1 = np.transpose(sample1, (1, 0))
 
-        sample = sample.astype(np.float32)
-        sample = np.pad(sample, ((0, 0), (self.padding_size, self.padding_size)), mode='constant')
+        sample1 = sample1.astype(np.float32)
+        #sample = np.pad(sample, ((0, 0), (self.padding_size, self.padding_size)), mode='constant')
         target = self.labels[idx]
 
-        return sample, add_data_sample, target
+        if np.isnan(sample1).any():
+            raise ValueError('Nan values in sample after')
+
+        return sample1, add_data_sample, target
 
 
 class SensorPublicDataset(data.Dataset):
