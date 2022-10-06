@@ -17,7 +17,7 @@ from dask.distributed import Client
 def process_studies(dir_save, trials_per_file, time_wd, time_drop, final_freq, logger, process=True):
     # instantiate a object for each dataset and process the data
     data_name = []
-    #Intelligent ICU study
+    # Intelligent ICU study
     i_icu = PainDataset(dataset_name="intelligent_icu", dir_dataset="/data/datasets/ICU_Data/Sensor_Data/",
                 dir_save=dir_save, trials_per_file=trials_per_file, time_wd=time_wd, time_drop=time_drop,
                 final_freq=final_freq, logger=logger)
@@ -55,10 +55,8 @@ def data_generator(X, y, files, data_name):
             data = pickle.load(handle)
             fl = [i for i in data]
             for trial in fl:
-                # get labels for each trial
-                label_vector = trial.split("_s")[0].split("_")
-                # get the patient id
-                subject_id = trial.split("_s")[1].split("_")[0]
+                label_vector = trial.split("_")[:17]
+                subject_id = trial.split("_")[17].split("s")[1]
                 label_vector.append(subject_id)
                 # get the accel data
                 trial_accel = np.squeeze(data[trial].get())
@@ -88,7 +86,7 @@ def generate_dataset(dir_pkl, list_datasets):
     print("Done.", flush=True)
 
     for dataset_name in list_datasets:
-        X, y = data_generator(X, y, files_s[dataset_name], dataset_name, dir_pkl)
+        X, y = data_generator(X, y, files_s[dataset_name], dataset_name)
 
     X = np.array(X, dtype=float)
     y = np.array(y)
@@ -122,13 +120,13 @@ def generate_dataset(dir_pkl, list_datasets):
 
 if __name__ == "__main__":
     start = time.time()
-    process = True
+    process = False
     if process:
         multiprocessing.freeze_support()
         # Create a Dask Cluster to use multiple GPUs
         cluster = LocalCUDACluster()
         client = Client(cluster)
-    exp_name = "IntelligentICU_PAIN_ADAPT_15min"
+    exp_name = "PAIN_ADAPT_15min"
     dir_save_datasets = '/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset_preprocess_15min/'
     dir_save_file = '/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset'
     time_wd = 900
