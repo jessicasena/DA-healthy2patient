@@ -13,21 +13,7 @@ import fnmatch
 import dateutil
 import pickle
 import gc
-
-def read_labels_file_pain_adapt():
-    df = cudf.read_csv(
-        '/home/jsenadesouza/DA-healthy2patient/data/clinical_data/PAINandADAPT_clinical_data_outcomes.csv')
-    # conversion to GMT time
-    df['timestamp'] = cudf.Series(pd.to_datetime(df["timestamp"].to_pandas()).dt.tz_localize("EST").dt.tz_convert("GMT"))
-    return df
-
-
-def read_labels_file_intelligent_icu():
-    df = cudf.read_csv(
-        '/home/jsenadesouza/DA-healthy2patient/data/clinical_data/2016-20119_clinical_data_outcomes.csv')
-    # conversion to GMT time
-    df['timestamp'] = cudf.Series(pd.to_datetime(df["timestamp"].to_pandas()).dt.tz_localize("EST").dt.tz_convert("GMT"))
-    return df
+import dask_cudf
 
 
 def set_patient_map():
@@ -126,19 +112,19 @@ def process_labels(df, start_ts, end_ts):
 
 
 def reduce_sampling_rate(data, df_timestamps, reduce_rate):
-    data_ts = df_timestamps
+    data_ts = df_timestamps.to_pandas().to_numpy()
     if reduce_rate != 0:
         number_samp = data.shape[0]
         samples_slct = list(range(0, number_samp, int(reduce_rate)))
         new_data = data[samples_slct]
         data_ts = data_ts[samples_slct]
-        return new_data, data_ts.values_host
+        return new_data, data_ts
     else:
         return data, df_timestamps
 
 
 def read_acc_file_pain_adapt(file_name, logger):
-    df_acc = cudf.read_csv(file_name)
+    df_acc = dask_cudf.read_csv(file_name).compute()
     timestamp_col = None
     for col in df_acc.columns:
         if "timestamp" in col.lower():
@@ -155,7 +141,7 @@ def read_acc_file_pain_adapt(file_name, logger):
         # curation already converted the timestamp to EST, so we dont need to convert it again
         # I had to convert timestamps to pandas due to cudf not supporting milliseconds
         # -  that is need to calculate the frequency of the sensor
-        # TODO: check timezone- we need all timestamps on GMT timezone / waiting for clinical team answer
+        # pain and adapt are in EST time zone. But the function above convert it to GMT by default
         timestamps = cudf.Series(df_acc[timestamp_col], dtype="datetime64[ms]")
         return timestamps, df_acc.drop(columns=[timestamp_col]).to_cupy()
     else:
@@ -174,8 +160,7 @@ def read_acc_file_intelligenticu(file_name, logger):
     if "Timestamp" not in df_acc.columns[0]:
         logger.error("File {} has no timestamp column".format(file_name))
         return None
-    # TODO: check timezone- we need all timestamps on GMT timezone
-    #timestamps = pd.to_datetime(df_acc["Timestamp"].to_pandas()).dt.tz_convert('GMT')
+    # we are supposing Intelligent ICU is already on GMT timezone, so no need to convert it
     timestamps = cudf.Series(df_acc["Timestamp"], dtype="datetime64[ms]")
     return timestamps, df_acc.drop(columns=["Timestamp"]).to_cupy()
 
@@ -202,10 +187,20 @@ class PainDataset:
         self.trials_per_file = trials_per_file
         self.patient_map = set_patient_map()
         self.logger = logger
-        if dataset_name == 'intelligent_icu':
-            self.outcomes_file = read_labels_file_intelligent_icu()
+        self.outcomes_file = self.read_labels_file()
+
+    def read_labels_file(self):
+        if self.dataset_name == 'intelligent_icu':
+            df = cudf.read_csv(
+                '/home/jsenadesouza/DA-healthy2patient/data/clinical_data/2016-20119_clinical_data_outcomes.csv')
         else:
-            self.outcomes_file = read_labels_file_pain_adapt()
+            df = cudf.read_csv(
+                '/home/jsenadesouza/DA-healthy2patient/data/clinical_data/PAINandADAPT_clinical_data_outcomes.csv')
+
+        # conversion to GMT time
+        df['timestamp'] = cudf.Series(
+            pd.to_datetime(df["timestamp"].to_pandas()).dt.tz_localize("EST").dt.tz_convert("GMT"))
+        return df
 
     def get_accs_files(self):
         accs = []
@@ -330,7 +325,7 @@ class PainDataset:
                                     ts_sample = acc_ts_list[start_idx:end_idx]
 
                                     # check if the timestamps in the sample are continuous
-                                    if np.mean(np.diff(ts_sample)) < timedelta(minutes=1):
+                                    if np.mean(np.diff(ts_sample)) < np.timedelta64(1, 'm'):
                                         # above we filtered the timestamp list, if that range is continuous,
                                         # then the sample is continuous so we can extract it
                                         start_ts = ts_sample[0]
