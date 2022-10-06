@@ -192,10 +192,10 @@ class PainDataset:
     def read_labels_file(self):
         if self.dataset_name == 'intelligent_icu':
             df = cudf.read_csv(
-                '/home/jsenadesouza/DA-healthy2patient/data/clinical_data/2016-20119_clinical_data_outcomes.csv')
+                '/data2/datasets/ICU_Data/Curated/clinical_data/2016-20119_clinical_data_outcomes.csv')
         else:
             df = cudf.read_csv(
-                '/home/jsenadesouza/DA-healthy2patient/data/clinical_data/PAINandADAPT_clinical_data_outcomes.csv')
+                '/data2/datasets/ICU_Data/Curated/clinical_data/PAINandADAPT_clinical_data_outcomes.csv')
 
         # conversion to GMT time
         df['timestamp'] = cudf.Series(

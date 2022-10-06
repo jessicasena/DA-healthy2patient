@@ -26,7 +26,7 @@ def process_studies(dir_save, trials_per_file, time_wd, time_drop, final_freq, l
     data_name.append("intelligent_icu")
 
     # PAIN study
-    pain = PainDataset(dataset_name="pain", dir_dataset="/home/jsenadesouza/DA-healthy2patient/354_Sensor_data/",
+    pain = PainDataset(dataset_name="pain", dir_dataset="/data2/datasets/ICU_Data/Curated/354_Sensor_data/",
                 dir_save=dir_save, trials_per_file=trials_per_file, time_wd=time_wd, time_drop=time_drop,
                 final_freq=final_freq, logger=logger)
     if process:
@@ -34,7 +34,7 @@ def process_studies(dir_save, trials_per_file, time_wd, time_drop, final_freq, l
     data_name.append("pain")
 
     # ADAPT study
-    adapt = PainDataset(dataset_name="adapt", dir_dataset="/home/jsenadesouza/DA-healthy2patient/1013_Sensor_Data/",
+    adapt = PainDataset(dataset_name="adapt", dir_dataset="/data2/datasets/ICU_Data/Curated/1013_Sensor_Data/",
                 dir_save=dir_save, trials_per_file=trials_per_file, time_wd=time_wd, time_drop=time_drop,
                 final_freq=final_freq, logger=logger)
     if process:
