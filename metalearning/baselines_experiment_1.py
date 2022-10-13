@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 
 from utils.data import SensorDataset
 from utils.models import MetaSenseModel, MiniMetaSenseModel
-from utils.utils import train, test
+from utils.util import train, test
 
 
 def run_baseline0(args):

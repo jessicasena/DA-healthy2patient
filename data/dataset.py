@@ -112,7 +112,7 @@ def process_labels(df, start_ts, end_ts):
 
 
 def reduce_sampling_rate(data, df_timestamps, reduce_rate):
-    data_ts = df_timestamps.to_pandas().to_numpy()
+    data_ts = df_timestamps
     if reduce_rate != 0:
         number_samp = data.shape[0]
         samples_slct = list(range(0, number_samp, int(reduce_rate)))
@@ -131,6 +131,8 @@ def read_acc_file_pain_adapt(file_name, logger):
             timestamp_col = col
         if "timestamp" not in col.lower() and "accel" not in col.lower():
             df_acc.drop(col, inplace=True, axis=1)
+        if "emg" in col.lower():
+            raise Exception("EMG data found in accelerometer file")
     if timestamp_col and len(df_acc) >= 4:
         # in case there is more than one accelerometer, drop the others and keep the first one
         columns_to_keep = df_acc.columns[:4].to_numpy()
@@ -142,7 +144,7 @@ def read_acc_file_pain_adapt(file_name, logger):
         # I had to convert timestamps to pandas due to cudf not supporting milliseconds
         # -  that is need to calculate the frequency of the sensor
         # pain and adapt are in EST time zone. But the function above convert it to GMT by default
-        timestamps = cudf.Series(df_acc[timestamp_col], dtype="datetime64[ms]")
+        timestamps = df_acc[timestamp_col].to_numpy(dtype="datetime64[ns]")
         return timestamps, df_acc.drop(columns=[timestamp_col]).to_cupy()
     else:
         #debug
@@ -161,7 +163,7 @@ def read_acc_file_intelligenticu(file_name, logger):
         logger.error("File {} has no timestamp column".format(file_name))
         return None
     # we are supposing Intelligent ICU is already on GMT timezone, so no need to convert it
-    timestamps = cudf.Series(df_acc["Timestamp"], dtype="datetime64[ms]")
+    timestamps = cudf.Series(df_acc["Timestamp"], dtype="datetime64[ms]").to_numpy()
     return timestamps, df_acc.drop(columns=["Timestamp"]).to_cupy()
 
 
@@ -192,10 +194,10 @@ class PainDataset:
     def read_labels_file(self):
         if self.dataset_name == 'intelligent_icu':
             df = cudf.read_csv(
-                '/data2/datasets/ICU_Data/Curated/clinical_data/2016-20119_clinical_data_outcomes.csv')
+                '/home/jsenadesouza/DA-healthy2patient/data/clinical_data/2016-20119_clinical_data_outcomes.csv')
         else:
             df = cudf.read_csv(
-                '/data2/datasets/ICU_Data/Curated/clinical_data/PAINandADAPT_clinical_data_outcomes.csv')
+                '/home/jsenadesouza/DA-healthy2patient/data/clinical_data/PAINandADAPT_clinical_data_outcomes.csv')
 
         # conversion to GMT time
         df['timestamp'] = cudf.Series(
@@ -223,10 +225,13 @@ class PainDataset:
                         path = f'{self.dir_dataset}*/*_Accel/Curated_file/*'
 
                     if fnmatch.fnmatch(root, path):
-                        if 'wrist' in file.lower() or 'arm' in file.lower() or 'emg' in file.lower():
-                            patients[patient] = True
-                            if acc_csv not in accs:
-                                accs.append(acc_csv)
+                        # TODO: GET EMG BACK
+                        #if 'wrist' in file.lower() or 'arm' in file.lower() or 'emg' in file.lower():
+                        if 'wrist' in file.lower() or 'arm' in file.lower():
+                            if 'emg' not in file.lower():
+                                patients[patient] = True
+                                if acc_csv not in accs:
+                                    accs.append(acc_csv)
 
         for pat, acc_flag in patients.items():
             if not acc_flag:
@@ -267,6 +272,7 @@ class PainDataset:
         accs_files = self.get_accs_files()
         trial_id = 1
         output_dir = self.dir_save
+        frequencies = []
 
         for file in tqdm(accs_files):
             try:
@@ -282,6 +288,7 @@ class PainDataset:
                     last_day = df_timestamps.max()
                     last_day = last_day + np.timedelta64(1, 'D')
                     # get patient id to filter the outcomes file by the current patient
+                    # todo fix it when the data changes folder structure
                     patient_id = file.split("/")[5]
                     if self.dataset_name == 'intelligent_icu':
                         patient_id = int(patient_id.split("_")[1])
@@ -292,7 +299,9 @@ class PainDataset:
                     if len(pain_filtered) > 0:
                         samples_extracted = 0
                         # resampled the data to 10Hz
-                        freq = 1 / df_timestamps.diff().median().total_seconds()
+                        # todo: save it to a file
+                        freq = 1 / pd.to_timedelta(np.median(np.diff(df_timestamps))).total_seconds()
+                        frequencies.append(freq)
                         reduce_rate = freq / self.final_freq
                         acc_cupy_downsampled, acc_ts_list = reduce_sampling_rate(acc_cupy, df_timestamps, reduce_rate)
 
@@ -314,7 +323,7 @@ class PainDataset:
                             idx = idx - 1 if idx >= len(acc_ts_list) else idx
                             # check if there is at least time_wd + time_drop minutes of data before the pain measurement
                             if idx > time_wd + time_drop:
-                                margin_minutes=5
+                                margin_minutes = 5
                                 margin = np.timedelta64(margin_minutes, 'm')
                                 # check if the accelerometer timestamp is within 5 minutes of the pain measurement
                                 if abs(pain_datetime - acc_ts_list[idx]) <= margin:
@@ -325,10 +334,11 @@ class PainDataset:
                                     ts_sample = acc_ts_list[start_idx:end_idx]
 
                                     # check if the timestamps in the sample are continuous
-                                    if np.mean(np.diff(ts_sample)) < np.timedelta64(1, 'm'):
+                                    if np.max(np.diff(ts_sample)) < np.timedelta64(1, 's'):
                                         # above we filtered the timestamp list, if that range is continuous,
                                         # then the sample is continuous so we can extract it
                                         start_ts = ts_sample[0]
+
                                         end_ts = ts_sample[-1] + np.timedelta64(int(margin_minutes+time_drop/60/reduce_rate), 'm')
                                         sample = acc_cupy_downsampled[start_idx:end_idx]
                                         # get outcomes data for the sample
@@ -363,6 +373,8 @@ class PainDataset:
                 self.logger.error("File {}, message: {}", file, e)
         # save the last sample
         self.save_data(output_dir)
+        self.logger.info("Frequencies: mean = {}, values = {}", np.mean(frequencies), frequencies)
+
 
 
 

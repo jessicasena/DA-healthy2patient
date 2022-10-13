@@ -16,8 +16,8 @@ from torch.utils.data import DataLoader
 
 from utils.data import TargetDataset
 from utils.models import MetaSenseModel
-from utils.utils import (meta_test, multi_meta_train, multi_metaloaders,
-                   save_plot_adapt_steps, balanced_dataset)
+from utils.util import (meta_test, multi_meta_train, multi_metaloaders,
+                        save_plot_adapt_steps, balanced_dataset)
 
 
 def main(args):

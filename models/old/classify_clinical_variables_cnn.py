@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 
 from utils.data import SensorDataset
 from utils.models import MetaSenseModel, MetaSenseModeladdData
-from utils.utils import train, test
+from utils.util import train, test
 from sklearn.model_selection import StratifiedKFold
 from sklearn.utils import class_weight
 from tensorboardX import SummaryWriter

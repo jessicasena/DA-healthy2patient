@@ -34,36 +34,37 @@ class TimeSeriesTransformer(nn.Module):
                  ):
 
         super().__init__()
-        self.window_size = 272
+        self.window_size = 279
+        kernel_size=10
 
         self.encoder_input_layer = nn.Sequential(
-            nn.Conv1d(3, 16, kernel_size=10),
-            nn.SiLU(True),
+            nn.Conv1d(3, 16, kernel_size=(kernel_size,)),
+            nn.ReLU(True),
             nn.BatchNorm1d(16),
 
-            nn.Conv1d(16, 32, kernel_size=10),
+            nn.Conv1d(16, 32, kernel_size=(kernel_size,)),
             nn.MaxPool1d(2),
-            nn.SiLU(True),
+            nn.ReLU(True),
             nn.BatchNorm1d(32),
 
-            nn.Conv1d(32, 64, kernel_size=10),
+            nn.Conv1d(32, 64, kernel_size=(kernel_size,)),
             nn.MaxPool1d(2),
-            nn.SiLU(True),
+            nn.ReLU(True),
             nn.BatchNorm1d(64),
 
-            nn.Conv1d(64, 128, kernel_size=10),
+            nn.Conv1d(64, 128, kernel_size=(kernel_size,)),
             nn.MaxPool1d(2),
             nn.BatchNorm1d(128),
-            nn.SiLU(True),
+            nn.ReLU(True),
 
-            nn.Conv1d(128, 256, kernel_size=10),
+            nn.Conv1d(128, 256, kernel_size=(kernel_size,)),
             nn.MaxPool1d(2),
-            nn.SiLU(True),
+            nn.ReLU(True),
             nn.BatchNorm1d(256),
 
-            nn.Conv1d(256, 512, kernel_size=10),
+            nn.Conv1d(256, 512, kernel_size=(kernel_size,)),
             nn.MaxPool1d(2),
-            nn.SiLU(True),
+            nn.ReLU(True),
             nn.BatchNorm1d(512),
         )
 
@@ -91,13 +92,14 @@ class TimeSeriesTransformer(nn.Module):
 
     def forward(self, src: Tensor) -> Tensor:
         src = self.encoder_input_layer(src)
-        src = src.permute(2, 0, 1)
-
-        cls_token = self.cls_token.unsqueeze(1).repeat(1, src.shape[1], 1)
-        src = torch.cat([cls_token, src])
-        src += self.position_embed
-
-        src = self.encoder(src=src)[0]
+        # src = src.permute(2, 0, 1)
+        #
+        # cls_token = self.cls_token.unsqueeze(1).repeat(1, src.shape[1], 1)
+        # src = torch.cat([cls_token, src])
+        # src += self.position_embed
+        #
+        # src = self.encoder(src=src)[0]
+        src = torch.mean(src, dim=2)
 
         logits = self.imu_head(src)
 
@@ -141,3 +143,5 @@ class PositionalEncoder(nn.Module):
         x = x + self.pe[:, :x.size(self.x_dim), :]
 
         return self.dropout(x)
+
+

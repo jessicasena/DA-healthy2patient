@@ -15,7 +15,7 @@ from utils.models import ProtoMetaSenseModel
 
 from MetaOptNet.utils_metaopt import set_gpu, Timer, count_accuracy, check_dir, log
 from utils.sensordata import SensorDataset, FewShotDataloader
-from utils.utils import get_metrics
+from utils.util import get_metrics
 import time
 import datetime
 import scipy.stats as st

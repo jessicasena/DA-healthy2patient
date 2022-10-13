@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 class CNNLSTM(nn.Module):
 
-    def __init__(self, n_classes):
+    def   __init__(self, n_classes):
         super(CNNLSTM, self).__init__()
 
         self.features = nn.Sequential(

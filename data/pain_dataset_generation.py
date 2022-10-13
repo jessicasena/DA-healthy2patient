@@ -26,7 +26,7 @@ def process_studies(dir_save, trials_per_file, time_wd, time_drop, final_freq, l
     data_name.append("intelligent_icu")
 
     # PAIN study
-    pain = PainDataset(dataset_name="pain", dir_dataset="/data2/datasets/ICU_Data/Curated/354_Sensor_data/",
+    pain = PainDataset(dataset_name="pain", dir_dataset="/home/jsenadesouza/DA-healthy2patient/354_Sensor_data/",
                 dir_save=dir_save, trials_per_file=trials_per_file, time_wd=time_wd, time_drop=time_drop,
                 final_freq=final_freq, logger=logger)
     if process:
@@ -34,7 +34,7 @@ def process_studies(dir_save, trials_per_file, time_wd, time_drop, final_freq, l
     data_name.append("pain")
 
     # ADAPT study
-    adapt = PainDataset(dataset_name="adapt", dir_dataset="/data2/datasets/ICU_Data/Curated/1013_Sensor_Data/",
+    adapt = PainDataset(dataset_name="adapt", dir_dataset="/home/jsenadesouza/DA-healthy2patient/1013_Sensor_Data/",
                 dir_save=dir_save, trials_per_file=trials_per_file, time_wd=time_wd, time_drop=time_drop,
                 final_freq=final_freq, logger=logger)
     if process:
@@ -104,6 +104,9 @@ def generate_dataset(dir_pkl, list_datasets):
 
     print(f"{count_bad_data} bad samples")
     X = new_X
+    # Normalized Data
+    # X_normalized = ((X - np.min(X)) / (np.max(X) - np.min(X))) * 2 - 1
+    # X = X_normalized
     y = new_y
 
     # store the name of the labels columns
@@ -126,7 +129,7 @@ if __name__ == "__main__":
         # Create a Dask Cluster to use multiple GPUs
         cluster = LocalCUDACluster()
         client = Client(cluster)
-    exp_name = "PAIN_ADAPT_15min"
+    exp_name = "INTELLIGENT_PAIN_ADAPT_15min"
     dir_save_datasets = '/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset_preprocess_15min/'
     dir_save_file = '/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset'
     time_wd = 900

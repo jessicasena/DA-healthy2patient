@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 
 from utils.data import SensorPublicDataset
 from models.transformer_model import TimeSeriesTransformer
-from utils.utils import train, test
+from utils.util import train, test
 from sklearn.model_selection import StratifiedKFold
 from sklearn.utils import class_weight
 from tensorboardX import SummaryWriter

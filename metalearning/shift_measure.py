@@ -4,7 +4,7 @@ import torch.nn as nn
 from scipy.stats import wasserstein_distance
 from utils.models import MetaSenseModel
 from torch.utils.data import DataLoader
-from utils.utils import train
+from utils.util import train
 from utils.data import SensorDataset
 import os
 from sklearn.svm import LinearSVC

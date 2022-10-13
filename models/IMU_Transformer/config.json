@@ -1,0 +1,31 @@
+{
+	"n_freq_print": 10,
+	"n_freq_checkpoint": 3,
+	"n_workers": 4,
+	"device_id": "cuda:2",
+
+	"input_dim": 3,
+	"window_size":281,
+	"num_classes":2,
+    "window_shift": 50,
+	"use_baseline": false,
+
+	"encode_position":true,
+	"transformer_dim": 512,
+	"nhead": 8,
+	"num_encoder_layers": 6,
+	"num_decoder_layers": 6,
+	"dim_feedforward": 128,
+	"transformer_dropout": 0.1,
+	"transformer_activation": "gelu",
+	"head_activation": "gelu",
+    "baseline_dropout": 0.1,
+
+	"batch_size": 40,
+	"lr": 1e-4,
+	"weight_decay":1e-4,
+	"eps": 1e-10,
+	"lr_scheduler_step_size": 5,
+	"lr_scheduler_gamma": 0.5,
+	"n_epochs": 100
+}

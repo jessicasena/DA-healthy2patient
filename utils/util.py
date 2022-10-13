@@ -20,7 +20,7 @@ import torchvision
 from time import time
 import datetime
 
-
+from scipy import stats as st
 import gc
 import optuna
 # Timing utilities
@@ -52,12 +52,64 @@ def get_metrics(y_true, y_pred):
         'recall': recall_score(y_true, y_pred, average=None, zero_division=0),
         'recall_macro': recall_score(y_true, y_pred, average="macro", zero_division=0),
         'confusion_matrix': confusion_matrix(y_true, y_pred),
+        'confusion_matrix_norm_true': confusion_matrix(y_true, y_pred, normalize='true'),
         'precision': precision_score(y_true, y_pred, average=None, zero_division=0),
         'precision_macro': precision_score(y_true, y_pred, average="macro", zero_division=0),
         'roc_auc': roc_auc_score(y_true, y_pred, average="macro")
     }
 
-#
+def print_metrics(logger, n_classes, cum_acc, cum_recall, cum_precision, cum_auc, cum_f1, cum_recall_macro, cum_precision_macro,
+                  cum_f1_macro):
+    current_acc = np.array(cum_acc)
+    current_auc = np.array(cum_auc)
+    current_recall_macro = np.array(cum_recall_macro)
+    current_prec_macro = np.array(cum_precision_macro)
+    current_f1_macro = np.array(cum_f1_macro)
+
+    ci_mean = st.t.interval(0.95, len(current_acc) - 1, loc=np.mean(current_acc), scale=st.sem(current_acc))
+    ci_auc = st.t.interval(0.95, len(current_auc) - 1, loc=np.mean(current_auc), scale=st.sem(current_auc))
+    ci_recall_macro = st.t.interval(0.95, len(current_recall_macro) - 1, loc=np.mean(current_recall_macro),
+                                    scale=st.sem(current_recall_macro))
+    ci_prec_macro = st.t.interval(0.95, len(current_prec_macro) - 1, loc=np.mean(current_prec_macro),
+                                  scale=st.sem(current_prec_macro))
+    ci_f1_macro = st.t.interval(0.95, len(current_f1_macro) - 1, loc=np.mean(current_f1_macro),
+                                scale=st.sem(current_f1_macro))
+
+    logger.info('accuracy: {:.2f} ± {:.2f}\n'.format(np.mean(current_acc) * 100,
+                                                          abs(np.mean(current_acc) - ci_mean[0]) * 100))
+
+    logger.info('recall_macro: {:.2f} ± {:.2f}\n'.format(np.mean(current_recall_macro) * 100,
+                                                              abs(np.mean(current_recall_macro) - ci_recall_macro[
+                                                                  0]) * 100))
+    logger.info('precision_macro: {:.2f} ± {:.2f}\n'.format(np.mean(current_prec_macro) * 100,
+                                                                 abs(np.mean(current_prec_macro) - ci_prec_macro[
+                                                                     0]) * 100))
+    logger.info('f1-score_macro: {:.2f} ± {:.2f}\n'.format(np.mean(current_f1_macro) * 100,
+                                                                abs(np.mean(current_f1_macro) - ci_f1_macro[
+                                                                    0]) * 100))
+    logger.info('roc_auc: {:.2f} ± {:.2f}\n'.format(np.mean(current_auc) * 100,
+                                                         abs(np.mean(current_auc) - ci_auc[0]) * 100))
+
+    for class_ in range(n_classes):
+        logger.info(f"Class: {class_}")
+
+        current_f1 = np.array(cum_f1)[:, class_]
+        current_recall = np.array(cum_recall)[:, class_]
+        current_prec = np.array(cum_precision)[:, class_]
+
+        ci_f1 = st.t.interval(0.95, len(current_f1) - 1, loc=np.mean(current_f1), scale=st.sem(current_f1))
+        ci_recall = st.t.interval(0.95, len(current_recall) - 1, loc=np.mean(current_recall),
+                                  scale=st.sem(current_recall))
+        ci_prec = st.t.interval(0.95, len(current_prec) - 1, loc=np.mean(current_prec), scale=st.sem(current_prec))
+
+        logger.info('recall: {:.2f} ± {:.2f}\n'.format(np.mean(current_recall) * 100,
+                                                            abs(np.mean(current_recall) - ci_recall[0]) * 100))
+        logger.info('precision: {:.2f} ± {:.2f}\n'.format(np.mean(current_prec) * 100,
+                                                               abs(np.mean(current_prec) - ci_prec[0]) * 100))
+        logger.info('f1-score: {:.2f} ± {:.2f}\n'.format(np.mean(current_f1) * 100,
+                                                         abs(np.mean(current_f1) - ci_f1[0]) * 100))
+
+            #
 # def balanced_dataset(X, y):
 #     from imblearn.under_sampling import RandomUnderSampler
 #     from collections import Counter
@@ -69,35 +121,29 @@ def get_metrics(y_true, y_pred):
 #     return X_res.squeeze(), y_res.squeeze()
 
 
-def validation(model, loader, device, criterion, focal_loss=False, use_cuda=True, use_additional_data=False):
+def validation(model, loader, device, criterion, focal_loss=False, use_cuda=True):
     model.eval()
     y_true = []
     y_pred = []
     loss_total = 0
 
     with torch.no_grad():
-        for inputs, add_data, targets in loader:
+        for inputs, targets in loader:
             if use_cuda:
                 inputs, targets = inputs.to(device), targets.to(device)
-                if use_additional_data:
-                    add_data = add_data.to(device)
 
-            if use_additional_data:
-                preds = model(inputs, add_data)
-            else:
-                preds = model(inputs)
+            preds = model(inputs)
 
-            if focal_loss:
-                loss = criterion(preds, targets)
-            else:
-                loss = criterion(torch.squeeze(preds).float(), targets.float())
+            loss = criterion(preds, targets)
+
             loss_total += loss.item()
 
             if use_cuda:
                 targets = targets.cpu()
 
-            y_true.extend(np.argmax(targets, axis=1))
-            y_pred.extend(np.argmax(preds.detach().cpu(), axis=1))
+            preds = torch.argmax(preds, dim=1)
+            y_pred.extend(preds.cpu().numpy())
+            y_true.extend(targets.cpu().numpy())
 
     return loss_total / len(loader), get_metrics(y_true, y_pred)
 
@@ -105,6 +151,7 @@ def validation(model, loader, device, criterion, focal_loss=False, use_cuda=True
 def train(model, train_loader, early_stopping, optimizer, criterion, device, scheduler, best_model_folder, writer, trial, focal_loss= False, epochs=100, use_cuda=True, use_additional_data=False):
     step = 0
     start_timer()
+    best_metric = 0
     # Constructs scaler once, at the beginning of the convergence run, using default args.
     # If your network fails to converge with default GradScaler args, please file an issue.
     # The same GradScaler instance should be used for the entire convergence run.
@@ -141,11 +188,15 @@ def train(model, train_loader, early_stopping, optimizer, criterion, device, sch
 
                 # output is float16 because linear layers autocast to float16.
                 assert preds.dtype is torch.float16
+                # y_true = np.argmax(targets.detach().cpu(), axis=1)
+                # y_pred = np.argmax(preds.detach().cpu(), axis=1)
+                # print(f'preds = {y_pred}')
+                # print(f'target = {y_true}\n')
 
                 if focal_loss:
                     loss = criterion(preds, targets)
                 else:
-                    loss = criterion(preds, targets.float())
+                    loss = criterion(preds, targets)
 
                 # loss is float32 because mse_loss layers autocast to float32.
                 assert loss.dtype is torch.float32
@@ -177,7 +228,7 @@ def train(model, train_loader, early_stopping, optimizer, criterion, device, sch
         current_loss, current_metric = validation(model, early_stopping["val_loader"], device, criterion, focal_loss, use_cuda, use_additional_data)
         end = time()
         epoch_desc = 'Epoch {{0: <{0}d}}'.format(1 + int(math.log10(epochs))).format(epoch + 1)
-        epoch_fin = 'loss: {:.6f}, F1: {} [{}]'.format(current_loss, current_metric['f1-score'], str(datetime.timedelta(seconds=(end - start))))
+        epoch_fin = 'loss: {:.6f}, F1: {} [{}]'.format(current_loss, current_metric['f1-score_macro'], str(datetime.timedelta(seconds=(end - start))))
         print(epoch_desc + epoch_fin, flush=True)
 
         writer.add_scalar('Loss/train', current_loss, epoch)
@@ -190,10 +241,14 @@ def train(model, train_loader, early_stopping, optimizer, criterion, device, sch
                 return model
         else:
             early_stopping["trigger_times"] = 0
+
+        if current_metric['f1-score_macro'] > best_metric:
+            best_metric = current_metric['f1-score_macro']
             checkpoint = {"model": model.state_dict(),
                           "optimizer": optimizer.state_dict(),
                           "scaler": scaler.state_dict()}
             torch.save(checkpoint, best_model_folder)
+            print(f"Best model. loss: {current_loss}, F1 macro: {current_metric['f1-score_macro']}", flush=True)
 
         early_stopping["last_loss"] = current_loss
         if trial is not None:
@@ -226,8 +281,8 @@ def test(model, loader, device, use_cuda=True, use_additional_data=False):
             if use_cuda:
                 targets = targets.cpu()
 
-            y_true.extend(targets.numpy())
-            y_pred.extend([1 if x > 0 else 0 for x in preds.detach().cpu().numpy()])
+            y_true.extend(targets)
+            y_pred.extend(np.argmax(preds.detach().cpu(), axis=1))
 
     return get_metrics(y_true, y_pred)
 

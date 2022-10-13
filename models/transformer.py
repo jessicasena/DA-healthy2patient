@@ -1,5 +1,7 @@
+import math
 import sys
 import os
+from multiprocessing import Pool
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import argparse
@@ -10,7 +12,7 @@ from scipy import stats as st
 from torch.utils.data import DataLoader, WeightedRandomSampler
 from utils.data import SensorDataset
 from models.transformer_model import TimeSeriesTransformer
-from utils.utils import train, test
+from utils.util import train, test
 from models.transformer_model import FocalLoss
 from utils.data import DA_Jitter, DA_Scaling, DA_TimeWarp, DA_MagWarp, DA_Permutation, DA_Rotation, DA_RandSampling
 
@@ -44,12 +46,12 @@ class Transformer:
         self.data_aug = data_aug
         self.loss = loss
         self.weighted_sampler = weighted_sampler
+        self.clin_variable_target = "pain_score_class"
         self.use_cuda = torch.cuda.is_available()
-        self.device = torch.device('cuda:2') if self.use_cuda else torch.device('cpu')
+        self.device = torch.device('cuda:1') if self.use_cuda else torch.device('cpu')
         self.logger = set_logger(os.path.join(self.out_folder, self.exp_name))
         self.X, self.y, self.y_target = self.load_data(self.data_path)
-        self.n_classes = np.unique(self.y_target).shape[0]
-        self.labels2idx = {k: idx for idx, k in enumerate(np.unique(self.y_target))}
+        self.n_classes = len(np.unique(self.y_target))
 
     def print_info(self):
         self.logger.info(f"Experiment name: {self.exp_name}")
@@ -69,6 +71,9 @@ class Transformer:
         self.logger.info(str(np.unique(self.y_target, return_counts=True)) + "")
 
         # print variable info
+        self.logger.info(f"File={self.data_path}")
+        self.logger.info(f"Num epochs={self.num_epochs}")
+        self.logger.info(f"Batch size={self.batch_size}")
         self.logger.info(f"Data augmentation: {self.data_aug}")
         self.logger.info(f"Loss: {self.loss}")
         self.logger.info(f"Weighted sampler: {self.weighted_sampler}")
@@ -104,24 +109,24 @@ class Transformer:
         self.logger.info('roc_auc: {:.2f} ± {:.2f}\n'.format(np.mean(current_auc) * 100,
                                                              abs(np.mean(current_auc) - ci_auc[0]) * 100))
 
-        for class_ in range(len(np.unique(self.y_target))):
-            self.logger.info(f"Class: {class_}")
-
-            current_f1 = np.array(cum_f1)[:, class_]
-            current_recall = np.array(cum_recall)[:, class_]
-            current_prec = np.array(cum_precision)[:, class_]
-
-            ci_f1 = st.t.interval(0.95, len(current_f1) - 1, loc=np.mean(current_f1), scale=st.sem(current_f1))
-            ci_recall = st.t.interval(0.95, len(current_recall) - 1, loc=np.mean(current_recall),
-                                      scale=st.sem(current_recall))
-            ci_prec = st.t.interval(0.95, len(current_prec) - 1, loc=np.mean(current_prec), scale=st.sem(current_prec))
-
-            self.logger.info('recall: {:.2f} ± {:.2f}\n'.format(np.mean(current_recall) * 100,
-                                                            abs(np.mean(current_recall) - ci_recall[0]) * 100))
-            self.logger.info('precision: {:.2f} ± {:.2f}\n'.format(np.mean(current_prec) * 100,
-                                                               abs(np.mean(current_prec) - ci_prec[0]) * 100))
-            self.logger.info('f1-score: {:.2f} ± {:.2f}\n'.format(np.mean(current_f1) * 100,
-                                                              abs(np.mean(current_f1) - ci_f1[0]) * 100))
+        # for class_ in range(len(np.unique(self.y_target))):
+        #     self.logger.info(f"Class: {class_}")
+        #
+        #     current_f1 = np.array(cum_f1)[:, class_]
+        #     current_recall = np.array(cum_recall)[:, class_]
+        #     current_prec = np.array(cum_precision)[:, class_]
+        #
+        #     ci_f1 = st.t.interval(0.95, len(current_f1) - 1, loc=np.mean(current_f1), scale=st.sem(current_f1))
+        #     ci_recall = st.t.interval(0.95, len(current_recall) - 1, loc=np.mean(current_recall),
+        #                               scale=st.sem(current_recall))
+        #     ci_prec = st.t.interval(0.95, len(current_prec) - 1, loc=np.mean(current_prec), scale=st.sem(current_prec))
+        #
+        #     self.logger.info('recall: {:.2f} ± {:.2f}\n'.format(np.mean(current_recall) * 100,
+        #                                                     abs(np.mean(current_recall) - ci_recall[0]) * 100))
+        #     self.logger.info('precision: {:.2f} ± {:.2f}\n'.format(np.mean(current_prec) * 100,
+        #                                                        abs(np.mean(current_prec) - ci_prec[0]) * 100))
+        #     self.logger.info('f1-score: {:.2f} ± {:.2f}\n'.format(np.mean(current_f1) * 100,
+        #                                                       abs(np.mean(current_f1) - ci_f1[0]) * 100))
 
 
 
@@ -138,14 +143,10 @@ class Transformer:
         test_data, test_labels = self.X[test_index].squeeze(), self.y_target[test_index].squeeze()
         val_data, val_labels = self.X[val_index].squeeze(), self.y_target[val_index].squeeze()
 
-        # train_labels = np.array([self.labels2idx[label] for label in train_labels])
-        # test_labels = np.array([self.labels2idx[label] for label in test_labels])
-        # val_labels = np.array([self.labels2idx[label] for label in val_labels])
-
         self.logger.info(f"Folder {folder_idx + 1}")
-        self.logger.info(f"Train data: {get_class_distribution(np.unique(np.argmax(train_labels, axis=1), return_counts=True))}")
-        self.logger.info(f"Test data: {get_class_distribution(np.unique(np.argmax(test_labels, axis=1), return_counts=True))}")
-        self.logger.info(f"Val data: {get_class_distribution(np.unique(np.argmax(val_labels, axis=1), return_counts=True))}")
+        self.logger.info(f"Train data: {get_class_distribution(np.unique(train_labels, return_counts=True))}")
+        self.logger.info(f"Test data: {get_class_distribution(np.unique(test_labels, return_counts=True))}")
+        self.logger.info(f"Val data: {get_class_distribution(np.unique(val_labels, return_counts=True))}")
 
         return train_data, train_labels, test_data, test_labels, val_data, val_labels
 
@@ -156,9 +157,9 @@ class Transformer:
 
         if self.weighted_sampler:
             class_sample_count = np.array(
-                [len(np.where(train_labels == t)[0]) for t in np.unique(train_labels)])
+                [len(np.where(train_labels == t)[0]) for t in np.arange(0, len(np.unique(train_labels)))])
             weight = 1. / class_sample_count
-            samples_weight = np.array([weight[t] for t in np.argmax(train_labels, axis=1)])
+            samples_weight = np.array([weight[t] for t in train_labels])
 
             samples_weight = torch.from_numpy(samples_weight)
             samples_weight = samples_weight.double()
@@ -166,7 +167,7 @@ class Transformer:
             train_loader = DataLoader(train_set, batch_size=self.batch_size,
                                       pin_memory=True, sampler=sampler)
         else:
-            train_loader = DataLoader(train_set, batch_size=self.batch_size, pin_memory=True)
+            train_loader = DataLoader(train_set, batch_size=self.batch_size, pin_memory=True, shuffle=True)
 
         test_loader = DataLoader(test_set, batch_size=self.batch_size, pin_memory=True)
         val_loader = DataLoader(val_set, batch_size=self.batch_size, pin_memory=True)
@@ -275,13 +276,18 @@ class Transformer:
             if self.loss == "focal":
                 criterion = FocalLoss(alpha=0.5, gamma=2)
             else:
-                # class_weights = class_weight.compute_class_weight('balanced', classes=np.unique(np.argmax(train_labels, axis=1)), y=np.argmax(train_labels, axis=1))
-                # class_weights = torch.tensor(class_weights, dtype=torch.float).to(self.device)
-                # class_weights_hugo = self.loss_weights(np.argmax(train_labels, axis=1), self.device)
-                class_weights = torch.tensor([1., 1000.], dtype=torch.float).to(self.device)
+                class_weights = class_weight.compute_class_weight('balanced', classes=np.unique(train_labels), y=train_labels)
+                class_weights = torch.tensor(class_weights, dtype=torch.float).to(self.device)
+                #class_weights_hugo = self.loss_weights(np.argmax(train_labels, axis=1), self.device)
+                #class_weights = torch.tensor([1., 1000], dtype=torch.float).to(self.device)
                 criterion = nn.CrossEntropyLoss(weight=class_weights)
-            optim = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-04)
-            scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=5, gamma=0.5)
+            step_size = self.num_epochs // 6 if self.num_epochs > 6 else 1
+            # for CNN
+            optim = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-5)
+            scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=step_size, gamma=0.5)
+            # for transformers
+            # optim = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-04)
+            # scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=step_size, gamma=0.5)
             earling_stopping = {"val_loader": test_loader, "last_loss": 100, "patience": 10, "triggertimes": 0}
             best_model_folder = os.path.join(self.out_folder, "best_model")
             if not os.path.exists(best_model_folder):
@@ -301,13 +307,16 @@ class Transformer:
             metrics = test(model, test_loader, self.device, use_cuda=self.use_cuda)
 
             for k, v in metrics.items():
-                if k != 'confusion_matrix':
+                if "confusion" in k:
+                    self.logger.info('Fold {} {}:\n{}\n'.format(folder_idx + 1, k.capitalize(), v))
+                else:
                     self.logger.info('Fold {} {}: {}\n'.format(folder_idx + 1, k.capitalize(), v))
 
+
             cum_acc.append(metrics['accuracy'])
-            cum_f1.append(metrics['f1-score'])
-            cum_recall.append(metrics['recall'])
-            cum_precision.append(metrics['precision'])
+            #cum_f1.append(metrics['f1-score'])
+            #cum_recall.append(metrics['recall'])
+            #cum_precision.append(metrics['precision'])
             cum_auc.append(metrics['roc_auc'])
             cum_f1_macro.append(metrics['f1-score_macro'])
             cum_recall_macro.append(metrics['recall_macro'])
@@ -341,14 +350,31 @@ class Transformer:
         X = dataset["X"]
         y = dataset["y"]
         y_col_names = list(dataset['y_col_names'])
-        col_idx_target = y_col_names.index(clin_variable_target)
+        col_idx_target = y_col_names.index(self.clin_variable_target)
 
         X, y = clean(X, y, col_idx_target)
-        y_target = y[:, col_idx_target]
-        enc = OneHotEncoder(handle_unknown='ignore')
-        y_target = enc.fit_transform(y_target.reshape(-1, 1)).toarray()
-        return X, y, y_target
+        if self.clin_variable_target == "pain_score_class":
+            y_target = np.array([0 if x == "mild" else 1 for x in y[:, col_idx_target]])
+        else:
+            y_target = np.array([round(float(x)) for x in y[:, col_idx_target]])
 
+        def magnitude(sample):
+            mag_vector = []
+            for s in sample:
+                mag_vector.append(math.sqrt(sum([s[0] ** 2, s[1] ** 2, s[2] ** 2])))
+            return mag_vector
+
+        X_trasp = np.transpose(np.squeeze(X), (0, 1, 2))
+        print("Extracting Features")
+        start = time()
+        with Pool(100) as p:
+            X_feat = p.map(magnitude, X_trasp)
+        end = time()
+        print(f"{end - start:.4} seconds passed.")
+
+        X_feat = np.array(X_feat)
+
+        return X_feat, y, y_target
 
 def clean(X, y, col_target):
     if '-1' in np.unique(y[:, col_target]):
@@ -441,20 +467,23 @@ def optuna_search():
 
     print("Number of finished trials: ", len(study.trials))
 
+
 if __name__ == '__main__':
     start = time()
 
-    exp_name = f"exp_transformer_{time()}.log"
+    exp_name = f"exp_transformer_onlyintel_{time()}.log"
     out_folder = "/home/jsenadesouza/DA-healthy2patient/results/outcomes/classifier_results/"
     best_model_folder = "/home/jsenadesouza/DA-healthy2patient/results/best_models/pain_transformer_15min"
-    filepath = "/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset/f10_t900_IntelligentICU_PAIN_ADAPT_15min.npz"
+    filepath = "/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset/PAIN_15min.npz"
+    #filepath = "/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset/t900_IntelligentICU_15min.npz"
+    #filepath = "/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset/t900_IntelligentICU_PAIN_ADAPT_15min.npz"
 
-    num_epochs = 200
-    batch_size = 40
+    num_epochs = 1000
+    batch_size = 512
     data_aug = False
     loss = "ce"
-    weighted_sampler = False
-    clin_variable_target = "pain_score_class"
+    weighted_sampler = True
+
     num_folders = 1
 
     model = Transformer(filepath, exp_name, out_folder, num_epochs, batch_size, data_aug=data_aug, loss=loss,

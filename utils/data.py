@@ -243,9 +243,8 @@ class SensorSequence(data.Dataset):
 
 
 class SensorDataset(data.Dataset):
-    def __init__(self, data, add_data, labels, dataaug=False):
+    def __init__(self, data, labels, dataaug=False):
         self.data = data
-        self.add_data = add_data
         self.labels = labels
         self.dataaug = dataaug
         self.padding_size = padding(self.data[1].shape[-1])
@@ -259,29 +258,25 @@ class SensorDataset(data.Dataset):
             idx = idx.tolist()
 
         sample = self.data[idx].squeeze()
-        add_data_sample = []
-        if self.add_data is not None:
-            add_data_sample = self.add_data[idx]
 
         if self.dataaug:
             if np.random.rand() > 0.5:
                 sample = DA_Rotation(sample)
 
         # normalizacao
-        if np.isnan(sample).any():
-            raise ValueError('Nan values in sample before')
-        sample1 = sample
-        #sample1 = ((sample - np.min(sample)) / (np.max(sample) - np.min(sample))) * 2 - 1
-        sample1 = np.transpose(sample1, (1, 0))
+        sample = ((sample - np.min(sample)) / (np.max(sample) - np.min(sample))) * 2 - 1
+        #sample = (sample - sample.mean(axis=0)) / sample.std(axis=0)
 
-        sample1 = sample1.astype(np.float32)
+        #sample = np.transpose(sample, (1, 0))
+
+        sample = sample.astype(np.float32)
         #sample = np.pad(sample, ((0, 0), (self.padding_size, self.padding_size)), mode='constant')
         target = self.labels[idx]
 
-        if np.isnan(sample1).any():
+        if np.isnan(sample).any():
             raise ValueError('Nan values in sample after')
 
-        return sample1, add_data_sample, target
+        return sample, target
 
 
 class SensorPublicDataset(data.Dataset):

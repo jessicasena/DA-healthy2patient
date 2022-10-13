@@ -16,8 +16,8 @@ from torch.utils.data import DataLoader
 
 from utils.data import SensorDataset, TargetDataset
 from utils.models import ProtoMetaSenseModel
-from utils.utils import (get_metrics, pairwise_distances_logits,
-                   save_plot_2lines)
+from utils.util import (get_metrics, pairwise_distances_logits,
+                        save_plot_2lines)
 
 
 def process_multidatasets(dataset):
