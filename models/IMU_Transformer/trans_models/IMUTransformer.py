@@ -18,23 +18,28 @@ class IMUTransformerEncoder(nn.Module):
         self.transformer_dim = config.get("transformer_dim")
 
         self.input_proj = nn.Sequential(
-            nn.Conv1d(config.get("input_dim"), self.transformer_dim//16, (1,)),
+            nn.Conv1d(config.get("input_dim"), self.transformer_dim // 32, (1,)),
+            nn.Conv1d(self.transformer_dim // 32, self.transformer_dim // 16, (1,)),
+            nn.MaxPool1d(4),
+            nn.GELU(),
+
+            nn.Conv1d(self.transformer_dim//16, self.transformer_dim//16, (1,)),
             nn.Conv1d(self.transformer_dim//16, self.transformer_dim//8, (1,)),
             nn.MaxPool1d(2),
             nn.GELU(),
 
             nn.Conv1d(self.transformer_dim//8, self.transformer_dim//8, (1,)),
-            nn.Conv1d(self.transformer_dim//8, self.transformer_dim//8, (1,)),
-            nn.MaxPool1d(2),
-            nn.GELU(),
-
             nn.Conv1d(self.transformer_dim//8, self.transformer_dim//4, (1,)),
-            nn.Conv1d(self.transformer_dim//4, self.transformer_dim//4, (1,)),
-            nn.Conv1d(self.transformer_dim//4, self.transformer_dim//4, (1,)),
             nn.MaxPool1d(2),
             nn.GELU(),
 
+            nn.Conv1d(self.transformer_dim//4, self.transformer_dim//4, (1,)),
+            nn.Conv1d(self.transformer_dim//4, self.transformer_dim//4, (1,)),
             nn.Conv1d(self.transformer_dim//4, self.transformer_dim//2, (1,)),
+            nn.MaxPool1d(2),
+            nn.GELU(),
+
+            nn.Conv1d(self.transformer_dim//2, self.transformer_dim//2, (1,)),
             nn.Conv1d(self.transformer_dim//2, self.transformer_dim//2, (1,)),
             nn.Conv1d(self.transformer_dim//2, self.transformer_dim, (1,)),
             nn.MaxPool1d(2),
@@ -82,7 +87,7 @@ class IMUTransformerEncoder(nn.Module):
          # Shape N x S x C with S = sequence length, N = batch size, C = channels
 
         # Embed in a high dimensional space and reshape to Transformer's expected shape
-        src = self.input_proj(data.transpose(1, 2)).permute(2, 0, 1)
+        src = self.input_proj(data).permute(2, 0, 1)
 
         # Prepend class token
         cls_token = self.cls_token.unsqueeze(1).repeat(1, src.shape[1], 1)
@@ -98,6 +103,7 @@ class IMUTransformerEncoder(nn.Module):
         # Class probability
         target = self.log_softmax(self.imu_head(target))
         return target
+
 
 def get_activation(activation):
     """Return an activation function given a string"""

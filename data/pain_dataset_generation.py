@@ -17,13 +17,13 @@ from dask.distributed import Client
 def process_studies(dir_save, trials_per_file, time_wd, time_drop, final_freq, logger, process=True):
     # instantiate a object for each dataset and process the data
     data_name = []
-    # Intelligent ICU study
-    i_icu = PainDataset(dataset_name="intelligent_icu", dir_dataset="/data/datasets/ICU_Data/Sensor_Data/",
-                dir_save=dir_save, trials_per_file=trials_per_file, time_wd=time_wd, time_drop=time_drop,
-                final_freq=final_freq, logger=logger)
-    if process:
-      i_icu.preprocess()
-    data_name.append("intelligent_icu")
+    # # Intelligent ICU study
+    # i_icu = PainDataset(dataset_name="intelligent_icu", dir_dataset="/data/datasets/ICU_Data/Sensor_Data/",
+    #             dir_save=dir_save, trials_per_file=trials_per_file, time_wd=time_wd, time_drop=time_drop,
+    #             final_freq=final_freq, logger=logger)
+    # if process:
+    #   i_icu.preprocess()
+    # data_name.append("intelligent_icu")
 
     # PAIN study
     pain = PainDataset(dataset_name="pain", dir_dataset="/home/jsenadesouza/DA-healthy2patient/354_Sensor_data/",
@@ -33,13 +33,13 @@ def process_studies(dir_save, trials_per_file, time_wd, time_drop, final_freq, l
         pain.preprocess()
     data_name.append("pain")
 
-    # ADAPT study
-    adapt = PainDataset(dataset_name="adapt", dir_dataset="/home/jsenadesouza/DA-healthy2patient/1013_Sensor_Data/",
-                dir_save=dir_save, trials_per_file=trials_per_file, time_wd=time_wd, time_drop=time_drop,
-                final_freq=final_freq, logger=logger)
-    if process:
-        adapt.preprocess()
-    data_name.append("adapt")
+    # # ADAPT study
+    # adapt = PainDataset(dataset_name="adapt", dir_dataset="/home/jsenadesouza/DA-healthy2patient/1013_Sensor_Data/",
+    #             dir_save=dir_save, trials_per_file=trials_per_file, time_wd=time_wd, time_drop=time_drop,
+    #             final_freq=final_freq, logger=logger)
+    # if process:
+    #     adapt.preprocess()
+    # data_name.append("adapt")
 
     return data_name
 
@@ -88,7 +88,7 @@ def generate_dataset(dir_pkl, list_datasets):
     for dataset_name in list_datasets:
         X, y = data_generator(X, y, files_s[dataset_name], dataset_name)
 
-    X = np.array(X, dtype=float)
+    X = np.array(X)
     y = np.array(y)
 
     # remove samples that the entire content is the same value
@@ -129,11 +129,11 @@ if __name__ == "__main__":
         # Create a Dask Cluster to use multiple GPUs
         cluster = LocalCUDACluster()
         client = Client(cluster)
-    exp_name = "INTELLIGENT_PAIN_ADAPT_15min"
+    exp_name = "PAIN_30min_no_drop"
     dir_save_datasets = '/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset_preprocess_15min/'
     dir_save_file = '/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset'
-    time_wd = 900
-    time_drop = 900
+    time_wd = 1800
+    time_drop = 0
     new_freq = 10
     trials_per_file = 100
 

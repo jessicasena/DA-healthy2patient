@@ -243,12 +243,13 @@ class SensorSequence(data.Dataset):
 
 
 class SensorDataset(data.Dataset):
-    def __init__(self, data, labels, dataaug=False):
+    def __init__(self, data, labels, sample_start, dataaug=False):
         self.data = data
         self.labels = labels
         self.dataaug = dataaug
-        self.padding_size = padding(self.data[1].shape[-1])
+        #self.padding_size = padding(self.data[1].shape[-1])
         self.classes = np.unique(labels)
+        self.sample_start = sample_start
 
     def __len__(self):
         return len(self.data)
@@ -258,6 +259,7 @@ class SensorDataset(data.Dataset):
             idx = idx.tolist()
 
         sample = self.data[idx].squeeze()
+        sample = sample[self.sample_start:]
 
         if self.dataaug:
             if np.random.rand() > 0.5:
@@ -265,9 +267,12 @@ class SensorDataset(data.Dataset):
 
         # normalizacao
         sample = ((sample - np.min(sample)) / (np.max(sample) - np.min(sample))) * 2 - 1
-        #sample = (sample - sample.mean(axis=0)) / sample.std(axis=0)
+        sample = (sample - sample.mean()) / sample.std()
 
-        #sample = np.transpose(sample, (1, 0))
+        sample = np.transpose(sample, (1, 0))
+
+        # padding_size = padding(sample.shape[-1])
+        # sample = np.pad(sample, ((0, 0), (padding_size, padding_size)), mode='constant')
 
         sample = sample.astype(np.float32)
         #sample = np.pad(sample, ((0, 0), (self.padding_size, self.padding_size)), mode='constant')

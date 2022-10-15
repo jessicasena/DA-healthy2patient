@@ -41,10 +41,10 @@ def split_data(X, y, y_target, labels2idx, logger, patient_splits, folder_idx):
     return train_data, train_labels, test_data, test_labels, val_data, val_labels
 
 
-def get_loaders(batch_size, train_data, train_labels, test_data, test_labels, val_data, val_labels, weighted_sampler):
-    train_set = SensorDataset(train_data, train_labels)
-    test_set = SensorDataset(test_data, test_labels)
-    val_set = SensorDataset(val_data, val_labels)
+def get_loaders(batch_size, sample_start, train_data, train_labels, test_data, test_labels, val_data, val_labels, weighted_sampler):
+    train_set = SensorDataset(train_data, train_labels, sample_start, dataaug=True)
+    test_set = SensorDataset(test_data, test_labels, sample_start)
+    val_set = SensorDataset(val_data, val_labels, sample_start)
 
     if weighted_sampler:
         class_sample_count = np.array(
@@ -69,11 +69,10 @@ def get_loaders(batch_size, train_data, train_labels, test_data, test_labels, va
 def load_data(filepath, clin_variable_target):
     # Load data
     dataset = np.load(filepath, allow_pickle=True)
-    X = rescale(dataset["X"])
+    X = dataset["X"]
     y = dataset["y"]
     y_col_names = list(dataset['y_col_names'])
     col_idx_target = y_col_names.index(clin_variable_target)
-    #logger.info(f"Clinical variable: {clin_variable_target}")
 
     X, y = clean(X, y, col_idx_target)
     y_target = y[:, col_idx_target]
@@ -91,23 +90,22 @@ def magnitude(sample):
 def load_data_mag(filepath, clin_variable_target):
     # Load data
     dataset = np.load(filepath, allow_pickle=True)
-    X = rescale(dataset["X"])
-    y = dataset["y"]
+    X = dataset["X"][:500,:,:]
+    y = dataset["y"][:500]
     y_col_names = list(dataset['y_col_names'])
     col_idx_target = y_col_names.index(clin_variable_target)
 
     X, y = clean(X, y, col_idx_target)
     y_target = y[:, col_idx_target]
-    X = X[:, :, 0]
 
-    # X_trasp = np.transpose(np.squeeze(X), (0, 1, 2))
-    # print("Extracting Features")
-    # start = time()
-    # with Pool(200) as p:
-    #     X_feat = p.map(magnitude, X_trasp)
-    # end = time()
-    # print(f"{end - start:.4} seconds passed.")
-    # X = np.array(X_feat)
+    X_trasp = np.transpose(np.squeeze(X), (0, 1, 2))
+    print("Extracting Features")
+    start = time()
+    with Pool(200) as p:
+        X_feat = p.map(magnitude, X_trasp)
+    end = time()
+    print(f"{end - start:.4} seconds passed.")
+    X = np.array(X_feat)
 
     return X, y, y_target
 

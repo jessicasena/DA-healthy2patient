@@ -5,27 +5,33 @@
 	"device_id": "cuda:2",
 
 	"input_dim": 3,
-	"window_size":281,
+	"window_size":140,
 	"num_classes":2,
     "window_shift": 50,
-	"use_baseline": false,
+	"use_model": "lstm",
 
 	"encode_position":true,
 	"transformer_dim": 512,
-	"nhead": 8,
+	"nhead": 4,
 	"num_encoder_layers": 6,
 	"num_decoder_layers": 6,
-	"dim_feedforward": 128,
+	"dim_feedforward": 2048,
 	"transformer_dropout": 0.1,
 	"transformer_activation": "gelu",
 	"head_activation": "gelu",
     "baseline_dropout": 0.1,
 
-	"batch_size": 40,
+	"batch_size": 128,
 	"lr": 1e-4,
-	"weight_decay":1e-4,
+	"weight_decay":1e-04,
 	"eps": 1e-10,
 	"lr_scheduler_step_size": 5,
 	"lr_scheduler_gamma": 0.5,
-	"n_epochs": 100
+	"n_epochs": 50,
+
+	"sample_size": 18000,
+	"cnn_blocks": 4,
+	"best_model": false,
+	"checkpoint_path": "None",
+	"data_path": "/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset/t1800_PAIN_30min_no_drop.npz"
 }
