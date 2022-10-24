@@ -5,6 +5,7 @@ import fnmatch
 import pickle
 import numpy as np
 import multiprocessing
+import matplotlib.pyplot as plt
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))# So that we can import from the same directory
 import time
@@ -17,13 +18,13 @@ from dask.distributed import Client
 def process_studies(dir_save, trials_per_file, time_wd, time_drop, final_freq, logger, process=True):
     # instantiate a object for each dataset and process the data
     data_name = []
-    # # Intelligent ICU study
-    # i_icu = PainDataset(dataset_name="intelligent_icu", dir_dataset="/data/datasets/ICU_Data/Sensor_Data/",
-    #             dir_save=dir_save, trials_per_file=trials_per_file, time_wd=time_wd, time_drop=time_drop,
-    #             final_freq=final_freq, logger=logger)
-    # if process:
-    #   i_icu.preprocess()
-    # data_name.append("intelligent_icu")
+    #Intelligent ICU study
+    i_icu = PainDataset(dataset_name="intelligent_icu", dir_dataset="/data/datasets/ICU_Data/Sensor_Data/",
+                dir_save=dir_save, trials_per_file=trials_per_file, time_wd=time_wd, time_drop=time_drop,
+                final_freq=final_freq, logger=logger)
+    if process:
+      i_icu.preprocess()
+    data_name.append("intelligent_icu")
 
     # PAIN study
     pain = PainDataset(dataset_name="pain", dir_dataset="/home/jsenadesouza/DA-healthy2patient/354_Sensor_data/",
@@ -33,13 +34,13 @@ def process_studies(dir_save, trials_per_file, time_wd, time_drop, final_freq, l
         pain.preprocess()
     data_name.append("pain")
 
-    # # ADAPT study
-    # adapt = PainDataset(dataset_name="adapt", dir_dataset="/home/jsenadesouza/DA-healthy2patient/1013_Sensor_Data/",
-    #             dir_save=dir_save, trials_per_file=trials_per_file, time_wd=time_wd, time_drop=time_drop,
-    #             final_freq=final_freq, logger=logger)
-    # if process:
-    #     adapt.preprocess()
-    # data_name.append("adapt")
+    # ADAPT study
+    adapt = PainDataset(dataset_name="adapt", dir_dataset="/home/jsenadesouza/DA-healthy2patient/1013_Sensor_Data/",
+                dir_save=dir_save, trials_per_file=trials_per_file, time_wd=time_wd, time_drop=time_drop,
+                final_freq=final_freq, logger=logger)
+    if process:
+        adapt.preprocess()
+    data_name.append("adapt")
 
     return data_name
 
@@ -55,8 +56,8 @@ def data_generator(X, y, files, data_name):
             data = pickle.load(handle)
             fl = [i for i in data]
             for trial in fl:
-                label_vector = trial.split("_")[:17]
-                subject_id = trial.split("_")[17].split("s")[1]
+                label_vector = trial.split("_")[:-2]
+                subject_id = trial.split("_")[-2].split("s")[1]
                 label_vector.append(subject_id)
                 # get the accel data
                 trial_accel = np.squeeze(data[trial].get())
@@ -70,6 +71,19 @@ def data_generator(X, y, files, data_name):
     print(f"{count_samples} samples\n")
     print(f"{len(count_patients)} patients")
     return X, y
+
+
+def plot_accel(sample, title, path, idx):
+
+    fig = plt.figure(idx)
+    plt.plot(sample[:, 0], label="x")
+    plt.plot(sample[:, 1], label="y")
+    plt.plot(sample[:, 2], label="z")
+    plt.title(title)
+    plt.legend()
+
+    plt.savefig(os.path.join(path,f"{title}_{time.time()}.png"))
+    plt.close(fig)
 
 
 def generate_dataset(dir_pkl, list_datasets):
@@ -104,14 +118,30 @@ def generate_dataset(dir_pkl, list_datasets):
 
     print(f"{count_bad_data} bad samples")
     X = new_X
-    # Normalized Data
-    # X_normalized = ((X - np.min(X)) / (np.max(X) - np.min(X))) * 2 - 1
-    # X = X_normalized
     y = new_y
+
+    # # remove samples with no movement
+    # new_X = []
+    # new_y = []
+    # var_threshold = 0.01
+    # count_no_movement = 0
+    # for sample, label in zip(X, y):
+    #     sample = np.squeeze(sample)
+    #     var = np.mean([np.var(sample[:, 0]), np.var(sample[:, 1]), np.var(sample[:, 2])])
+    #     if var > var_threshold:
+    #         new_X.append(sample)
+    #         new_y.append(label)
+    #     else:
+    #         count_no_movement += 1
+    #         path = os.path.join("/home/jsenadesouza/DA-healthy2patient/results/outcomes/", "no_movement")
+    #         plot_accel(sample, label[7], path, count_no_movement)
+    # print("{} samples removed because of no movement".format(count_no_movement))
+    # X = new_X
+    # y = new_y
 
     # store the name of the labels columns
     y_col_names = ['heart_rate', 'heart_rate_class', 'temp', 'temp_class', 'lenght_of_stay', 'is_dead', 'pain_score',
-                   'pain_score_class',
+                   'pain_score_class',  'pain_score_prev', 'pain_score_prev_class',
                    'sofa_score', 'sofa_score_class', 'map', 'map_class', 'braden_score', 'braden_score_class', 'spo2',
                    'spo2_class', 'cam', 'patient_id']
     # save to a npz fila the accel data and labels and column names
@@ -123,17 +153,17 @@ def generate_dataset(dir_pkl, list_datasets):
 
 if __name__ == "__main__":
     start = time.time()
-    process = False
+    process = True
     if process:
         multiprocessing.freeze_support()
         # Create a Dask Cluster to use multiple GPUs
         cluster = LocalCUDACluster()
         client = Client(cluster)
-    exp_name = "PAIN_30min_no_drop"
+    exp_name = "INTELLIGENT_ADAPT_PAIN_15wd_15drop_painprev"
     dir_save_datasets = '/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset_preprocess_15min/'
     dir_save_file = '/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset'
-    time_wd = 1800
-    time_drop = 0
+    time_wd = 900
+    time_drop = 900
     new_freq = 10
     trials_per_file = 100
 

@@ -19,7 +19,7 @@ from learn2learn.data.transforms import (ConsecutiveLabels, FusedNWaysKShots,
 import torchvision
 from time import time
 import datetime
-
+from sklearn.metrics import roc_curve
 from scipy import stats as st
 import gc
 import optuna
@@ -57,6 +57,7 @@ def get_metrics(y_true, y_pred):
         'precision_macro': precision_score(y_true, y_pred, average="macro", zero_division=0),
         'roc_auc': roc_auc_score(y_true, y_pred, average="macro")
     }
+
 
 def print_metrics(logger, n_classes, cum_acc, cum_recall, cum_precision, cum_auc, cum_f1, cum_recall_macro, cum_precision_macro,
                   cum_f1_macro):

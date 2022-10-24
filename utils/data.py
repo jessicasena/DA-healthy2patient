@@ -244,7 +244,8 @@ class SensorSequence(data.Dataset):
 
 class SensorDataset(data.Dataset):
     def __init__(self, data, labels, sample_start, dataaug=False):
-        self.data = data
+        self.data = data["acc"]
+        self.clin_data = data["clin"]
         self.labels = labels
         self.dataaug = dataaug
         #self.padding_size = padding(self.data[1].shape[-1])
@@ -259,6 +260,7 @@ class SensorDataset(data.Dataset):
             idx = idx.tolist()
 
         sample = self.data[idx].squeeze()
+        clin_data = self.clin_data[idx]
         sample = sample[self.sample_start:]
 
         if self.dataaug:
@@ -280,8 +282,8 @@ class SensorDataset(data.Dataset):
 
         if np.isnan(sample).any():
             raise ValueError('Nan values in sample after')
-
-        return sample, target
+        data = {"acc": sample, "clin": np.array(clin_data, dtype=np.float32)}
+        return data, target
 
 
 class SensorPublicDataset(data.Dataset):

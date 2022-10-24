@@ -27,8 +27,9 @@ def set_patient_map():
     return patient_map
 
 
-def process_labels(df, start_ts, end_ts):
-    df = df[(df['timestamp'] >= start_ts) & (df['timestamp'] <= end_ts)]
+def process_labels(df_data, start_ts, end_ts):
+    df = df_data[(df_data['timestamp'] >= start_ts) & (df_data['timestamp'] <= end_ts)]
+    df_prev = df_data[df_data['timestamp'] <= (start_ts-np.timedelta64(1, 's'))]
     df = df.to_pandas()
     if len(df) == 0:
         return []
@@ -65,6 +66,14 @@ def process_labels(df, start_ts, end_ts):
             pain_score_class = "mild"
         else:
             pain_score_class = "severe"
+
+        pain_score_prev = df_prev["pain_score"][df_prev["pain_score"] != -1].iloc[-1]
+        if pain_score_prev == -1:
+            pain_score_prev_class = -1
+        elif 0 <= pain_score_prev < 5:
+            pain_score_prev_class = "mild"
+        else:
+            pain_score_prev_class = "severe"
         sofa_score = df["sofa_score"][df["sofa_score"] != -1]
         sofa_score = np.mean(sofa_score) if len(sofa_score) > 0 else -1
         if sofa_score == -1:
@@ -107,6 +116,7 @@ def process_labels(df, start_ts, end_ts):
         cam = np.argmax(np.bincount(cam)) if len(cam) > 0 else -1
         return np.nan_to_num(
             [heart_rate, heart_rate_class, temp, temp_class, lenght_of_stay, is_dead, pain_score, pain_score_class,
+             pain_score_prev, pain_score_prev_class,
              sofa_score, sofa_score_class, map, map_class, braden_score, braden_score_class, spo2, spo2_class, cam],
             nan=-1)
 
@@ -225,9 +235,8 @@ class PainDataset:
                         path = f'{self.dir_dataset}*/*_Accel/Curated_file/*'
 
                     if fnmatch.fnmatch(root, path):
-                        # TODO: GET EMG BACK
-                        #if 'wrist' in file.lower() or 'arm' in file.lower() or 'emg' in file.lower():
-                        if 'wrist' in file.lower() or 'arm' in file.lower():
+                        if 'wrist' in file.lower() or 'arm' in file.lower() or 'emg' in file.lower():
+                        #if 'wrist' in file.lower() or 'arm' in file.lower():
                             if 'emg' not in file.lower():
                                 patients[patient] = True
                                 if acc_csv not in accs:
@@ -299,7 +308,6 @@ class PainDataset:
                     if len(pain_filtered) > 0:
                         samples_extracted = 0
                         # resampled the data to 10Hz
-                        # todo: save it to a file
                         freq = 1 / pd.to_timedelta(np.median(np.diff(df_timestamps))).total_seconds()
                         frequencies.append(freq)
                         reduce_rate = freq / self.final_freq
@@ -314,11 +322,11 @@ class PainDataset:
                                          freq, reduce_rate, time_wd)
 
                         # for each pain measurement in the range of the accelerometer file
-                        for pain_datetime in pain_filtered.values_host:
-
+                        pain_datetimes = pain_filtered.values_host
+                        for i in range(1, len(pain_datetimes)):
                             # get the accel timestamp nearest to the pain measurement
                             # I had to convert acc_ts_list to numpy array because of error when using cudf in bisect function
-                            idx = bisect_left(acc_ts_list, pain_datetime)
+                            idx = bisect_left(acc_ts_list, pain_datetimes[1])
                             # in case that is too near the end, adjust the index
                             idx = idx - 1 if idx >= len(acc_ts_list) else idx
                             # check if there is at least time_wd + time_drop minutes of data before the pain measurement
@@ -326,7 +334,7 @@ class PainDataset:
                                 margin_minutes = 5
                                 margin = np.timedelta64(margin_minutes, 'm')
                                 # check if the accelerometer timestamp is within 5 minutes of the pain measurement
-                                if abs(pain_datetime - acc_ts_list[idx]) <= margin:
+                                if abs(pain_datetimes[1] - acc_ts_list[idx]) <= margin:
                                     # get time_wd minutes before time_drop minutes from the pain measurement
                                     # 15 minutes are dropped because the nurse can be in the room doing some procedures
                                     start_idx = int(idx - time_wd - time_drop)

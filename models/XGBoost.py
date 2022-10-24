@@ -10,10 +10,12 @@ from time import time
 import logging
 import random
 from utils.util import get_metrics, print_metrics
-from models.util import load_data, set_logger, split_data
+from models.util import load_data, set_logger, split_data, Find_Optimal_Cutoff
 from xgboost import XGBClassifier
 from collections import Counter
+from sklearn.metrics import confusion_matrix
 import math
+
 
 random.seed(42)
 
@@ -106,6 +108,16 @@ def feature_extraction(sample):
 
     return features
 
+def plot_accel(sample, title, path):
+    import matplotlib.pyplot as plt
+
+    plt.plot(sample[:, 0])
+    plt.plot(sample[:, 1])
+    plt.plot(sample[:, 2])
+    plt.title(os.path.join(path,title))
+
+    plt.savefig(f"{title}.png")
+
 
 class XGboost:
     def __init__(self, data_path, exp_name, out_folder):
@@ -122,6 +134,7 @@ class XGboost:
 
     def load_data(self, data_path):
         X, y, y_target = load_data(data_path, clin_variable_target=self.clin_variable_target)
+
         X_trasp = np.transpose(np.squeeze(X), (0, 1, 2))
         print("Extracting Features")
         start = time()
@@ -168,23 +181,35 @@ class XGboost:
             #     f'/home/jsenadesouza/DA-healthy2patient/results/outcomes/tensorboard/transformers/self.exp_name/run_{time()}')
 
             # split the data into train, val and test sets
-            train_data, train_labels, test_data, test_labels, val_data, val_labels = split_data(self.X, self.y, self.y_target, self.labels2idx, self.logger, patient_splits, folder_idx)
+            train_data, train_labels, test_data, test_labels, val_data, val_labels = split_data(self.X, self.y, self.y_target, self.labels2idx, patient_splits, folder_idx, logger=self.logger)
             counter = Counter(train_labels)
             # estimate scale_pos_weight value
             estimate = counter[0] / counter[1]
             print(f'Estimate: {estimate}. {counter}')
             # fit model no training data
             model = XGBClassifier(tree_method="gpu_hist", use_label_encoder=False, eval_metric='logloss',
-                                  scale_pos_weight=estimate)
+                                  scale_pos_weight=estimate, random_state=42)
             model.fit(train_data, train_labels)
 
             y_pred = model.predict(test_data)
-            y_pred = [round(value) for value in y_pred]
-            metrics = get_metrics(test_labels, y_pred)
+            y_score = model.predict_proba(test_data)
 
-            for k, v in metrics.items():
-                if k != 'confusion_matrix':
-                    self.logger.info('Fold {} {}: {}\n'.format(folder_idx + 1, k.capitalize(), v))
+            threshold = Find_Optimal_Cutoff(test_labels, y_score[:, 1])
+            print(f'threshold: {threshold}')
+            y_pred_2 = list(map(lambda x: 1 if x > threshold else 0, y_score[:, 1]))
+            print(confusion_matrix(test_labels, y_pred_2))
+
+            def plot_metrics(ground_truth, predicted):
+                metrics = get_metrics(ground_truth, predicted)
+                for k, v in metrics.items():
+                    if "confusion" in k:
+                        logging.info('Fold {} {}:\n{}\n'.format(folder_idx, k.capitalize(), v))
+                    else:
+                        logging.info('Fold {} {}: {}\n'.format(folder_idx, k.capitalize(), v))
+                return metrics
+
+            metrics = plot_metrics(test_labels, y_pred)
+            metrics = plot_metrics(test_labels, y_pred_2)
 
             cum_acc.append(metrics['accuracy'])
             cum_f1.append(metrics['f1-score'])
@@ -194,6 +219,7 @@ class XGboost:
             cum_f1_macro.append(metrics['f1-score_macro'])
             cum_recall_macro.append(metrics['recall_macro'])
             cum_precision_macro.append(metrics['precision_macro'])
+
 
         print_metrics(self.logger, self.n_classes, cum_acc, cum_recall, cum_precision, cum_auc, cum_f1, cum_recall_macro, cum_precision_macro, cum_f1_macro)
 

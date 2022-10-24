@@ -18,12 +18,7 @@ class IMUTransformerEncoder(nn.Module):
         self.transformer_dim = config.get("transformer_dim")
 
         self.input_proj = nn.Sequential(
-            nn.Conv1d(config.get("input_dim"), self.transformer_dim // 32, (1,)),
-            nn.Conv1d(self.transformer_dim // 32, self.transformer_dim // 16, (1,)),
-            nn.MaxPool1d(4),
-            nn.GELU(),
-
-            nn.Conv1d(self.transformer_dim//16, self.transformer_dim//16, (1,)),
+            nn.Conv1d(config.get("input_dim"), self.transformer_dim//16, (1,)),
             nn.Conv1d(self.transformer_dim//16, self.transformer_dim//8, (1,)),
             nn.MaxPool1d(2),
             nn.GELU(),
@@ -76,6 +71,19 @@ class IMUTransformerEncoder(nn.Module):
             nn.Dropout(0.1),
             nn.Linear(self.transformer_dim//4,  num_classes)
         )
+        self.add_info = nn.Sequential(
+            nn.Linear(1, 16),
+            nn.GELU(),
+            nn.Dropout(0.1),
+            nn.Linear(16, num_classes)
+        )
+
+        self.late_fusion = nn.Sequential(
+            nn.Linear(4, 32),
+            nn.GELU(),
+            nn.Dropout(0.1),
+            nn.Linear(32, num_classes)
+        )
         self.log_softmax = nn.LogSoftmax(dim=1)
 
         # init
@@ -84,10 +92,11 @@ class IMUTransformerEncoder(nn.Module):
                 nn.init.xavier_uniform_(p)
 
     def forward(self, data):
-         # Shape N x S x C with S = sequence length, N = batch size, C = channels
-
+        # Shape N x S x C with S = sequence length, N = batch size, C = channels
+        inp1 = data["acc"]
+        inp2 = data["clin"]
         # Embed in a high dimensional space and reshape to Transformer's expected shape
-        src = self.input_proj(data).permute(2, 0, 1)
+        src = self.input_proj(inp1).permute(2, 0, 1)
 
         # Prepend class token
         cls_token = self.cls_token.unsqueeze(1).repeat(1, src.shape[1], 1)
@@ -100,8 +109,12 @@ class IMUTransformerEncoder(nn.Module):
         # Transformer Encoder pass
         target = self.transformer_encoder(src)[0]
 
+        transf_out = self.imu_head(target)
+        add_info = self.add_info(torch.reshape(inp2, (-1, 1)))
+        concat = torch.cat([transf_out, add_info], dim=1)
+        late_fusion = self.late_fusion(concat)
         # Class probability
-        target = self.log_softmax(self.imu_head(target))
+        target = self.log_softmax(late_fusion)
         return target
 
 

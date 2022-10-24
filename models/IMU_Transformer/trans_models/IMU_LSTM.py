@@ -78,7 +78,7 @@ class IMU_LSTM(nn.Module):
         # Embed in a high dimensional space and reshape to Transformer's expected shape
         src = self.input_proj(data).permute(2, 0, 1)
 
-        src = self.lstm(src)[0]
+        src = self.lstm(src)[0].permute(1, 0, 2)
         src = torch.mean(src, dim=1)
 
         # Class probability

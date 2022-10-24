@@ -5,8 +5,10 @@ from multiprocessing.dummy import Pool
 
 import torch
 from torch.utils.data import DataLoader, WeightedRandomSampler
-
+from imblearn.over_sampling import KMeansSMOTE, SMOTE
 from utils.data import SensorDataset
+from sklearn.metrics import roc_curve
+import pandas as pd
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -16,7 +18,26 @@ from time import time
 import logging
 
 
-def split_data(X, y, y_target, labels2idx, logger, patient_splits, folder_idx):
+def Find_Optimal_Cutoff(target, predicted):  # Youden index
+    """ Find the optimal probability cutoff point for a classification model related to event rate
+    Parameters
+    ----------
+    target : Matrix with dependent or target data, where rows are observations
+    predicted : Matrix with predicted data, where rows are observations
+    Returns
+    -------
+    list type, with optimal cutoff value
+
+    """
+    fpr, tpr, threshold = roc_curve(target, predicted)
+    i = np.arange(len(tpr))
+    roc = pd.DataFrame({'tf': pd.Series(tpr - (1 - fpr), index=i), 'threshold': pd.Series(threshold, index=i)})
+    roc_t = roc.iloc[(roc.tf - 0).abs().argsort()[:1]]
+
+
+    return list(roc_t['threshold'])
+
+def split_data(X, y, y_target, labels2idx, patient_splits, folder_idx, logger=None):
     # split samples based on patients k-fold cross validation
     test_index, val_index, train_index = [], [], []
     for patient in patient_splits[folder_idx]:
@@ -33,18 +54,20 @@ def split_data(X, y, y_target, labels2idx, logger, patient_splits, folder_idx):
     test_labels = np.array([labels2idx[label] for label in test_labels])
     val_labels = np.array([labels2idx[label] for label in val_labels])
 
-    logger.info(f"Folder {folder_idx + 1}")
-    logger.info(f"Train data: {get_class_distribution(np.unique(train_labels, return_counts=True))}")
-    logger.info(f"Test data: {get_class_distribution(np.unique(test_labels, return_counts=True))}")
-    logger.info(f"Val data: {get_class_distribution(np.unique(val_labels, return_counts=True))}")
+    if logger:
+        logger.info(f"Folder {folder_idx + 1}")
+        logger.info(f"Train data: {get_class_distribution(np.unique(train_labels, return_counts=True))}")
+        logger.info(f"Test data: {get_class_distribution(np.unique(test_labels, return_counts=True))}")
+        logger.info(f"Val data: {get_class_distribution(np.unique(val_labels, return_counts=True))}")
 
     return train_data, train_labels, test_data, test_labels, val_data, val_labels
 
 
-def get_loaders(batch_size, sample_start, train_data, train_labels, test_data, test_labels, val_data, val_labels, weighted_sampler):
+def get_loaders(batch_size, sample_start, train_data, train_labels, test_data, test_labels, val_data=None, val_labels=None, weighted_sampler=False):
     train_set = SensorDataset(train_data, train_labels, sample_start, dataaug=True)
     test_set = SensorDataset(test_data, test_labels, sample_start)
-    val_set = SensorDataset(val_data, val_labels, sample_start)
+    if val_data is not None and val_labels is not None:
+        val_set = SensorDataset(val_data, val_labels, sample_start)
 
     if weighted_sampler:
         class_sample_count = np.array(
@@ -61,10 +84,12 @@ def get_loaders(batch_size, sample_start, train_data, train_labels, test_data, t
         train_loader = DataLoader(train_set, batch_size=batch_size, pin_memory=True, shuffle=True)
 
     test_loader = DataLoader(test_set, batch_size=1, pin_memory=True)
-    val_loader = DataLoader(val_set, batch_size=1, pin_memory=True)
+    if val_data is not None and val_labels is not None:
+        val_loader = DataLoader(val_set, batch_size=1, pin_memory=True)
 
-    return train_loader, test_loader, val_loader
-
+        return train_loader, test_loader, val_loader
+    else:
+        return train_loader, test_loader
 
 def load_data(filepath, clin_variable_target):
     # Load data
@@ -75,9 +100,16 @@ def load_data(filepath, clin_variable_target):
     col_idx_target = y_col_names.index(clin_variable_target)
 
     X, y = clean(X, y, col_idx_target)
-    y_target = y[:, col_idx_target]
+    y_target = y[:, col_idx_target]#.astype(float)
 
-    return X, y, y_target
+    # not using pain level 0
+    # idxs = np.where(y_target != 0)[0]
+    # X_new, y_new, y_target_new = X[idxs], y[idxs], y_target[idxs]
+    #
+    # y_classes = [0 if yy < 5 else 1 for yy in y_target_new]
+    # y_classes = np.array(y_classes)
+
+    return X, y, y_target, y_col_names
 
 
 def magnitude(sample):
