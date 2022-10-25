@@ -1,6 +1,7 @@
 import datetime
 import os
 import sys
+from multiprocessing.dummy import Pool
 from time import time
 
 import pandas as pd
@@ -26,7 +27,6 @@ import torchtest as tt
 import io
 import msoffcrypto
 import glob
-
 
 def magnitude(sample):
     mag_vector = []
@@ -260,259 +260,6 @@ def set_patient_map():
 
     return patient_map
 
-def get_demo_data(X, y, y_target, y_col_names):
-    passwd = 'pervasiveICU'
-
-    filename = '/home/jsenadesouza/DA-healthy2patient/Pervasive_Sensing_Enrollment_Log.xlsx'
-    decrypted_workbook = io.BytesIO()
-    with open(filename, 'rb') as file:
-        office_file = msoffcrypto.OfficeFile(file)
-        office_file.load_key(password=passwd)
-        office_file.decrypt(decrypted_workbook)
-
-    ADAPT_enrollment = pd.read_excel(decrypted_workbook, engine="openpyxl")
-
-    input_dir = '/data/datasets/ICU_Data/EHR_Data/truncated/2020-02-26/'
-    df_2016 = pd.read_csv(os.path.join(input_dir, 'encounters_0_trimmed.csv'))
-
-    df_2021 = []
-    files_enc = glob.glob('/data/daily_data/*/encounters*.csv',
-                          recursive=True)
-    files_peso = glob.glob('/data/daily_data/*/height_weight*.csv',
-                           recursive=True)
-
-    for file in files_enc:
-        df = pd.read_csv(file)
-        df_2021.append(df)
-
-    df_2021_peso = []
-    for file in files_peso:
-        df = pd.read_csv(file)
-        df_2021_peso.append(df)
-
-    df_2021 = pd.concat(df_2021)
-    df_2021_peso = pd.concat(df_2021_peso)
-
-    patients_char = []
-    patient_map = set_patient_map()
-    for patient_id in y_target:
-        if "P" in patient_id or "I" in patient_id:
-            row = df_2021[df_2021['patient_deiden_id'] == patient_map[patient_id]]
-            height = np.mean(df_2021_peso[(df_2021_peso['patient_deiden_id'] == patient_map[patient_id]) & (
-                        df_2021_peso['measurement_name'] == 'weight_kgs')]['measurement_value'].values)
-            weight = df_2021_peso[(df_2021_peso['patient_deiden_id'] == patient_map[patient_id]) & (
-                        df_2021_peso['measurement_name'] == 'height_cm')]['measurement_value'].values[0]
-            if "I" in patient_id:
-                try:
-                    admit = datetime.datetime.strptime(
-                        ADAPT_enrollment['ICU_admit'][ADAPT_enrollment["Record ID"] == patient_id].values[0],
-                        '%m/%d/%y %H%M')
-                except:
-                    try:
-                        admit = datetime.datetime.strptime(
-                            ADAPT_enrollment['ICU_admit'][ADAPT_enrollment["Record ID"] == patient_id].values[0],
-                            '%m/%d/%Y %H%M')
-                    except:
-                        print(
-                            f"admit: {ADAPT_enrollment['ICU_admit'][ADAPT_enrollment['Record ID'] == patient_id].values}")
-                try:
-                    consent = pd.Timestamp(
-                        ADAPT_enrollment['Consent Date'][ADAPT_enrollment["Record ID"] == patient_id].values[0])
-                except:
-                    print(
-                        f"consent: {ADAPT_enrollment['Consent Date'][ADAPT_enrollment['Record ID'] == patient_id].values}")
-                try:
-                    dischg = datetime.datetime.strptime(
-                        ADAPT_enrollment['ICU_dischg'][ADAPT_enrollment["Record ID"] == patient_id].values[0],
-                        '%m/%d/%y %H%M')
-                except:
-                    d_time = ADAPT_enrollment['ICU_dischg'][ADAPT_enrollment["Record ID"] == patient_id].values[0]
-                    if type(d_time) == type(datetime):
-                        dischg = d_time
-                    else:
-                        dischg = datetime.datetime.combine(datetime.datetime.date.today(), datetime.datetime.min.time())
-            else:
-                ad_rows = row['admit_datetime'][~row['admit_datetime'].isna()].values
-                dc_rows = row['dischg_datetime'][~row['dischg_datetime'].isna()].values
-                try:
-                    admit = datetime.datetime.strptime(min(ad_rows), '%Y-%m-%d %H:%M:%S')
-                except:
-                    admit = datetime.datetime.strptime(min(ad_rows), '%Y-%m-%d')
-                try:
-                    dischg = datetime.datetime.strptime(max(dc_rows), '%Y-%m-%d %H:%M:%S')
-                except:
-                    try:
-                        dischg = datetime.datetime.strptime(max(dc_rows), '%Y-%m-%d')
-                    except:
-                        print(patient_id)
-                        print(dc_rows)
-                        dischg = datetime.datetime.combine(datetime.datetime.date.today(), datetime.datetime.min.time())
-            consent = admit
-        else:
-            row = df_2016[df_2016['record_id'] == int(patient_id)]
-            height = row['height_cm'][~row['height_cm'].isna()].values[0]
-            weight = row['weight_kgs'][~row['weight_kgs'].isna()].values[0]
-            ad_rows = row['admit_datetime'][~row['admit_datetime'].isna()].values
-            dc_rows = row['dischg_datetime'][~row['dischg_datetime'].isna()].values
-            try:
-                admit = datetime.datetime.strptime(min(ad_rows), '%Y-%m-%d %H:%M:%S')
-            except:
-                admit = datetime.datetime.strptime(min(ad_rows), '%Y-%m-%d')
-            try:
-                dischg = datetime.datetime.strptime(max(dc_rows), '%Y-%m-%d %H:%M:%S')
-            except:
-                try:
-                    dischg = datetime.datetime.strptime(max(dc_rows), '%Y-%m-%d')
-                except:
-                    print(patient_id)
-                    print(dc_rows)
-                    dischg = datetime.datetime.combine(datetime.datetime.date.today(), datetime.datetime.min.time())
-            consent = admit
-
-        birth = datetime.datetime.strptime(row['birth_date'][~row['birth_date'].isna()].values[0], '%Y-%m-%d')
-        age = int((consent - birth).days / 365)
-        lenght_stay = abs((dischg - admit).days)
-
-        gender = row['sex'][~row['sex'].isna()].values[0]
-        race = row['race'][~row['race'].isna()].values[0]
-        ethnicity = row['ethnicity'][~row['ethnicity'].isna()].values[0]
-        if len(row['aids'][~row['aids'].isna()]) > 0:
-            aids = row['aids'][~row['aids'].isna()].values[0]
-        else:
-            aids = -1
-        if len(row['cancer'][~row['cancer'].isna()]) > 0:
-            cancer = row['cancer'][~row['cancer'].isna()].values[0]
-        else:
-            cancer = -1
-        if len(row['cerebrovascular_disease'][~row['cerebrovascular_disease'].isna()]) > 0:
-            cerebrovascular_disease = row['cerebrovascular_disease'][~row['cerebrovascular_disease'].isna()].values[0]
-        else:
-            cerebrovascular_disease = -1
-        if len(row['dementia'][~row['dementia'].isna()]) > 0:
-            dementia = row['dementia'][~row['dementia'].isna()].values[0]
-        else:
-            dementia = -1
-        if len(row['paraplegia_hemiplegia'][~row['paraplegia_hemiplegia'].isna()]) > 0:
-            paraplegia_hemiplegia = row['paraplegia_hemiplegia'][~row['paraplegia_hemiplegia'].isna()].values[0]
-        else:
-            paraplegia_hemiplegia = -1
-        if len(row['smoking_status'][~row['smoking_status'].isna()]) > 0:
-            smoking_status = row['smoking_status'][~row['smoking_status'].isna()].values[0]
-        else:
-            smoking_status = -1
-        if len(row['chf'][~row['chf'].isna()]) > 0:
-            chf = row['chf'][~row['chf'].isna()].values[0]
-        else:
-            chf = -1
-        if len(row['copd'][~row['copd'].isna()]) > 0:
-            copd = row['copd'][~row['copd'].isna()].values[0]
-        else:
-            copd = -1
-
-        if len(row['diabetes_w_o_complications'][~row['diabetes_w_o_complications'].isna()]) > 0:
-            diabetes_w_o_complications = \
-            row['diabetes_w_o_complications'][~row['diabetes_w_o_complications'].isna()].values[0]
-        else:
-            diabetes_w_o_complications = -1
-        if len(row['diabetes_w_complications'][~row['diabetes_w_complications'].isna()]) > 0:
-            diabetes_w_complications = row['diabetes_w_complications'][~row['diabetes_w_complications'].isna()].values[
-                0]
-        else:
-            diabetes_w_complications = -1
-        if diabetes_w_o_complications == 1 or diabetes_w_complications == 1:
-            diabetes = 1
-        elif diabetes_w_o_complications == -1 and diabetes_w_complications == -1:
-            diabetes = -1
-        elif diabetes_w_o_complications == 0 and diabetes_w_complications == 0:
-            diabetes = 0
-        if len(row['m_i'][~row['m_i'].isna()]) > 0:
-            m_i = row['m_i'][~row['m_i'].isna()].values[0]
-        else:
-            m_i = -1
-        if len(row['metastatic_carcinoma'][~row['metastatic_carcinoma'].isna()]) > 0:
-            metastatic_carcinoma = row['metastatic_carcinoma'][~row['metastatic_carcinoma'].isna()].values[0]
-        else:
-            metastatic_carcinoma = -1
-        if len(row['mild_liver_disease'][~row['mild_liver_disease'].isna()]) > 0:
-            mild_liver_disease = row['mild_liver_disease'][~row['mild_liver_disease'].isna()].values[0]
-        else:
-            mild_liver_disease = -1
-        if len(row['moderate_severe_liver_disease'][~row['moderate_severe_liver_disease'].isna()]) > 0:
-            moderate_severe_liver_disease = \
-            row['moderate_severe_liver_disease'][~row['moderate_severe_liver_disease'].isna()].values[0]
-        else:
-            moderate_severe_liver_disease = -1
-        if mild_liver_disease == 1 or moderate_severe_liver_disease == 1:
-            liver_disease = 1
-        elif mild_liver_disease == -1 and moderate_severe_liver_disease == -1:
-            liver_disease = -1
-        elif mild_liver_disease == 0 and moderate_severe_liver_disease == 0:
-            liver_disease = 0
-        if len(row['peptic_ulcer_disease'][~row['peptic_ulcer_disease'].isna()]) > 0:
-            peptic_ulcer_disease = row['peptic_ulcer_disease'][~row['peptic_ulcer_disease'].isna()].values[0]
-        else:
-            peptic_ulcer_disease = -1
-        if len(row['peripheral_vascular_disease'][~row['peripheral_vascular_disease'].isna()]) > 0:
-            peripheral_vascular_disease = \
-            row['peripheral_vascular_disease'][~row['peripheral_vascular_disease'].isna()].values[0]
-        else:
-            peripheral_vascular_disease = -1
-        if len(row['renal_disease'][~row['renal_disease'].isna()]) > 0:
-            renal_disease = row['renal_disease'][~row['renal_disease'].isna()].values[0]
-        else:
-            renal_disease = -1
-        if len(row['rheumatologic_disease'][~row['rheumatologic_disease'].isna()]) > 0:
-            rheumatologic_disease = row['rheumatologic_disease'][~row['rheumatologic_disease'].isna()].values[0]
-        else:
-            rheumatologic_disease = -1
-
-        patients_char.append({'patient_id': patient_id, 'sex': gender, 'race': race, 'height_cm': height,
-                              'age': age, 'weight_kgs': weight, 'lenght_stay': lenght_stay,
-                              "ethnicity": ethnicity, "aids": aids, "cancer": cancer,
-                              "cerebrovascular_disease": cerebrovascular_disease,
-                              "dementia": dementia, "paraplegia_hemiplegia": paraplegia_hemiplegia,
-                              "smoking_status": smoking_status,
-                              "chf": chf, "copd": copd, "diabetes": diabetes, "m_i": m_i,
-                              "metastatic_carcinoma": metastatic_carcinoma,
-                              "liver_disease": liver_disease, "peptic_ulcer_disease": peptic_ulcer_disease,
-                              "renal_disease": renal_disease,
-                              "rheumatologic_disease": rheumatologic_disease
-                              })
-
-    df_char = pd.DataFrame(data=patients_char)
-
-    df_char.loc[df_char.sex == 'MALE', 'sex'] = 0
-    df_char.loc[df_char.sex != 'MALE', 'sex'] = 1
-    df_char.loc[df_char.race == 'BLACK', 'race'] = 0
-    df_char.loc[df_char.race != 'BLACK', 'race'] = 1
-    df_char.loc[df_char.ethnicity == 'HISPANIC', 'ethnicity'] = 0
-    df_char.loc[df_char.ethnicity != 'HISPANIC', 'ethnicity'] = 1
-    df_char.loc[df_char.smoking_status == 'Former Smoker', 'smoking_status'] = 0
-    df_char.loc[df_char.smoking_status == 'Smoker', 'smoking_status'] = 1
-    df_char.loc[df_char.smoking_status == 'Smoker, Current Status Unknown', 'smoking_status'] = 1
-    df_char.loc[df_char.smoking_status == 'Current Every Day Smoker', 'smoking_status'] = 1
-    df_char.loc[df_char.smoking_status == 'Current Some Day Smoker', 'smoking_status'] = 1
-    df_char.loc[df_char.smoking_status == 'Light Tobacco Smoker', 'smoking_status'] = 1
-    df_char.loc[df_char.smoking_status == 'Never Smoker', 'smoking_status'] = 2
-    df_char.loc[df_char.smoking_status == 'Never Smoker ', 'smoking_status'] = 2
-    df_char.loc[df_char.smoking_status == 'Status Unknown', 'smoking_status'] = 3
-    df_char.loc[df_char.smoking_status == 'Unknown If Ever Smoked', 'smoking_status'] = 3
-    df_char.loc[df_char.smoking_status == 'Current Status Unknown', 'smoking_status'] = 3
-    df_char.loc[df_char.smoking_status == 'Unknown If Ever Smoked', 'smoking_status'] = 3
-    df_char.loc[df_char.smoking_status == 'Never Assessed', 'smoking_status'] = 3
-
-    X_char = []
-    col_patient = y_col_names.index('patient_id')
-    for xx, sample in zip(X.squeeze(), y):
-        try:
-            char_pat = df_char[df_char["patient_id"] == sample[col_patient]]
-            char_final = list(char_pat.loc[:, char_pat.columns != "patient_id"].values[0])
-            X_char.append(char_final)
-        except:
-            print(sample[col_patient])
-    X_char = np.array(X_char)
-    return X_char, df_char
-
 
 def split(y):
     folds_pat = []
@@ -605,7 +352,7 @@ if __name__ == "__main__":
     prev_pain = y[:, col_idx_prevpain]
     prev_pain = np.array([0 if x == "mild" else 1 for x in prev_pain])
 
-    #X_demo, df_demo = get_demo_data(X, y, y[:, -1], y_col_names)
+    X_demo = np.load('/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset/X_demo.npz', allow_pickle=True)['X_demo']
 
     folders = split(y)
 
@@ -616,7 +363,9 @@ if __name__ == "__main__":
     cum_recall_macro, cum_precision_macro, cum_f1_macro = [], [], []
 
     for folder_idx in range(num_folders):
-        clin_data = prev_pain
+        #clin_data = np.concatenate([np.expand_dims(prev_pain, axis=1), X_demo], axis=1)
+        clin_data = X_demo
+        print(clin_data.shape)
 
         train_idx = folders[folder_idx][0]
         test_idx = folders[folder_idx][1]

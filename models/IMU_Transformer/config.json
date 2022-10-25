@@ -29,6 +29,7 @@
 	"lr_scheduler_gamma": 0.5,
 	"n_epochs": 50,
 
+	"clinical_data_dim": 22,
 	"sample_size": 9000,
 	"cnn_blocks": 4,
 	"best_model": false,

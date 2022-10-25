@@ -16,6 +16,7 @@ class IMUTransformerEncoder(nn.Module):
         super().__init__()
 
         self.transformer_dim = config.get("transformer_dim")
+        self.clinical_data_dim = config.get("clinical_data_dim")
 
         self.input_proj = nn.Sequential(
             nn.Conv1d(config.get("input_dim"), self.transformer_dim//16, (1,)),
@@ -59,6 +60,9 @@ class IMUTransformerEncoder(nn.Module):
                                               num_layers = config.get("num_encoder_layers"),
                                               norm = nn.LayerNorm(self.transformer_dim))
         self.cls_token = nn.Parameter(torch.zeros((1, self.transformer_dim)), requires_grad=True)
+        self.clin_embbeding = nn.Sequential(
+                    nn.Linear(self.clinical_data_dim, self.transformer_dim),
+        )
 
         if self.encode_position:
             self.position_embed = nn.Parameter(torch.randn(self.window_size + 1, 1, self.transformer_dim))
@@ -72,10 +76,10 @@ class IMUTransformerEncoder(nn.Module):
             nn.Linear(self.transformer_dim//4,  num_classes)
         )
         self.add_info = nn.Sequential(
-            nn.Linear(1, 16),
+            nn.Linear(23, 256),
             nn.GELU(),
             nn.Dropout(0.1),
-            nn.Linear(16, num_classes)
+            nn.Linear(256, num_classes)
         )
 
         self.late_fusion = nn.Sequential(
@@ -100,6 +104,8 @@ class IMUTransformerEncoder(nn.Module):
 
         # Prepend class token
         cls_token = self.cls_token.unsqueeze(1).repeat(1, src.shape[1], 1)
+        clin = self.clin_embbeding(inp2)
+        cls_token = cls_token + clin.unsqueeze(0)
         src = torch.cat([cls_token, src])
 
         # Add the position embedding
@@ -108,13 +114,16 @@ class IMUTransformerEncoder(nn.Module):
 
         # Transformer Encoder pass
         target = self.transformer_encoder(src)[0]
+        out = self.imu_head(target)
+        # add_info = self.add_info(torch.reshape(inp2, (-1, 1)))
+        # concat = torch.cat([out, add_info], dim=1)
 
-        transf_out = self.imu_head(target)
-        add_info = self.add_info(torch.reshape(inp2, (-1, 1)))
-        concat = torch.cat([transf_out, add_info], dim=1)
-        late_fusion = self.late_fusion(concat)
+        # transf_out = self.imu_head(target)
+        #add_info = self.add_info(inp2)
+        # concat = torch.cat([transf_out, add_info], dim=1)
+        # late_fusion = self.late_fusion(concat)
         # Class probability
-        target = self.log_softmax(late_fusion)
+        target = self.log_softmax(out)
         return target
 
 
