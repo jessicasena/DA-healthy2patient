@@ -101,11 +101,10 @@ class IMUTransformerEncoder(nn.Module):
         inp2 = data["clin"]
         # Embed in a high dimensional space and reshape to Transformer's expected shape
         src = self.input_proj(inp1).permute(2, 0, 1)
-
+        clin = self.clin_embbeding(inp2).unsqueeze(0)
+        src = torch.cat([src, clin])
         # Prepend class token
         cls_token = self.cls_token.unsqueeze(1).repeat(1, src.shape[1], 1)
-        clin = self.clin_embbeding(inp2)
-        cls_token = cls_token + clin.unsqueeze(0)
         src = torch.cat([cls_token, src])
 
         # Add the position embedding

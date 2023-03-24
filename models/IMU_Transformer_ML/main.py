@@ -168,6 +168,24 @@ def plot_accel(sample, title, path, idx):
     plt.close(fig)
 
 
+def dvprs_score2label(scores):
+    labels = []
+    for x in scores:
+        # 0 - no pain
+        # 1-4 - mild pain
+        # 5-6 - moderate pain
+        # 7-10 - severe pain
+        if x == 0:
+            labels.append(0)
+        elif 1 <= x <= 4:
+            labels.append(1)
+        elif 5 <= x <= 6:
+            labels.append(2)
+        else:
+            labels.append(3)
+    return labels
+
+
 def test(config, device, device_id, test_loader, folder_idx, n_classes):
     checkpoint_prefix = join(utils.create_output_dir('out'), utils.get_stamp_from_log())
     if config.get("use_model") == "cnn":
@@ -194,8 +212,7 @@ def test(config, device, device_id, test_loader, folder_idx, n_classes):
     logging.info("Start testing")
     predicted = []
     ground_truth = []
-    # pred_score = []
-    # samples = []
+
     with torch.no_grad():
         for minibatch, label in test_loader:
             # Forward pass
@@ -206,22 +223,9 @@ def test(config, device, device_id, test_loader, folder_idx, n_classes):
 
             # Evaluate and append
             pred_label = torch.argmax(res, dim=1)
-            #pred_score.append(torch.exp(res).cpu().numpy()[0])
             predicted.extend(pred_label.cpu().numpy())
             ground_truth.extend(label.cpu().numpy())
-            #samples.extend(minibatch.cpu().numpy())
 
-    #pred_score = np.array(pred_score)
-
-    #threshold = Find_Optimal_Cutoff(test_labels, pred_score[:, 1])
-    #print(f'threshold: {threshold}')
-    #y_pred_2 = list(map(lambda x: 1 if x > threshold else 0, pred_score[:, 1]))
-    #print(confusion_matrix(ground_truth, y_pred_2))
-    # for idx, (sample, true, pred) in enumerate(zip(samples, ground_truth, y_pred_2)):
-    #     if true != pred:
-    #         plot_accel(sample, f"True: {true} - Pred {pred}", "/home/jsenadesouza/DA-healthy2patient/results/outcomes/missclassified/", idx)
-    #path_out = "/home/jsenadesouza/DA-healthy2patient/results/outcomes/classifier_results/IMUTransformers/missclassified/"
-    #np.savez_compressed(join(path_out, f"predtest_{folder_idx}.npz"), predicted=y_pred_2, ground_truth=ground_truth, samples=samples)
     def plot_metrics(ground_truth, predicted):
         metrics = get_metrics(ground_truth, predicted)
         for k, v in metrics.items():
@@ -232,7 +236,6 @@ def test(config, device, device_id, test_loader, folder_idx, n_classes):
         return metrics
 
     metrics = plot_metrics(ground_truth, predicted)
-    #metrics = plot_metrics(ground_truth, y_pred_2)
 
     return metrics
 
@@ -261,49 +264,36 @@ def set_patient_map():
     return patient_map
 
 
-def split(y):
+def split(y, y_label):
+    n_classes = np.unique(y_label).shape[0]
     folds_pat = []
-    folds_pat.append(
-        ['P023', 'P013', 'I051A', '49', '48', '100', 'I045A', 'P051', 'I028A', '112', '92', '83', 'P037', '22', '29',
-         '35', '64', '58', 'P046', 'I001A', 'I034A'])
-    folds_pat.append(
-        ['I021A', 'I043A', 'I019A', 'I044A', 'I008A', '51', '106', 'P004', 'P007', '82', '69', 'P054', 'P055', '63',
-         '41', '4', '89', 'I027A', 'P024', '17'])
-    folds_pat.append(
-        ['P038', 'P021', 'P017', 'P067', 'I033A', 'I050A', 'P052', '40', 'P015', '109', '90', 'I049A', '103', '14',
-         '81', '60', '20', 'I047A', 'P006', '32'])
-    folds_pat.append(
-        ['I052A', '98', 'P029', 'I006A', 'I037A', 'P057', 'I004A', 'P042', 'I018A', 'P028', '25', 'P003', 'I025A', '39',
-         '52', '28', '18', 'I053A', 'I023A', '8'])
-    folds_pat.append(
-        ['P010', 'I026A', '95', 'I042A', 'P063', '88', '66', '50', '93', '87', '65', '44', 'I022A', 'P070', '47', '26',
-         '75', 'P009', '13', '15'])
+    patients = np.unique(y[:, -1])
+    for pat in patients:
+        idxs = np.where(y[:, -1] == pat)[0]
+        labels_pat = np.unique(y_label[idxs])
+        if len(labels_pat) > n_classes-1:
+            print(f"Patient {pat}. Labels {labels_pat} #samples {len(idxs)}")
+            folds_pat.append(pat)
 
-    folds_idx = [[], [], [], [], []]
-    for i in range(5):
-        for pat in folds_pat[i]:
-            idxs = np.where(y[:, -1] == pat)[0]
-            folds_idx[i].extend(list(idxs))
+    # LOPO protocol - leave one patient out
+    folds = []
+    for pat in folds_pat:
+        train_idx = np.where(y[:, -1] != pat)[0]
+        test_idx = np.where(y[:, -1] == pat)[0]
+        assert train_idx != test_idx
+        folds.append([train_idx, test_idx])
+        #debug
+        print(f"{pat}: Train {len(train_idx)} Test {len(test_idx)}")
 
-            # %%
-
-    folders = [[[], []], [[], []], [[], []], [[], []], [[], []]]
-    for i in range(len(folds_idx)):
-        # print(f"Folder {i}")
-        for j in range(len(folds_idx)):
-            if i == j:
-                # print(f"Train:{j}")
-                folders[i][0].append(folds_idx[j])
-            else:
-                # print(f"Test:{j}")
-                folders[i][1].extend(folds_idx[j])
-    return folders
+    return folds, folds_pat
 
 
 if __name__ == "__main__":
     # Read configuration
-    with open('/home/jsenadesouza/DA-healthy2patient/code/models/IMU_Transformer/config.json', "r") as read_file:
+    with open('/home/jsenadesouza/DA-healthy2patient/code/models/IMU_Transformer_ML/config.json', "r") as read_file:
         config = json.load(read_file)
+
+    set_logger(f"/home/jsenadesouza/DA-healthy2patient/results/personalization/exp_{time()}.txt")
 
     # Set the seeds and the device
     torch_seed = 42
@@ -321,12 +311,9 @@ if __name__ == "__main__":
 
     device = torch.device(device_id)
 
-    num_folders = 5
-    n_classes = 2
-
-    utils.init_logger()
+    #utils.init_logger()
     # Record execution details
-    logging.info("Starting IMU-transformers")
+    logging.info("Starting Personalization experiment")
     logging.info("Running with configuration:\n{}".format(
         '\n'.join(["\t{}: {}".format(k, v) for k, v in config.items()])))
 
@@ -343,18 +330,43 @@ if __name__ == "__main__":
     logging.info("Start train data preparation")
     # read data and get dataset and dataloader
     # split the data into train, val and test sets
-    X, y, y_target, y_col_names = load_data(config.get("data_path"), clin_variable_target="pain_score_class")
+    X, y, _, y_col_names = load_data(config.get("data_path"), clin_variable_target="pain_score")
+
+    col_idx_target = y_col_names.index("pain_score")
+    col_idx_prevpain = y_col_names.index('pain_score_prev')
+
+    y_target = np.round(np.array(y[:, col_idx_target], dtype=float))
+    prev_pain = np.round(np.array(y[:, col_idx_prevpain], dtype=float))
+
     labels2idx = {k: idx for idx, k in enumerate(np.unique(y_target))}
-    yy_t = np.array([0 if x == "mild" else 1 for x in y_target])
 
+    scenario = config.get("scenario")
+    yy_t = []
+    prev_pain_t = []
 
-    col_idx_prevpain = y_col_names.index('pain_score_prev_class')
-    prev_pain = y[:, col_idx_prevpain]
-    prev_pain = np.array([0 if x == "mild" else 1 for x in prev_pain])
+    if scenario == "nopainvspain":
+        print(np.unique(y_target, return_counts=True))
+        prev_pain_t = np.array([0 if x == 0 else 1 for x in prev_pain])
+        yy_t = np.array([0 if x == 0 else 1 for x in y_target])
+    elif scenario == "mildvssevere":
+        idx = np.where(y_target > 0)
+        print(np.unique(y_target[idx], return_counts=True))
+        prev_pain_t = np.asarray([0 if x <= 5 else 1 for x in prev_pain[idx]])
+        yy_t = np.asarray([0 if x <= 5 else 1 for x in y_target[idx]])
+        X = X[idx]
+        y = y[idx]
+    elif scenario == "dvprsscale":
+        print(np.unique(y_target, return_counts=True))
+        prev_pain_t = np.asarray(dvprs_score2label(prev_pain))
+        yy_t = np.asarray(dvprs_score2label(y_target))
 
-    X_demo = np.load('/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset/X_demo.npz', allow_pickle=True)['X_demo']
+    folders, patients = split(y, yy_t)
+    print(np.unique(prev_pain_t, return_counts=True))
+    print(np.unique(yy_t, return_counts=True))
 
-    folders = split(y)
+    n_classes = np.unique(y_target).shape[0]
+
+    #X_demo = np.load('/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset/X_demo.npz', allow_pickle=True)['X_demo']
 
     sample_start = X.shape[1] - config.get("sample_size")
     checkpoint_path = config.get("checkpoint_path")
@@ -362,38 +374,32 @@ if __name__ == "__main__":
     cum_acc, cum_recall, cum_precision, cum_auc, cum_f1 = [], [], [], [], []
     cum_recall_macro, cum_precision_macro, cum_f1_macro = [], [], []
 
-    for folder_idx in range(num_folders):
+    folder_idx = 0
+    for folder in folders:
         #clin_data = np.concatenate([np.expand_dims(prev_pain, axis=1), X_demo], axis=1)
-        clin_data = X_demo
+        clin_data = np.expand_dims(prev_pain, axis=1)
         print(clin_data.shape)
 
-        train_idx = folders[folder_idx][0]
-        test_idx = folders[folder_idx][1]
+        train_idx = folder[0]
+        test_idx = folder[1]
         train_acc_data, train_labels, test_acc_data, test_labels = X[train_idx], yy_t[train_idx], X[test_idx], yy_t[test_idx]
         train_clin_data, test_clin_data = clin_data[train_idx], clin_data[test_idx]
         train_data = {"acc": train_acc_data, "clin": train_clin_data}
         test_data = {"acc": test_acc_data, "clin": test_clin_data}
 
-
-        logging.info(f"Folder {folder_idx + 1}")
+        logging.info(f"Folder {folder_idx + 1} - Patient: {patients[folder_idx]}")
         logging.info(f"Train data: {get_class_distribution(np.unique(train_labels, return_counts=True))}")
         logging.info(f"Test data: {get_class_distribution(np.unique(test_labels, return_counts=True))}")
 
         # get dataloaders
         train_loader, test_loader = get_loaders(config.get("batch_size"), sample_start, train_data, train_labels, test_data, test_labels)
 
-
         logging.info("Train data shape: {}".format(train_data["acc"].shape))
         logging.info("Train data shape: {}".format(train_data["clin"].shape))
-        # zero = np.where(train_labels == 0)[0][0]
-        # one = np.where(train_labels == 1)[0][0]
-        # train_data, train_labels = train_data[[zero, one]], train_labels[[zero, one]]
-        # train_loader, test_loader, val_loader = get_loaders(2, train_data, train_labels,
-        #                                                     test_data, test_labels,
-        #                                                     val_data, val_labels, weighted_sampler=False)
+
         if config.get("checkpoint_path") == "None":
             train(model, config, device, train_loader, train_labels, use_cuda)
-        metrics = test(config, device, device_id, test_loader, folder_idx, n_classes)
+        metrics = test(config, device, device_id, test_loader, folder_idx+1, n_classes)
 
         logging.info("Data preparation completed")
         cum_acc.append(metrics['accuracy'])
@@ -405,24 +411,8 @@ if __name__ == "__main__":
         cum_recall_macro.append(metrics['recall_macro'])
         cum_precision_macro.append(metrics['precision_macro'])
 
+        folder_idx += 1
+
     print_metrics(logging, n_classes, cum_acc, cum_recall, cum_precision, cum_auc, cum_f1, cum_recall_macro,
                   cum_precision_macro,
                   cum_f1_macro)
-
-
-
-
-
-
-    # Record overall statistics
-    # confusion_mat = confusion_matrix(ground_truth, predicted, labels=list(range(config.get("num_classes"))))
-    # print(confusion_mat.shape)
-    # stats_msg = "\n\tAccuracy: {:.3f}".format(np.mean(metric))
-    # accuracies = []
-    # for i in range(len(accuracy_per_label)):
-    #     print("Performance for class [{}] - accuracy {:.3f}".format(i, accuracy_per_label[i] / count_per_label[i]))
-    #     accuracies.append(accuracy_per_label[i] / count_per_label[i])
-    # # save dump
-    # np.savez(checkpoint_path + "_test_results_dump", confusion_mat=confusion_mat, accuracies=accuracies,
-    #          count_per_label=count_per_label, total_acc=np.mean(metric))
-    # logging.info(stats_msg)

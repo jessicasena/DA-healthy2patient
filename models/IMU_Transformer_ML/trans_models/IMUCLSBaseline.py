@@ -21,7 +21,7 @@ class IMUCLSBaseline(nn.Module):
             dim = dim * 2
 
         num_classes = config.get("num_classes")
-        dim = config.get("sample_size") // (2 ** (cnn_blocks - 1))
+        dim = (config.get("sample_size") // (2 ** (cnn_blocks - 1))) + 1
         self.imu_head = nn.Sequential(
             nn.LayerNorm(dim),
             nn.Linear(dim,  dim//4),
@@ -42,8 +42,11 @@ class IMUCLSBaseline(nn.Module):
         :param x:  B X M x T tensor reprensting a batch of size B of  M sensors (measurements) X T time steps (e.g. 128 x 6 x 100)
         :return: B X N weight for each mode per sample
         """
-        x = self.input_proj(data)
+        inp1 = data["acc"]
+        inp2 = data["clin"]
+        x = self.input_proj(inp1)
         x = torch.mean(x, dim=1)
+        x = torch.cat([x, inp2], dim=1)
         x = self.imu_head(x)
         x = self.log_softmax(x)
         return x # B X N

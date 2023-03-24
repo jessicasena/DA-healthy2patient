@@ -60,7 +60,7 @@ class IMU_LSTM(nn.Module):
 
         num_classes=config.get("num_classes")
         self.imu_head = nn.Sequential(
-            nn.Linear(lstm_hidden,  lstm_hidden//4),
+            nn.Linear(lstm_hidden+1,  lstm_hidden//4),
             nn.GELU(),
             nn.Dropout(0.1),
             nn.Linear(lstm_hidden//4,  num_classes)
@@ -74,15 +74,19 @@ class IMU_LSTM(nn.Module):
 
     def forward(self, data):
          # (seq, batch, feature)
+        inp1 = data["acc"]
+        inp2 = data["clin"]
 
         # Embed in a high dimensional space and reshape to Transformer's expected shape
-        src = self.input_proj(data).permute(2, 0, 1)
+        src = self.input_proj(inp1).permute(2, 0, 1)
 
         src = self.lstm(src)[0].permute(1, 0, 2)
         src = torch.mean(src, dim=1)
+        src = torch.cat([src, inp2], dim=1)
+        out = self.imu_head(src)
 
         # Class probability
-        target = self.log_softmax(self.imu_head(src))
+        target = self.log_softmax(out)
         return target
 
 def get_activation(activation):

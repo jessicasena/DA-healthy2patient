@@ -5,10 +5,10 @@
 	"device_id": "cuda:2",
 
 	"input_dim": 3,
-	"window_size":281,
+	"window_size":282,
 	"num_classes":2,
     "window_shift": 50,
-	"use_model": "transformer",
+	"use_model": "cnn",
 
 	"encode_position":true,
 	"transformer_dim": 512,
@@ -29,7 +29,9 @@
 	"lr_scheduler_gamma": 0.5,
 	"n_epochs": 50,
 
-	"clinical_data_dim": 22,
+
+	"scenario": "dvprsscale",
+	"clinical_data_dim": 1,
 	"sample_size": 9000,
 	"cnn_blocks": 4,
 	"best_model": false,

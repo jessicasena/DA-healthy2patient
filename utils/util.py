@@ -44,7 +44,10 @@ def end_timer_and_print(local_msg):
     print("Max memory used by tensors = {} bytes".format(torch.cuda.max_memory_allocated()))
 
 
-def get_metrics(y_true, y_pred):
+def get_metrics(y_true, y_pred, n_classes):
+    roc = 0
+    if n_classes == 2:
+        roc = roc_auc_score(y_true, y_pred, average="macro")
     return {
         'accuracy': accuracy_score(y_true, y_pred),
         'f1-score': f1_score(y_true, y_pred, average=None, labels=[0,1]),
@@ -55,7 +58,7 @@ def get_metrics(y_true, y_pred):
         'confusion_matrix_norm_true': confusion_matrix(y_true, y_pred, normalize='true'),
         'precision': precision_score(y_true, y_pred, average=None, zero_division=0),
         'precision_macro': precision_score(y_true, y_pred, average="macro", zero_division=0),
-        'roc_auc': roc_auc_score(y_true, y_pred, average="macro")
+        'roc_auc': roc
     }
 
 
@@ -68,7 +71,6 @@ def print_metrics(logger, n_classes, cum_acc, cum_recall, cum_precision, cum_auc
     current_f1_macro = np.array(cum_f1_macro)
 
     ci_mean = st.t.interval(0.95, len(current_acc) - 1, loc=np.mean(current_acc), scale=st.sem(current_acc))
-    ci_auc = st.t.interval(0.95, len(current_auc) - 1, loc=np.mean(current_auc), scale=st.sem(current_auc))
     ci_recall_macro = st.t.interval(0.95, len(current_recall_macro) - 1, loc=np.mean(current_recall_macro),
                                     scale=st.sem(current_recall_macro))
     ci_prec_macro = st.t.interval(0.95, len(current_prec_macro) - 1, loc=np.mean(current_prec_macro),
@@ -88,29 +90,35 @@ def print_metrics(logger, n_classes, cum_acc, cum_recall, cum_precision, cum_auc
     logger.info('f1-score_macro: {:.2f} ± {:.2f}\n'.format(np.mean(current_f1_macro) * 100,
                                                                 abs(np.mean(current_f1_macro) - ci_f1_macro[
                                                                     0]) * 100))
-    logger.info('roc_auc: {:.2f} ± {:.2f}\n'.format(np.mean(current_auc) * 100,
-                                                         abs(np.mean(current_auc) - ci_auc[0]) * 100))
+    if n_classes == 2:
+        for class_ in range(n_classes):
+            ci_auc = st.t.interval(0.95, len(current_auc) - 1, loc=np.mean(current_auc), scale=st.sem(current_auc))
+            logger.info('roc_auc: {:.2f} ± {:.2f}\n'.format(np.mean(current_auc) * 100,
+                                                            abs(np.mean(current_auc) - ci_auc[0]) * 100))
+            logger.info(f"Class: {class_}")
 
-    for class_ in range(n_classes):
-        logger.info(f"Class: {class_}")
+            current_f1 = np.array(cum_f1)[:, class_]
+            current_recall = np.array(cum_recall)[:, class_]
+            current_prec = np.array(cum_precision)[:, class_]
 
-        current_f1 = np.array(cum_f1)[:, class_]
-        current_recall = np.array(cum_recall)[:, class_]
-        current_prec = np.array(cum_precision)[:, class_]
+            ci_f1 = st.t.interval(0.95, len(current_f1) - 1, loc=np.mean(current_f1), scale=st.sem(current_f1))
+            ci_recall = st.t.interval(0.95, len(current_recall) - 1, loc=np.mean(current_recall),
+                                      scale=st.sem(current_recall))
+            ci_prec = st.t.interval(0.95, len(current_prec) - 1, loc=np.mean(current_prec), scale=st.sem(current_prec))
 
-        ci_f1 = st.t.interval(0.95, len(current_f1) - 1, loc=np.mean(current_f1), scale=st.sem(current_f1))
-        ci_recall = st.t.interval(0.95, len(current_recall) - 1, loc=np.mean(current_recall),
-                                  scale=st.sem(current_recall))
-        ci_prec = st.t.interval(0.95, len(current_prec) - 1, loc=np.mean(current_prec), scale=st.sem(current_prec))
+            logger.info('recall: {:.2f} ± {:.2f}\n'.format(np.mean(current_recall) * 100,
+                                                                abs(np.mean(current_recall) - ci_recall[0]) * 100))
+            logger.info('precision: {:.2f} ± {:.2f}\n'.format(np.mean(current_prec) * 100,
+                                                                   abs(np.mean(current_prec) - ci_prec[0]) * 100))
+            logger.info('f1-score: {:.2f} ± {:.2f}\n'.format(np.mean(current_f1) * 100,
+                                                             abs(np.mean(current_f1) - ci_f1[0]) * 100))
 
-        logger.info('recall: {:.2f} ± {:.2f}\n'.format(np.mean(current_recall) * 100,
-                                                            abs(np.mean(current_recall) - ci_recall[0]) * 100))
-        logger.info('precision: {:.2f} ± {:.2f}\n'.format(np.mean(current_prec) * 100,
-                                                               abs(np.mean(current_prec) - ci_prec[0]) * 100))
-        logger.info('f1-score: {:.2f} ± {:.2f}\n'.format(np.mean(current_f1) * 100,
-                                                         abs(np.mean(current_f1) - ci_f1[0]) * 100))
-
-            #
+    else:
+        for pair, rocauc in current_auc.items():
+            ci_pair_auc = st.t.interval(0.95, len(rocauc) - 1, loc=np.mean(rocauc), scale=st.sem(rocauc))
+            logger.info('roc_auc {}: {:.2f} ± {:.2f}\n'.format(pair, np.mean(rocauc) * 100,
+                                                            abs(np.mean(rocauc) - ci_pair_auc[0]) * 100))
+                #
 # def balanced_dataset(X, y):
 #     from imblearn.under_sampling import RandomUnderSampler
 #     from collections import Counter
