@@ -282,6 +282,8 @@ class PainDataset:
         trial_id = 1
         output_dir = self.dir_save
         frequencies = []
+        count_missing_samples_by_missing_data = 0
+        max_list_missing_data = []
 
         for file in tqdm(accs_files):
             try:
@@ -326,15 +328,16 @@ class PainDataset:
                         for i in range(1, len(pain_datetimes)):
                             # get the accel timestamp nearest to the pain measurement
                             # I had to convert acc_ts_list to numpy array because of error when using cudf in bisect function
-                            idx = bisect_left(acc_ts_list, pain_datetimes[1])
+                            idx = bisect_left(acc_ts_list, pain_datetimes[i])
                             # in case that is too near the end, adjust the index
                             idx = idx - 1 if idx >= len(acc_ts_list) else idx
                             # check if there is at least time_wd + time_drop minutes of data before the pain measurement
                             if idx > time_wd + time_drop:
                                 margin_minutes = 5
                                 margin = np.timedelta64(margin_minutes, 'm')
+                                # todo plot with margin x number of samples [5m, 30m, 2m step]
                                 # check if the accelerometer timestamp is within 5 minutes of the pain measurement
-                                if abs(pain_datetimes[1] - acc_ts_list[idx]) <= margin:
+                                if abs(pain_datetimes[i] - acc_ts_list[idx]) <= margin:
                                     # get time_wd minutes before time_drop minutes from the pain measurement
                                     # 15 minutes are dropped because the nurse can be in the room doing some procedures
                                     start_idx = int(idx - time_wd - time_drop)
@@ -347,18 +350,20 @@ class PainDataset:
                                         # then the sample is continuous so we can extract it
                                         start_ts = ts_sample[0]
 
-                                        end_ts = ts_sample[-1] + np.timedelta64(int(margin_minutes+time_drop/60/reduce_rate), 'm')
+                                        end_ts = ts_sample[-1] + np.timedelta64(int(((margin_minutes+time_drop)/60)/reduce_rate), 'm')
                                         sample = acc_cupy_downsampled[start_idx:end_idx]
                                         # get outcomes data for the sample
                                         label = process_labels(outcomes_filtered_df, start_ts, end_ts)
                                         if len(label) > 0:
-                                            label = "_".join(label.astype(str))
+                                            label = "_".join(label.astype(str)) + "_" + str(pd.to_datetime(start_ts))
                                             # save the sample
                                             self.add_info_data(label, patient_id, trial_id, sample, output_dir)
                                             trial_id += 1
                                             samples_extracted += 1
                                         del sample
-
+                                    else:
+                                        count_missing_samples_by_missing_data += 1
+                                        max_list_missing_data.append(np.max(np.diff(ts_sample)))
                                     del ts_sample
                         if not samples_extracted:
                             self.logger.error("File {}, message: no sample extracted", file)
@@ -382,6 +387,9 @@ class PainDataset:
         # save the last sample
         self.save_data(output_dir)
         self.logger.info("Frequencies: mean = {}, values = {}", np.mean(frequencies), frequencies)
+        self.logger.info("Missing data: count = {}", count_missing_samples_by_missing_data)
+        self.logger.info("Missing data: max = {}", max_list_missing_data)
+
 
 
 

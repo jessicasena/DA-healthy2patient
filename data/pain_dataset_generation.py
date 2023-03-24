@@ -159,7 +159,7 @@ if __name__ == "__main__":
         # Create a Dask Cluster to use multiple GPUs
         cluster = LocalCUDACluster()
         client = Client(cluster)
-    exp_name = "INTELLIGENT_ADAPT_PAIN_15wd_15drop_painprev"
+    exp_name = "INTELLIGENT_ADAPT_PAIN_15wd_15drop_painprev_timestamp"
     dir_save_datasets = '/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset_preprocess_15min/'
     dir_save_file = '/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset'
     time_wd = 900
