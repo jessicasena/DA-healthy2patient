@@ -31,7 +31,9 @@ def process_labels(df_data, start_ts, end_ts):
     df = df_data[(df_data['timestamp'] >= start_ts) & (df_data['timestamp'] <= end_ts)]
     df_prev = df_data[df_data['timestamp'] <= (start_ts-np.timedelta64(1, 's'))]
     df = df.to_pandas()
-    if len(df) == 0:
+    df_prev = df_prev.to_pandas()
+    df_prev = df_prev["pain_score"][df_prev["pain_score"] != -1]
+    if len(df) == 0 or len(df_prev) == 0:
         return []
     else:
         heart_rate = df["heart_rate"][df["heart_rate"] != -1]
@@ -67,7 +69,7 @@ def process_labels(df_data, start_ts, end_ts):
         else:
             pain_score_class = "severe"
 
-        pain_score_prev = df_prev["pain_score"][df_prev["pain_score"] != -1].iloc[-1]
+        pain_score_prev = df_prev.iloc[-1]
         if pain_score_prev == -1:
             pain_score_prev_class = -1
         elif 0 <= pain_score_prev < 5:
@@ -164,14 +166,14 @@ def read_acc_file_pain_adapt(file_name, logger):
             logger.error("File {}, message: Not enough columns ", file_name)
         if len(df_acc) == 0:
             logger.error("File {}, message: Empty file ", file_name)
-        return None
+        return None, None
 
 
 def read_acc_file_intelligenticu(file_name, logger):
     df_acc = cudf.read_csv(file_name, header=10)
     if "Timestamp" not in df_acc.columns[0]:
         logger.error("File {} has no timestamp column".format(file_name))
-        return None
+        return None, None
     # we are supposing Intelligent ICU is already on GMT timezone, so no need to convert it
     timestamps = cudf.Series(df_acc["Timestamp"], dtype="datetime64[ms]").to_numpy()
     return timestamps, df_acc.drop(columns=["Timestamp"]).to_cupy()
@@ -277,16 +279,23 @@ class PainDataset:
         except Exception as e:
             sys.exit('Error: save pickle {} for {} dataset.\n Error: {}'.format(self.n_pkl, self.dataset_name, e))
 
-    def preprocess(self):
+    def preprocess(self, margin_minutes):
         accs_files = self.get_accs_files()
         trial_id = 1
         output_dir = self.dir_save
         frequencies = []
         count_missing_samples_by_missing_data = 0
         max_list_missing_data = []
-
+        samples_extracted = 0
         for file in tqdm(accs_files):
             try:
+                # # todo: remove this if
+                # patient_id = file.split("/")[5]
+                # if self.dataset_name == 'intelligent_icu':
+                #     patient_id = int(patient_id.split("_")[1])
+                # if patient_id != 33:
+                #     continue
+                # # todo end remove ---------------------------
                 # get accel data and accel timestamps from csv file
                 if self.dataset_name == 'intelligent_icu':
                     df_timestamps, acc_cupy = read_acc_file_intelligenticu(file, self.logger)
@@ -333,9 +342,10 @@ class PainDataset:
                             idx = idx - 1 if idx >= len(acc_ts_list) else idx
                             # check if there is at least time_wd + time_drop minutes of data before the pain measurement
                             if idx > time_wd + time_drop:
-                                margin_minutes = 5
-                                margin = np.timedelta64(margin_minutes, 'm')
                                 # todo plot with margin x number of samples [5m, 30m, 2m step]
+                                #margin_minutes = margin_minutes
+                                margin = np.timedelta64(margin_minutes, 'm')
+
                                 # check if the accelerometer timestamp is within 5 minutes of the pain measurement
                                 if abs(pain_datetimes[i] - acc_ts_list[idx]) <= margin:
                                     # get time_wd minutes before time_drop minutes from the pain measurement
@@ -384,6 +394,8 @@ class PainDataset:
                 gc.collect()
             except Exception as e:
                 self.logger.error("File {}, message: {}", file, e)
+                if samples_extracted > 0:
+                    self.save_data(output_dir)
         # save the last sample
         self.save_data(output_dir)
         self.logger.info("Frequencies: mean = {}, values = {}", np.mean(frequencies), frequencies)

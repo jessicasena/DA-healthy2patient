@@ -1,4 +1,5 @@
 import glob
+import shutil
 import sys
 import os
 import fnmatch
@@ -15,7 +16,7 @@ from dask_cuda import LocalCUDACluster
 from dask.distributed import Client
 
 
-def process_studies(dir_save, trials_per_file, time_wd, time_drop, final_freq, logger, process=True):
+def process_studies(dir_save, trials_per_file, time_wd, time_drop, final_freq, logger, margin, process=True):
     # instantiate a object for each dataset and process the data
     data_name = []
     #Intelligent ICU study
@@ -23,7 +24,7 @@ def process_studies(dir_save, trials_per_file, time_wd, time_drop, final_freq, l
                 dir_save=dir_save, trials_per_file=trials_per_file, time_wd=time_wd, time_drop=time_drop,
                 final_freq=final_freq, logger=logger)
     if process:
-      i_icu.preprocess()
+      i_icu.preprocess(margin)
     data_name.append("intelligent_icu")
 
     # PAIN study
@@ -31,7 +32,7 @@ def process_studies(dir_save, trials_per_file, time_wd, time_drop, final_freq, l
                 dir_save=dir_save, trials_per_file=trials_per_file, time_wd=time_wd, time_drop=time_drop,
                 final_freq=final_freq, logger=logger)
     if process:
-        pain.preprocess()
+        pain.preprocess(margin)
     data_name.append("pain")
 
     # ADAPT study
@@ -39,7 +40,7 @@ def process_studies(dir_save, trials_per_file, time_wd, time_drop, final_freq, l
                 dir_save=dir_save, trials_per_file=trials_per_file, time_wd=time_wd, time_drop=time_drop,
                 final_freq=final_freq, logger=logger)
     if process:
-        adapt.preprocess()
+        adapt.preprocess(margin)
     data_name.append("adapt")
 
     return data_name
@@ -143,12 +144,17 @@ def generate_dataset(dir_pkl, list_datasets):
     y_col_names = ['heart_rate', 'heart_rate_class', 'temp', 'temp_class', 'lenght_of_stay', 'is_dead', 'pain_score',
                    'pain_score_class',  'pain_score_prev', 'pain_score_prev_class',
                    'sofa_score', 'sofa_score_class', 'map', 'map_class', 'braden_score', 'braden_score_class', 'spo2',
-                   'spo2_class', 'cam', 'patient_id']
+                   'spo2_class', 'cam', 'timestamp', 'patient_id']
     # save to a npz fila the accel data and labels and column names
     np.savez_compressed(os.path.join(dir_save_file, name_file),
                         X=X,
                         y=y,
                         y_col_names=y_col_names)
+
+    n_samples = len(X)
+    n_patients = len(np.unique(np.asarray(y)[:, -1])) if len(y) > 0 else 0
+
+    return n_samples, n_patients
 
 
 if __name__ == "__main__":
@@ -159,26 +165,35 @@ if __name__ == "__main__":
         # Create a Dask Cluster to use multiple GPUs
         cluster = LocalCUDACluster()
         client = Client(cluster)
-    exp_name = "INTELLIGENT_ADAPT_PAIN_15wd_15drop_painprev_timestamp"
-    dir_save_datasets = '/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset_preprocess_15min/'
-    dir_save_file = '/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset'
-    time_wd = 900
-    time_drop = 900
-    new_freq = 10
-    trials_per_file = 100
+    margin_samples = []
+    count = 0
+    for margin in [10, 20, 30]:
+        exp_name = "INTELLIGENT_ADAPT_PAIN_15wd_15drop_painprev_timestamp_bugfixed_margin{}".format(margin)
+        dir_save_datasets = '/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset_preprocess_15min/'
+        dir_save_file = '/home/jsenadesouza/DA-healthy2patient/results/outcomes/dataset'
+        time_wd = 900
+        time_drop = 9000
+        new_freq = 10
+        trials_per_file = 100
+        if count == 0:
+            logger.remove(0)
+        count += 1
+        logger.add('/home/jsenadesouza/DA-healthy2patient/results/outcomes/' + exp_name + ".log", enqueue=True,
+                   format="{time} | {level} | {message}", colorize=True, mode="w")
+        logger.add(sys.stdout, format="[{time}] [<level>{level}</level>] {message}", colorize=True)
 
-    logger.remove(0)
-    logger.add('/home/jsenadesouza/DA-healthy2patient/results/outcomes/' + exp_name + ".log", enqueue=True,
-               format="{time} | {level} | {message}", colorize=True, mode="w")
-    logger.add(sys.stderr, enqueue=True, format="{time} | {level} | {message}", colorize=True)
-
-    if not os.path.exists(dir_save_datasets):
+        if os.path.exists(dir_save_datasets):
+            shutil.rmtree(dir_save_datasets)
         os.makedirs(dir_save_datasets)
-    if not os.path.exists(dir_save_file):
-        os.makedirs(dir_save_file)
+        if not os.path.exists(dir_save_file):
+            os.makedirs(dir_save_file)
 
-    list_datasets = process_studies(dir_save_datasets, trials_per_file, time_wd, time_drop, new_freq, logger, process=process)
-    generate_dataset(dir_save_datasets, list_datasets)
+        list_datasets = process_studies(dir_save_datasets, trials_per_file, time_wd, time_drop, new_freq, logger, margin, process=process)
+        n_samples, n_patients = generate_dataset(dir_save_datasets, list_datasets)
+        margin_samples.append([margin, n_samples, n_patients])
 
-    end = time.time()
-    print("Time passed = {}".format(end - start), flush=True)
+        end = time.time()
+        print("Time passed = {}".format(end - start), flush=True)
+
+    print("Margin experiment finished")
+    print(margin_samples)
